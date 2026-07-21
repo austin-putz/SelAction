@@ -87,23 +87,27 @@ sudo apt-get install gfortran
 sudo yum install gcc-gfortran
 ```
 
-### Linux (recommended, known working)
+### Linux (recommended, verified working)
+
+`gfortran` compiles left to right and needs each module already built before compiling anything that `USE`s it, so **the main program must come last**, after every module it depends on:
 
 ```bash
 cd fortran_linux/
 
 # Full version
-gfortran -o mssel mssel.f90 seldiscrete.f90 selovlp.f90 \
-         selparameters.f90 selroutines.f90 seltools.f90 selinbreeding.f90
+gfortran -o mssel seltools.f90 selparameters.f90 selroutines.f90 \
+         selinbreeding.f90 selovlp.f90 seldiscrete.f90 mssel.f90
 
 # Discrete generations only
-gfortran -o msseld msseld.f90 seldiscrete.f90 \
-         selparameters.f90 selroutines.f90 seltools.f90 selinbreeding.f90
+gfortran -o msseld seltools.f90 selparameters.f90 selroutines.f90 \
+         selinbreeding.f90 seldiscrete.f90 msseld.f90
 
 # Overlapping generations only
-gfortran -o msselo msselo.f90 selovlp.f90 \
-         selparameters.f90 selroutines.f90 seltools.f90 selinbreeding.f90
+gfortran -o msselo seltools.f90 selparameters.f90 selroutines.f90 \
+         selovlp.f90 msselo.f90
 ```
+
+All three binaries have been built and smoke-tested against `fortran_linux/test1.in` with this exact sequence.
 
 ### macOS (known broken — see Known Issues)
 
@@ -116,10 +120,12 @@ make        # builds only `mssel`; currently fails/misbehaves, see Known Issues
 
 ```bash
 cd fortran_orig/
-# Same compilation commands as the Linux version above, but may need
-# -ffixed-line-length-none or fail outright on modern gfortran — this
-# directory exists for comparison against Rutten & Bijma's original
-# source, not as a build target.
+# Same compilation order as the Linux version above. mssel and msseld
+# will still fail with a modern gfortran even with correct ordering
+# (see Known Issues — this is a pre-existing bug in the original code,
+# unrelated to file order). msselo builds and runs fine. This directory
+# exists for comparison against Rutten & Bijma's original source, not
+# as a build target — use fortran_linux/ if you need a working binary.
 ```
 
 ### Compilation Flags
@@ -319,8 +325,9 @@ See `examples/output_discrete_1_stage/` for a complete 3-trait, single-stage wor
 ## Known Issues
 
 - **`fortran_mac/` does not build cleanly.** It diverges from `fortran_orig/` in most of its modules (not just the handful of compiler-compatibility tweaks in `fortran_linux/`), and those changes currently conflict. Use `fortran_linux/` — including on macOS via a case-sensitive filesystem or Linux VM/container — until this is debugged. Contributions welcome; please open an issue with the exact gfortran version and error output.
+- **`selroutines.f90` contains dead, duplicated code.** Somewhere in its history, the entire `dFmtblup` inbreeding function (and its helpers `create_C`, `Poissoncorr`, `hyper_correct`) got copy-pasted into `selroutines.f90` in addition to living in `selinbreeding.f90`/`MODULE Inbreeding` where it's actually used. This is present in `fortran_orig/` too — it's not something introduced by either fork. It only becomes a build error because `selinbreeding.f90` does `USE selroutines` unrestricted, which collides with its own `dFmtblup`. `fortran_linux/selinbreeding.f90` fixes this with `USE selroutines, ONLY: trunc` (the one symbol it actually needs); `fortran_orig/` and `fortran_mac/` are unaffected/untouched by that fix, so `mssel`/`msseld` from `fortran_orig/` still won't build even with correct file order.
 - **Singular matrix errors**: usually caused by inconsistent genetic parameters (correlation matrices that aren't positive definite) — check inputs before assuming a code bug.
-- **Module not found / build order**: always compile `seltools.f90` → `selparameters.f90` → `selroutines.f90` → the other modules → the main program, in that order.
+- **Module not found / build order**: always compile `seltools.f90` → `selparameters.f90` → `selroutines.f90` → `selinbreeding.f90`/`selovlp.f90`/`seldiscrete.f90` → the main program, in that order (see [Installation and Compilation](#installation-and-compilation)). The main program must always come last.
 
 ## Troubleshooting
 

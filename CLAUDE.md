@@ -16,13 +16,13 @@ There is no "modernized 2.0" codebase in this repository — earlier drafts of t
 cd fortran_linux/
 
 # Full version
-gfortran -o mssel mssel.f90 seldiscrete.f90 selovlp.f90 selparameters.f90 selroutines.f90 seltools.f90 selinbreeding.f90
+gfortran -o mssel seltools.f90 selparameters.f90 selroutines.f90 selinbreeding.f90 selovlp.f90 seldiscrete.f90 mssel.f90
 
 # Discrete generations only
-gfortran -o msseld msseld.f90 seldiscrete.f90 selparameters.f90 selroutines.f90 seltools.f90 selinbreeding.f90
+gfortran -o msseld seltools.f90 selparameters.f90 selroutines.f90 selinbreeding.f90 seldiscrete.f90 msseld.f90
 
 # Overlapping generations only
-gfortran -o msselo msselo.f90 selovlp.f90 selparameters.f90 selroutines.f90 seltools.f90 selinbreeding.f90
+gfortran -o msselo seltools.f90 selparameters.f90 selroutines.f90 selovlp.f90 msselo.f90
 ```
 
 ### macOS (currently broken — do not assume this works)
@@ -42,6 +42,8 @@ cd fortran_orig/
 ```
 
 There is no top-level Makefile in this repository. Each platform directory is compiled directly with the `gfortran` invocations above (or, for `fortran_mac/`, via its own local `Makefile`).
+
+**File order in these commands is not cosmetic.** `gfortran` compiles the files it's given left to right and needs each module's `.mod` file to already exist before compiling something that `USE`s it — so the main program (`mssel.f90` etc.) must always be *last*, after every module it depends on, in the Module Dependencies order below. Earlier drafts of this file listed the main program first, which fails outright; the order above has been verified to build cleanly.
 
 ## Code Architecture
 
@@ -90,6 +92,7 @@ Main programs (mssel.f90, msseld.f90, msselo.f90)
 - Maintain module dependency order during compilation (see above).
 - `fortran_linux/` and `fortran_mac/` are **not** independent rewrites of `fortran_orig/` — they're the same code with the minimum edits needed to satisfy a modern compiler. When fixing something in `fortran_mac/`, diff it against `fortran_orig/` first to see exactly what already changed and why, rather than re-deriving from scratch.
 - **Never edit anything under `fortran_orig/`.** If a fix is needed, make it in `fortran_linux/` or `fortran_mac/`.
+- `fortran_linux/selinbreeding.f90` restricts its `USE selroutines` to `USE selroutines, ONLY: trunc`. `selroutines.f90` (present in `fortran_orig/` too) contains a leftover, fully duplicated copy of the whole `dFmtblup` function and its helpers (`create_C`, `Poissoncorr`, `hyper_correct`) — dead code from whenever `selinbreeding.f90` was split out that was never removed. A blanket `USE selroutines` pulls in that duplicate `dFmtblup` and collides with `selinbreeding.f90`'s own definition, breaking the build for `mssel`/`msseld` (but not `msselo`, which never links `selinbreeding.f90`). The `ONLY: trunc` restriction is the one symbol actually needed and avoids the collision without changing any numerics.
 
 ### Testing
 

@@ -24,13 +24,13 @@ There is no "modernized 2.0" directory in this repository. Earlier drafts of thi
 ```bash
 cd fortran_linux/
 # Full version
-gfortran -o mssel mssel.f90 seldiscrete.f90 selovlp.f90 selparameters.f90 selroutines.f90 seltools.f90 selinbreeding.f90
+gfortran -o mssel seltools.f90 selparameters.f90 selroutines.f90 selinbreeding.f90 selovlp.f90 seldiscrete.f90 mssel.f90
 
 # Discrete generations only
-gfortran -o msseld msseld.f90 seldiscrete.f90 selparameters.f90 selroutines.f90 seltools.f90 selinbreeding.f90
+gfortran -o msseld seltools.f90 selparameters.f90 selroutines.f90 selinbreeding.f90 seldiscrete.f90 msseld.f90
 
 # Overlapping generations only
-gfortran -o msselo msselo.f90 selovlp.f90 selparameters.f90 selroutines.f90 seltools.f90 selinbreeding.f90
+gfortran -o msselo seltools.f90 selparameters.f90 selroutines.f90 selovlp.f90 msselo.f90
 ```
 
 ### Mac Version (Currently Non-Functional)

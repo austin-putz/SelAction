@@ -31,7 +31,7 @@ REAL FUNCTION dFmtblup(nt,nim,nif,infom,infof,v,cas,cad,cis,cid,pm,pf,d,&
 !selection candidates per dam, m=number of sires, f = number of dams.
 !==================================================================================
 
-USE selroutines
+USE selroutines, ONLY: trunc
 USE seltools
 !USE normal_table
 !USE index_pack
