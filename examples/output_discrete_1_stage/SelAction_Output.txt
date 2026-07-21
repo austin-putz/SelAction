@@ -1,0 +1,143 @@
+ SelAction Version 1.0, licensed to Nutreco, Veerstraat 38, Boxmeer, The 
+Netherlands
+ Datafile: 
+ 
+Test Run 1
+
+
+
+
+ 
+  TRAITS USED
+ 
+            eADG
+             ADG
+             FCR
+ 
+ 
+  TRAIT PARAMETERS
+  
+                 phenotypic variance  heritability  com.env.effect
+            eADG         20.000          0.250          0.050
+             ADG        100.000          0.300          0.050
+             FCR          0.500          0.200          0.050
+ 
+ 
+  PHENOTYPIC CORRELATIONS
+  
+       ADG   FCR  
+ eADG   0.25  0.10
+ ADG         -0.70
+ 
+  GENETIC CORRELATIONS
+  
+       ADG   FCR  
+ eADG   0.20  0.15
+ ADG         -0.50
+ 
+  COMMON ENVIRONMENTAL CORRELATIONS
+  
+       ADG   FCR  
+ eADG   0.05  0.05
+ ADG          0.05
+ 
+ BREEDING GOAL INFORMATION
+ 
+          5.000 * ADG
+        -27.000 * FCR
+ 
+ 
+  POPULATION SIZE
+  
+                      number of selected sires :   10.0
+                       number of selected dams :  200.0
+   number of male selection candidates per dam :    5.0
+ number of female selection candidates per dam :    5.0
+ 
+               total selected proportion sires :  0.01000
+                total selected proportion dams :  0.20000
+ 
+ CHARACTERISTICS OF THE USED GROUPS
+ 
+ full-sib group 1 with        9.0 animals
+ half-sib group 1 with      200.0 dams, producing      190.0 animals
+ 
+ 
+ INDEX INFORMATION :
+ 
+                   Own performance of eADG           
+           Dam BLUP breeding value of eADG           
+          Sire BLUP breeding value of eADG           
+  Observations on full-Sib group 1 on eADG           
+  Observations on half-sib group 1 on eADG           
+Mean EBV of the dams of hs-group 1 on eADG           
+                   Own performance of ADG            
+           Dam BLUP breeding value of ADG            
+          Sire BLUP breeding value of ADG            
+  Observations on full-Sib group 1 on ADG            
+  Observations on half-sib group 1 on ADG            
+Mean EBV of the dams of hs-group 1 on ADG            
+                   Own performance of FCR            
+           Dam BLUP breeding value of FCR            
+          Sire BLUP breeding value of FCR            
+  Observations on full-Sib group 1 on FCR            
+  Observations on half-sib group 1 on FCR            
+Mean EBV of the dams of hs-group 1 on FCR            
+ 
+             ******************   RESULTS   *******************
+ 
+ EQUILIBRIUM PARAMETERS
+ 
+                 phenotypic variance  heritability  com.env.effect
+            eADG         19.986          0.249          0.050
+             ADG         92.652          0.244          0.054
+             FCR          0.492          0.188          0.051
+ 
+  PHENOTYPIC CORRELATIONS
+  
+       ADG   FCR  
+ eADG   0.25  0.10
+ ADG         -0.70
+ 
+  GENETIC CORRELATIONS
+  
+       ADG   FCR  
+ eADG   0.20  0.17
+ ADG         -0.44
+ 
+  COMMON ENVIRONMENTAL CORRELATIONS
+  
+       ADG   FCR  
+ eADG   0.05  0.05
+ ADG          0.05
+ 
+  RESPONSE
+                                     sires           dams          total
+             ADG
+               trait units:           3.759          2.023          5.782
+            economic units:          18.796         10.114         28.910
+        % of totalresponse:          55.448         29.837         85.285
+             FCR
+               trait units:          -0.120         -0.065         -0.185
+            economic units:           3.243          1.745          4.988
+        % of totalresponse:           9.567          5.148         14.715
+ 
+  CORRELATED RESPONSE
+            eADG
+               trait units:           0.166          0.089          0.256
+ 
+  TOTALRESPONSE
+                                     sires           dams          total
+ 
+            economic units:          22.038         11.859         33.898
+ 
+ 
+         variance of index:         301.400        301.400
+ variance of breeding goal:         804.183
+         accuracy of index:           0.612          0.612
+ 
+    increase of inbreeding:           3.817 % per generation
+ 
+ 
+                      ******  end of output  ******
+

@@ -1,0 +1,25 @@
+# Fortran build artifacts
+*.o
+*.mod
+*.obj
+
+# Compiled binaries produced by the build commands in README.md
+fortran_linux/mssel
+fortran_linux/msseld
+fortran_linux/msselo
+fortran_mac/mssel
+fortran_mac/msseld
+fortran_mac/msselo
+fortran_orig/mssel
+fortran_orig/msseld
+fortran_orig/msselo
+
+# LaTeX build artifacts
+docs/*.aux
+docs/*.log
+docs/*.toc
+docs/*.out
+docs/*.synctex.gz
+
+# OS cruft
+.DS_Store

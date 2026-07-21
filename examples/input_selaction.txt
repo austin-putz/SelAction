@@ -1,0 +1,49 @@
+1          ! stage selection (1/2/3/o)
+input      ! filename (max 8 char)
+n          ! use different indexes for sires and dams?
+eADG       ! name of trait 1
+i          ! use in index (i), breeding goal (h), both (b), or not in (n)
+ADG        ! name of trait 2
+h          ! use in index (i), breeding goal (h), both (b), or not in (n)
+5          ! relative economic value
+FCR        ! name of trait 3
+h          ! use in index (i), breeding goal (h), both (b), or not in (n)
+-27        ! relative economic value
+y          ! use common environmental effects
+25         ! trait 1: phenotypic variance
+0.20       ! trait 1: h2
+0.05       ! trait 1: c2 (common env)
+100        ! trait 2: phenotypic variance
+0.25       ! trait 2: h2
+0.05       ! trait 2: c2 (common env)
+0.04       ! trait 3: phenotypic variance
+0.15       ! trait 3: h2
+0.05       ! trait 3: c2 (common env)
+y          ! use FS groups (y/n)
+1          ! number of full sib groups
+9          ! numbe of animals in FS group
+y          ! use HS groups (y/n)
+1          ! number of HS groups
+200        ! number of dams producing HS groups
+190        ! number of animals in HS group
+n          ! number of animals in HS Group
+1          ! for eADG (index)
+2          ! 1 = own performance
+4          ! 2 = BLUP breeding values
+24         ! 4 = FS groups with 9
+-1         ! 24 = HS groups with 200 dams producing 190 animals
+0.25       ! cor eADG and ADG: phenotypic
+0.35       ! cor eADG and ADG: genetic
+0.05       ! cor eADG and ADG: common environmental
+0.10       ! cor eADG and FCR: phenotypic
+0.15       ! cor eADG and FCR: genetic
+0.05       ! cor eADG and FCR: common environmental
+0.10       ! cor eADG and FCR: phenotypic
+0.15       ! cor eADG and FCR: genetic
+0.05       ! cor eADG and FCR: common environmental
+10         ! number of selected sires
+200        ! number of selected dams
+5          ! number of male selection candidates per dam
+5          ! number of female selection candidates per dam
+0.01       ! prop of selected sires
+0.20       ! prop of selected dams

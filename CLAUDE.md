@@ -1,0 +1,115 @@
+# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
+## Overview
+
+SelAction is a Fortran-based animal breeding selection index program that calculates genetic responses and inbreeding effects for various selection schemes. This repository holds the original reference code from Peter Bijma plus two lightly-modified forks that make it compile with a modern gfortran, on Linux and macOS respectively.
+
+There is no "modernized 2.0" codebase in this repository — earlier drafts of this file described one (`fortran/` with `seltools2.f90` etc.), but that work was never started and the placeholder directory has been dropped. Don't recreate that section from memory; if a rewritten/modular version is wanted, it should be scoped as new work, not assumed to exist.
+
+## Build Commands
+
+### Linux (recommended, known working)
+
+```bash
+cd fortran_linux/
+
+# Full version
+gfortran -o mssel mssel.f90 seldiscrete.f90 selovlp.f90 selparameters.f90 selroutines.f90 seltools.f90 selinbreeding.f90
+
+# Discrete generations only
+gfortran -o msseld msseld.f90 seldiscrete.f90 selparameters.f90 selroutines.f90 seltools.f90 selinbreeding.f90
+
+# Overlapping generations only
+gfortran -o msselo msselo.f90 selovlp.f90 selparameters.f90 selroutines.f90 seltools.f90 selinbreeding.f90
+```
+
+### macOS (currently broken — do not assume this works)
+
+```bash
+cd fortran_mac/
+make        # builds only `mssel`; known to fail/misbehave, see README.md "Known Issues"
+```
+
+### Original version (reference only, never modify)
+
+```bash
+cd fortran_orig/
+# Same compilation commands as Linux, but may need -ffixed-line-length-none
+# or fail outright on modern gfortran. This directory is a byte-for-byte
+# copy of Peter Bijma's original code and exists for comparison only.
+```
+
+There is no top-level Makefile in this repository. Each platform directory is compiled directly with the `gfortran` invocations above (or, for `fortran_mac/`, via its own local `Makefile`).
+
+## Code Architecture
+
+### Directory Structure
+
+| Directory | Description | Status |
+|-----------|-------------|--------|
+| `fortran_orig/` | Original Fortran code from Peter Bijma | **Never modify — treat as read-only reference** |
+| `fortran_linux/` | Linux-compatible fork | Working, recommended |
+| `fortran_mac/` | macOS-compatible fork | Known broken, do not present as working |
+| `manual/` | User manual + program description (Markdown + PDF) | Reference documentation |
+| `docs/` | LaTeX technical reports on the underlying methods | Reference documentation |
+| `examples/` | Sample input files and a worked GUI example | Reference/test fixtures |
+
+### Module Dependencies (all three of fortran_orig/fortran_linux/fortran_mac)
+
+```
+seltools.f90 (base statistical functions)
+    ↓
+selparameters.f90 (global parameters, depends on seltools.f90)
+    ↓
+selroutines.f90 (mathematical routines, depends on both above)
+    ↓
+seldiscrete.f90, selovlp.f90, selinbreeding.f90 (depend on all above)
+    ↓
+Main programs (mssel.f90, msseld.f90, msselo.f90)
+```
+
+### Key Components
+
+- `mssel.f90` — full version supporting all selection types
+- `msseld.f90` — discrete generations only
+- `msselo.f90` — overlapping generations only
+- `seldiscrete.f90` — core discrete-generation selection calculations (`sel1s`, `sel2s`, `sel3s`)
+- `selovlp.f90` — overlapping generation calculations
+- `selinbreeding.f90` — BLUP-based inbreeding calculations
+- `selparameters.f90` — global parameters and shared variables
+- `selroutines.f90` — matrix operations and mathematical utilities (e.g. `invrt`, `trunc`)
+- `seltools.f90` — statistical/distribution functions (`gcef`, `sabf`, `sintvi`, `rawl3`, `dutt*`)
+
+## Development Guidelines
+
+### Working with Fortran Code
+
+- Use gfortran with `-g -O2 -Wall` flags.
+- Maintain module dependency order during compilation (see above).
+- `fortran_linux/` and `fortran_mac/` are **not** independent rewrites of `fortran_orig/` — they're the same code with the minimum edits needed to satisfy a modern compiler. When fixing something in `fortran_mac/`, diff it against `fortran_orig/` first to see exactly what already changed and why, rather than re-deriving from scratch.
+- **Never edit anything under `fortran_orig/`.** If a fix is needed, make it in `fortran_linux/` or `fortran_mac/`.
+
+### Testing
+
+- No automated test suite — testing is done through program execution with sample data (see `examples/` and `fortran_linux/test1.in` / `test1.out`).
+- `make test` / `make docs` referenced in older versions of this file do not exist — there is no build system beyond the direct `gfortran` commands above.
+
+## Common Issues
+
+- **Module not found errors**: ensure compilation order is correct (see Module Dependencies above).
+- **Long line errors**: add `-ffixed-line-length-none` when compiling `fortran_orig/` directly.
+- **Singular matrix errors**: check genetic parameter consistency in input data (correlation matrices must be positive definite).
+- **`fortran_mac/` compilation conflicts**: known and unresolved — use `fortran_linux/` instead unless you're specifically working on the macOS fix.
+
+## Related Project
+
+A separate R package, `SelActionR`, reimplements this program's selection index theory for a modern scriptable interface (targeting CRAN). It lives in its own repository, not this one. This repository is its validation reference — R outputs should be checked against `fortran_linux/test1.in`/`test1.out` and the `examples/` outputs.
+
+## Documentation Resources
+
+- `manual/SelAction_Manual.md` — user manual with GUI instructions
+- `manual/SelAction_Program_Description.md` — technical description and mathematics
+- `docs/SelAction_Technical_Report.pdf` and the per-module reports in `docs/` — detailed derivations
+- `README_Inputs.md` — field-by-field input file mapping guide
