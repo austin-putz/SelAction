@@ -710,13 +710,15 @@
             & cove,covapaq,scovapi,ssumits,sdesttraits,sits,stempsource,sresponse, &
             & stotalresponse,srih,srealg,sb,sinvp,totalh,initindsel,ev,tempev, &
             & fs,hs,s,d,fsgroupsoff,hsgroupsoff,proggroupsoffs,proggroupsoffd,hsgroupsdams, &
-            & proggroupsdams,covcprog,pvals,nsires,neffdams,noffs,scorrfs,scorrhs)
+            & proggroupsdams,covcprog,pvals,nsires,neffdams,noffs,scorrfs,scorrhs, &
+            & fsgroups,hsgroups,proggroups)
           initindsel="d"
           call selection_index(ntraits,dsigmai,sigmah,covp,covas,covad,covaw,covc, &
             & cove,covapaq,dcovapi,dsumits,ddesttraits,dits,dtempsource,dresponse, &
             & dtotalresponse,drih,drealg,db,dinvp,totalh,initindsel,ev,tempev, &
             & fs,hs,s,d,fsgroupsoff,hsgroupsoff,proggroupsoffs,proggroupsoffd,hsgroupsdams, &
-            & proggroupsdams,covcprog,pvald,nsires,neffdams,noffd,dcorrfs,dcorrhs)
+            & proggroupsdams,covcprog,pvald,nsires,neffdams,noffd,dcorrfs,dcorrhs, &
+            & fsgroups,hsgroups,proggroups)
           call covariance_update(ntraits,ssigmai,dsigmai,covp,covas,covad, &
             & covaw,covc,cove,covapaq,ssumits,sits,sresponse,stotalresponse,srealg, &
             & sb,sinvp,dsumits,dits,dresponse,dtotalresponse,drealg,db,dinvp,ks,kd, &
@@ -727,7 +729,8 @@
         call intra_sd(ntraits,ssigmai,dsigmai,covp,covas,covad,covaw,covc,cove,covapaq, &
           & ssumits,dsumits,sdesttraits,ddesttraits,sits,dits,stempsource,dtempsource,sb, &
           & db,fs,hs,s,d,fsgroupsoff,hsgroupsoff,proggroupsoffs,proggroupsoffd, &
-          & hsgroupsdams,proggroupsdams,covcprog,sdcorrfs,sdcorrhs)
+          & hsgroupsdams,proggroupsdams,covcprog,sdcorrfs,sdcorrhs, &
+          & fsgroups,hsgroups,proggroups)
 
 
       !  dFmtblup(nt,nim,nif,infom,infof,v,cas,cad,cis,cid,pm,pf,d,&
@@ -1924,7 +1927,8 @@
             & cove,covapaq,scovapi,ssumits2,sdesttraits2,sits2,stempsource2,sresponse2, &
             & stotalresponse2,srih2,srealg2,sb2,sinvp2,totalh,initindsel,ev,tempev, &
             & fs,hs,s,d,fsgroupsoff,hsgroupsoff,proggroupsoffs,proggroupsoffd,hsgroupsdams, &
-            & proggroupsdams,covcprog,pvalse,nsires,neffdams,noffs,scorrfs2,scorrhs2)
+            & proggroupsdams,covcprog,pvalse,nsires,neffdams,noffs,scorrfs2,scorrhs2, &
+            & fsgroups,hsgroups,proggroups)
           initindsel="d"
      !   print *," dams "
      !   print *," "
@@ -1932,7 +1936,8 @@
             & cove,covapaq,dcovapi,dsumits2,ddesttraits2,dits2,dtempsource2,dresponse2, &
             & dtotalresponse2,drih2,drealg2,db2,dinvp2,totalh,initindsel,ev,tempev, &
             & fs,hs,s,d,fsgroupsoff,hsgroupsoff,proggroupsoffs,proggroupsoffd,hsgroupsdams, &
-            & proggroupsdams,covcprog,pvalde,nsires,neffdams,noffd,dcorrfs2,dcorrhs2)
+            & proggroupsdams,covcprog,pvalde,nsires,neffdams,noffd,dcorrfs2,dcorrhs2, &
+            & fsgroups,hsgroups,proggroups)
 
           call covariance_update(ntraits,ssigmai2,dsigmai2,covp,covas,covad, &
             & covaw,covc,cove,covapaq,ssumits2,sits2,sresponse2,stotalresponse2,srealg2, &
@@ -1955,7 +1960,8 @@
             & cove,covapaq,scovapi,ssumits,sdesttraits,sits,stempsource,sresponse, &
             & stotalresponse,srih,srealg,sb,sinvp,totalh,initindsel,ev,tempev, &
             & fs,hs,s,d,fsgroupsoff,hsgroupsoff,proggroupsoffs,proggroupsoffd,hsgroupsdams, &
-            & proggroupsdams,covcprog,pvals,nsires,neffdams,noffs,scorrfs,scorrhs)
+            & proggroupsdams,covcprog,pvals,nsires,neffdams,noffs,scorrfs,scorrhs, &
+            & fsgroups,hsgroups,proggroups)
     !    print *,"srih",srih
 
         call covai_update(ntraits,ssigmai,ssumits,sresponsec,stotalresponsec, &
@@ -1979,7 +1985,8 @@
             & cove,covapaq,dcovapi,dsumits,ddesttraits,dits,dtempsource,dresponse, &
             & dtotalresponse,drih,drealg,db,dinvp,totalh,initindsel,ev,tempev, &
             & fs,hs,s,d,fsgroupsoff,hsgroupsoff,proggroupsoffs,proggroupsoffd,hsgroupsdams, &
-            & proggroupsdams,covcprog,pvald,nsires,neffdams,noffd,dcorrfs,dcorrhs)
+            & proggroupsdams,covcprog,pvald,nsires,neffdams,noffd,dcorrfs,dcorrhs, &
+            & fsgroups,hsgroups,proggroups)
       !  print *,"drih",drih
 
         call covai_update(ntraits,dsigmai,dsumits,dresponsec,dtotalresponsec, &
@@ -2396,13 +2403,15 @@
             & cove,covapaq,dcovapi,ssumits2,sdesttraits2,sits2,stempsource2,sresponse2, &
             & stotalresponse2,srih2,srealg2,sb2,sinvp2,totalh,initindsel,ev,tempev, &
             & fs,hs,s,d,fsgroupsoff,hsgroupsoff,proggroupsoffs,proggroupsoffd,hsgroupsdams, &
-            & proggroupsdams,covcprog,pvalse,nsires,neffdams,noffs,scorrfs2,scorrhs2)
+            & proggroupsdams,covcprog,pvalse,nsires,neffdams,noffs,scorrfs2,scorrhs2, &
+            & fsgroups,hsgroups,proggroups)
           initindsel="d"
           call selection_index(ntraits,dsigmai2,sigmah,covp,covas,covad,covaw,covc, &
             & cove,covapaq,dcovapi,dsumits2,ddesttraits2,dits2,dtempsource2,dresponse2, &
             & dtotalresponse2,drih2,drealg2,db2,dinvp2,totalh,initindsel,ev,tempev, &
             & fs,hs,s,d,fsgroupsoff,hsgroupsoff,proggroupsoffs,proggroupsoffd,hsgroupsdams, &
-            & proggroupsdams,covcprog,pvalde,nsires,neffdams,noffd,dcorrfs2,dcorrhs2)
+            & proggroupsdams,covcprog,pvalde,nsires,neffdams,noffd,dcorrfs2,dcorrhs2, &
+            & fsgroups,hsgroups,proggroups)
 
         ! calculation of truncation points and some conversions of real*8
         call racine
@@ -3598,13 +3607,15 @@
             & cove,covapaq,scovapi,ssumits3,sdesttraits3,sits3,stempsource3,sresponse3, &
             & stotalresponse3,srih3,srealg3,sb3,sinvp3,totalh,initindsel,ev,tempev, &
             & fs,hs,s,d,fsgroupsoff,hsgroupsoff,proggroupsoffs,proggroupsoffd,hsgroupsdams, &
-            & proggroupsdams,covcprog,pvalse,nsires,neffdams,noffs,scorrfs3,scorrhs3)
+            & proggroupsdams,covcprog,pvalse,nsires,neffdams,noffs,scorrfs3,scorrhs3, &
+            & fsgroups,hsgroups,proggroups)
           initindsel="d"
           call selection_index(ntraits,dsigmai3,sigmah,covp,covas,covad,covaw,covc, &
             & cove,covapaq,dcovapi,dsumits3,ddesttraits3,dits3,dtempsource3,dresponse3, &
             & dtotalresponse3,drih3,drealg3,db3,dinvp3,totalh,initindsel,ev,tempev, &
             & fs,hs,s,d,fsgroupsoff,hsgroupsoff,proggroupsoffs,proggroupsoffd,hsgroupsdams, &
-            & proggroupsdams,covcprog,pvalde,nsires,neffdams,noffd,dcorrfs3,dcorrhs3)
+            & proggroupsdams,covcprog,pvalde,nsires,neffdams,noffd,dcorrfs3,dcorrhs3, &
+            & fsgroups,hsgroups,proggroups)
 
           call covariance_update(ntraits,ssigmai3,dsigmai3,covp,covas,covad, &
             & covaw,covc,cove,covapaq,ssumits3,sits3,sresponse3,stotalresponse3,srealg3, &
@@ -3624,7 +3635,8 @@
             & cove,covapaq,scovapi,ssumits,sdesttraits,sits,stempsource,sresponse, &
             & stotalresponse,srih,srealg,sb,sinvp,totalh,initindsel,ev,tempev, &
             & fs,hs,s,d,fsgroupsoff,hsgroupsoff,proggroupsoffs,proggroupsoffd,hsgroupsdams, &
-            & proggroupsdams,covcprog,pvals,nsires,neffdams,noffs,scorrfs,scorrhs)
+            & proggroupsdams,covcprog,pvals,nsires,neffdams,noffs,scorrfs,scorrhs, &
+            & fsgroups,hsgroups,proggroups)
         call covai_update(ntraits,ssigmai,ssumits,sresponsec,stotalresponsec, &
           & srealg,sb,pvals,noffs,neffdams,nsires,scorrfs,scorrhs,srealp)
         call trunc(pvals,dum1,dum2,is,ks)
@@ -3639,7 +3651,8 @@
             & cove,covapaq,dcovapi,dsumits,ddesttraits,dits,dtempsource,dresponse, &
             & dtotalresponse,drih,drealg,db,dinvp,totalh,initindsel,ev,tempev, &
             & fs,hs,s,d,fsgroupsoff,hsgroupsoff,proggroupsoffs,proggroupsoffd,hsgroupsdams, &
-            & proggroupsdams,covcprog,pvald,nsires,neffdams,noffd,dcorrfs,dcorrhs)
+            & proggroupsdams,covcprog,pvald,nsires,neffdams,noffd,dcorrfs,dcorrhs, &
+            & fsgroups,hsgroups,proggroups)
         call covai_update(ntraits,dsigmai,dsumits,dresponsec,dtotalresponsec, &
           & drealg,db,pvald,noffd,neffdams,nsires,dcorrfs,dcorrhs,drealp)
         call trunc(pvald,dum1,dum2,id,kd)
@@ -3857,13 +3870,15 @@
             & cove,covapaq,scovapi,ssumits2,sdesttraits2,sits2,stempsource2,sresponse2, &
             & stotalresponse2,srih2,srealg2,sb2,sinvp2,totalh,initindsel,ev,tempev, &
             & fs,hs,s,d,fsgroupsoff,hsgroupsoff,proggroupsoffs,proggroupsoffd,hsgroupsdams, &
-            & proggroupsdams,covcprog,pvals*pvals2,nsires,neffdams,noffs,scorrfs2,scorrhs2)
+            & proggroupsdams,covcprog,pvals*pvals2,nsires,neffdams,noffs,scorrfs2,scorrhs2, &
+            & fsgroups,hsgroups,proggroups)
           initindsel="d"
           call selection_index(ntraits,dsigmai2,sigmah,covp,covas,covad,covaw,covc, &
             & cove,covapaq,dcovapi,dsumits2,ddesttraits2,dits2,dtempsource2,dresponse2, &
             & dtotalresponse2,drih2,drealg2,db2,dinvp2,totalh,initindsel,ev,tempev, &
             & fs,hs,s,d,fsgroupsoff,hsgroupsoff,proggroupsoffs,proggroupsoffd,hsgroupsdams, &
-            & proggroupsdams,covcprog,pvald*pvald2,nsires,neffdams,noffd,dcorrfs2,dcorrhs2)
+            & proggroupsdams,covcprog,pvald*pvald2,nsires,neffdams,noffd,dcorrfs2,dcorrhs2, &
+            & fsgroups,hsgroups,proggroups)
 
         ! print index 2 information
  	i=0
@@ -4390,13 +4405,15 @@
           & cove,covapaq,scovapi,ssumits3,sdesttraits3,sits3,stempsource3,sresponse3, &
           & stotalresponse3,srih3,srealg3,sb3,sinvp3,totalh,initindsel,ev,tempev, &
           & fs,hs,s,d,fsgroupsoff,hsgroupsoff,proggroupsoffs,proggroupsoffd,hsgroupsdams, &
-          & proggroupsdams,covcprog,pvalse,nsires,neffdams,noffs,scorrfs3,scorrhs3)
+          & proggroupsdams,covcprog,pvalse,nsires,neffdams,noffs,scorrfs3,scorrhs3, &
+          & fsgroups,hsgroups,proggroups)
         initindsel="d"
         call selection_index(ntraits,dsigmai3,sigmah,covp,covas,covad,covaw,covc, &
           & cove,covapaq,dcovapi,dsumits3,ddesttraits3,dits3,dtempsource3,dresponse3, &
           & dtotalresponse3,drih3,drealg3,db3,dinvp3,totalh,initindsel,ev,tempev, &
           & fs,hs,s,d,fsgroupsoff,hsgroupsoff,proggroupsoffs,proggroupsoffd,hsgroupsdams, &
-          & proggroupsdams,covcprog,pvalde,nsires,neffdams,noffd,dcorrfs3,dcorrhs3)
+          & proggroupsdams,covcprog,pvalde,nsires,neffdams,noffd,dcorrfs3,dcorrhs3, &
+          & fsgroups,hsgroups,proggroups)
 
         corrsrih12=srih/srih2
         if (corrsrih12.gt.0.93) then

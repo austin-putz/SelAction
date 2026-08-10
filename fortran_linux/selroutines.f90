@@ -1459,7 +1459,8 @@ subroutine invrt(a,ia,n)
           & cove,covapaq,covapi,sumits,locdesttraits,locits,loctempsource,locresponse, &
           & loctotalresponse,locrih,realg,locb,locinvp,loctotalh,locinitindsel, &
           & locev,loctempev,fs,hs,s,d,fsgroupsoff,hsgroupsoff,proggroupsoffs,proggroupsoffd, &
-          & hsgroupsdams,proggroupsdams,covcprog,pval,nsires,neffdams,noff,corrfs,corrhs)
+          & hsgroupsdams,proggroupsdams,covcprog,pval,nsires,neffdams,noff,corrfs,corrhs, &
+          & locfsgroups,lochsgroups,locprogroups)
 
 
         use seltools
@@ -1468,6 +1469,7 @@ subroutine invrt(a,ia,n)
         implicit none
 
         integer :: sumits,locntraits,i,j,k,l,m,n,p,q,loctotalh
+        integer :: locfsgroups,lochsgroups,locprogroups
         integer, dimension(locntraits) :: locits
         integer, dimension(locntraits,84) :: loctempsource
         real, dimension(20) :: fsgroupsoff,hsgroupsoff,proggroupsoffs,hsgroupsdams, &
@@ -1534,7 +1536,7 @@ subroutine invrt(a,ia,n)
             ! full-sib groups
             do i=1,20
               do j=1,20
-                if (i.eq.j) then
+                if (i.eq.j .and. i.le.locfsgroups) then
                   matp(p,q,i+3,j+3)=covas(p,q)+covad(p,q)+covc(p,q)+ &
                     & (covaw(p,q)/fsgroupsoff(i))+(cove(p,q)/fsgroupsoff(i))
                 else
@@ -1563,7 +1565,7 @@ subroutine invrt(a,ia,n)
             ! half-sib groups
             do i=1,20
               do j=1,20
-                if (i.eq.j) then
+                if (i.eq.j .and. i.le.lochsgroups) then
                   matp(p,q,i+23,j+23)=covas(p,q)+(covad(p,q)/hsgroupsdams(i))+ &
                     & (covc(p,q)/hsgroupsdams(i))+(covaw(p,q)/hsgroupsoff(i))+ &
                     & (cove(p,q)/hsgroupsoff(i))
@@ -1575,7 +1577,7 @@ subroutine invrt(a,ia,n)
             ! half-sib groups - mean ebv dams of half-sib groups
             do i=1,20
               do j=1,20
-                if (i.eq.j) then
+                if (i.eq.j .and. i.le.lochsgroups) then
                   matp(p,q,i+23,j+43)=(0.5*d(p,q))/hsgroupsdams(i)
                 else
                   matp(p,q,i+23,j+43)=0.0
@@ -1591,7 +1593,7 @@ subroutine invrt(a,ia,n)
             ! mean ebv dams of half-sib groups
             do i=1,20
               do j=1,20
-                if (i.eq.j) then
+                if (i.eq.j .and. i.le.lochsgroups) then
                   matp(p,q,i+43,j+43)=d(p,q)/hsgroupsdams(i)
                 else
                   matp(p,q,i+43,j+43)=0.0
@@ -1608,7 +1610,7 @@ subroutine invrt(a,ia,n)
             do i=1,20
               do j=1,20
                 if (locinitindsel.eq."s") then  ! individual=male
-                  if (i.eq.j) then
+                  if (i.eq.j .and. i.le.locprogroups) then
                     matp(p,q,i+63,j+63)=(0.25*covapaq(p,q))+ &
                       & ((0.25*covapaq(p,q))/proggroupsdams(i))+ &
                       & (covcprog(p,q)/proggroupsdams(i))+(covaw(p,q)/proggroupsoffs(i))+ &
@@ -1617,7 +1619,7 @@ subroutine invrt(a,ia,n)
                     matp(p,q,i+63,j+63)=0.25*covapaq(p,q)
                   end if
                 else  ! individual=female
-                  if (i.eq.j) then
+                  if (i.eq.j .and. i.le.locprogroups) then
                     matp(p,q,i+63,j+63)=(0.5*covapaq(p,q))+ &
                       & covcprog(p,q)+(covaw(p,q)/proggroupsoffd(i))+ &
                       & (cove(p,q)/proggroupsoffd(i))
@@ -1811,7 +1813,11 @@ subroutine invrt(a,ia,n)
   	    matrfs(p,q,3,3)=s(p,q)
             ! own performance - all groups
             do i=1,20
-              matrfs(p,q,1,i+3)=fs(p,q)+((covaw(p,q)+cove(p,q))/sum(fsgroupsoff))
+              if (locfsgroups.gt.0) then
+                matrfs(p,q,1,i+3)=fs(p,q)+((covaw(p,q)+cove(p,q))/sum(fsgroupsoff))
+              else
+                matrfs(p,q,1,i+3)=fs(p,q)
+              end if
               matrfs(p,q,1,i+23)=hs(p,q)
               matrfs(p,q,1,i+43)=0.0
               matrfs(p,q,1,i+63)=(0.5*covas(p,q))+(0.5*covad(p,q))
@@ -1833,7 +1839,7 @@ subroutine invrt(a,ia,n)
             ! full-sib groups
             do i=1,20
               do j=1,20
-                if (i.eq.j) then
+                if (i.eq.j .and. i.le.locfsgroups) then
                   matrfs(p,q,i+3,j+3)=covas(p,q)+covad(p,q)+covc(p,q)+ &
                     & (((covaw(p,q)+cove(p,q))*(fsgroupsoff(i)-(fsgroupsoff(i)/sum(fsgroupsoff))))/(fsgroupsoff(i)**2))
                 else
@@ -1856,14 +1862,18 @@ subroutine invrt(a,ia,n)
             ! full-sib groups - progeny groups
             do i=1,20
               do j=1,20
-                matrfs(p,q,i+3,j+63)=(0.5*covas(p,q))+(0.5*covad(p,q))+ &
-                  & (0.5*covaw(p,q)/sum(fsgroupsoff))
+                if (locfsgroups.gt.0) then
+                  matrfs(p,q,i+3,j+63)=(0.5*covas(p,q))+(0.5*covad(p,q))+ &
+                    & (0.5*covaw(p,q)/sum(fsgroupsoff))
+                else
+                  matrfs(p,q,i+3,j+63)=(0.5*covas(p,q))+(0.5*covad(p,q))
+                end if
               end do
             end do
             ! half-sib groups
             do i=1,20
               do j=1,20
-                if (i.eq.j) then
+                if (i.eq.j .and. i.le.lochsgroups) then
                   matrfs(p,q,i+23,j+23)=covas(p,q)+(covad(p,q)/hsgroupsdams(i))+ &
                     & (covc(p,q)/hsgroupsdams(i))+(covaw(p,q)/hsgroupsoff(i))+ &
                     & (cove(p,q)/hsgroupsoff(i))
@@ -1875,7 +1885,7 @@ subroutine invrt(a,ia,n)
             ! half-sib groups - mean ebv dams of half-sib groups
             do i=1,20
               do j=1,20
-                if (i.eq.j) then
+                if (i.eq.j .and. i.le.lochsgroups) then
                   matrfs(p,q,i+23,j+43)=(0.5*d(p,q))/hsgroupsdams(i)
                 else
                   matrfs(p,q,i+23,j+43)=0.0
@@ -1891,7 +1901,7 @@ subroutine invrt(a,ia,n)
             ! mean ebv dams of half-sib groups
             do i=1,20
               do j=1,20
-                if (i.eq.j) then
+                if (i.eq.j .and. i.le.lochsgroups) then
                   matrfs(p,q,i+43,j+43)=d(p,q)/hsgroupsdams(i)
                 else
                   matrfs(p,q,i+43,j+43)=0.0
@@ -1961,16 +1971,26 @@ subroutine invrt(a,ia,n)
             ! own performance - all groups
             do i=1,20
               matrhs(p,q,1,i+3)=hs(p,q)
-              matrhs(p,q,1,i+23)=covas(p,q)+(covad(p,q)/sum(hsgroupsdams))+ &
-                & ((covaw(p,q)+cove(p,q))/sum(hsgroupsoff))
-              matrhs(p,q,1,i+43)=(0.5*d(p,q))/sum(hsgroupsdams)
+              if (lochsgroups.gt.0) then
+                matrhs(p,q,1,i+23)=covas(p,q)+(covad(p,q)/sum(hsgroupsdams))+ &
+                  & ((covaw(p,q)+cove(p,q))/sum(hsgroupsoff))
+                matrhs(p,q,1,i+43)=(0.5*d(p,q))/sum(hsgroupsdams)
+              else
+                matrhs(p,q,1,i+23)=covas(p,q)
+                matrhs(p,q,1,i+43)=0.0
+              end if
               matrhs(p,q,1,i+63)=0.5*hs(p,q)
             end do
             ! ebv dam -  all groups
             do i=1,20
               matrhs(p,q,2,i+3)=0.0
-              matrhs(p,q,2,i+23)=(0.5*d(p,q))/sum(hsgroupsdams)
-              matrhs(p,q,2,i+43)=d(p,q)/sum(hsgroupsdams)
+              if (lochsgroups.gt.0) then
+                matrhs(p,q,2,i+23)=(0.5*d(p,q))/sum(hsgroupsdams)
+                matrhs(p,q,2,i+43)=d(p,q)/sum(hsgroupsdams)
+              else
+                matrhs(p,q,2,i+23)=0.0
+                matrhs(p,q,2,i+43)=0.0
+              end if
               matrhs(p,q,2,i+63)=0.0
             end do
             ! ebv sire - all groups
@@ -1989,14 +2009,22 @@ subroutine invrt(a,ia,n)
             ! full-sib groups - half-sib groups
             do i=1,20
               do j=1,20
-                matrhs(p,q,i+3,j+23)=covas(p,q)+(covad(p,q)/sum(hsgroupsdams))+ &
-                  & ((covaw(p,q)+cove(p,q))/sum(hsgroupsoff))
+                if (lochsgroups.gt.0) then
+                  matrhs(p,q,i+3,j+23)=covas(p,q)+(covad(p,q)/sum(hsgroupsdams))+ &
+                    & ((covaw(p,q)+cove(p,q))/sum(hsgroupsoff))
+                else
+                  matrhs(p,q,i+3,j+23)=covas(p,q)
+                end if
               end do
             end do
             ! full-sib groups - mean ebv dams of half-sib groups
             do i=1,20
               do j=1,20
-                matrhs(p,q,i+3,j+43)=(0.5*d(p,q))/sum(hsgroupsdams)
+                if (lochsgroups.gt.0) then
+                  matrhs(p,q,i+3,j+43)=(0.5*d(p,q))/sum(hsgroupsdams)
+                else
+                  matrhs(p,q,i+3,j+43)=0.0
+                end if
               end do
             end do
             ! full-sib groups - progeny groups
@@ -2008,7 +2036,7 @@ subroutine invrt(a,ia,n)
             ! half-sib groups
             do i=1,20
               do j=1,20
-                if (i.eq.j) then
+                if (i.eq.j .and. lochsgroups.gt.0) then
                   matrhs(p,q,i+23,j+23)=covas(p,q)+ &
                     & (covad(p,q)*((sum(hsgroupsdams)-(hsgroupsoff(i)/sum(hsgroupsoff)))/(sum(hsgroupsdams))**2))+ &
                     & ((covaw(p,q)+cove(p,q))*(sum(hsgroupsdams)-(hsgroupsoff(i)/sum(hsgroupsoff)))/ &
@@ -2021,7 +2049,7 @@ subroutine invrt(a,ia,n)
             ! half-sib groups - mean ebv dams of half-sib groups
             do i=1,20
               do j=1,20
-                if (i.eq.j) then
+                if (i.eq.j .and. i.le.lochsgroups) then
                   matrhs(p,q,i+23,j+43)=0.5*d(p,q)*((hsgroupsdams(i)-1)/(hsgroupsdams(i)**2))
                 else
                   matrhs(p,q,i+23,j+43)=0.0
@@ -2031,14 +2059,18 @@ subroutine invrt(a,ia,n)
             ! half-sib groups - progeny groups
             do i=1,20
               do j=1,20
-                matrhs(p,q,i+23,j+63)=(0.5*covas(p,q))+(0.5*covad(p,q)/sum(hsgroupsdams))+ &
-                  & (0.5*covaw(p,q)/sum(hsgroupsoff))
+                if (lochsgroups.gt.0) then
+                  matrhs(p,q,i+23,j+63)=(0.5*covas(p,q))+(0.5*covad(p,q)/sum(hsgroupsdams))+ &
+                    & (0.5*covaw(p,q)/sum(hsgroupsoff))
+                else
+                  matrhs(p,q,i+23,j+63)=0.5*covas(p,q)
+                end if
               end do
             end do
             ! mean ebv dams of half-sib groups
             do i=1,20
               do j=1,20
-                if (i.eq.j) then
+                if (i.eq.j .and. i.le.lochsgroups) then
                   matrhs(p,q,i+43,j+43)=d(p,q)*((hsgroupsdams(i)-1)/(hsgroupsdams(i)**2))
                 else
                   matrhs(p,q,i+43,j+43)=0.0
@@ -2048,7 +2080,11 @@ subroutine invrt(a,ia,n)
             ! mean ebv of the dams of half-sib groups - progeny groups
             do i=1,20
               do j=1,20
-                matrhs(p,q,i+43,j+63)=(0.25*d(p,q))/(sum(hsgroupsdams))
+                if (lochsgroups.gt.0) then
+                  matrhs(p,q,i+43,j+63)=(0.25*d(p,q))/(sum(hsgroupsdams))
+                else
+                  matrhs(p,q,i+43,j+63)=0.0
+                end if
               end do
             end do
             ! progeny groups
@@ -2726,12 +2762,14 @@ subroutine invrt(a,ia,n)
         subroutine intra_sd(locntraits,ssigmai,dsigmai,covp,covas,covad,covaw,covc,cove,covapaq, &
           & ssumits,dsumits,sdesttraits,ddesttraits,sits,dits,stempsource,dtempsource,sb, &
           & db,fs,hs,s,d,fsgroupsoff,hsgroupsoff,proggroupsoffs,proggroupsoffd, &
-          & hsgroupsdams,proggroupsdams,covcprog,sdcorrfs,sdcorrhs)
+          & hsgroupsdams,proggroupsdams,covcprog,sdcorrfs,sdcorrhs, &
+          & locfsgroups,lochsgroups,locprogroups)
 
 
         implicit none
 
         integer :: ssumits,dsumits,locntraits,i,j,k,l,m,n,p,q
+        integer :: locfsgroups,lochsgroups,locprogroups
         integer, dimension(locntraits) :: sits,dits
         integer, dimension(locntraits,84) :: stempsource,dtempsource
         real, dimension(20) :: fsgroupsoff,hsgroupsoff,proggroupsoffs,hsgroupsdams, &
@@ -2762,7 +2800,11 @@ subroutine invrt(a,ia,n)
   	    matrfs(p,q,3,3)=s(p,q)
             ! own performance - all groups
             do i=1,20
-              matrfs(p,q,1,i+3)=fs(p,q)+((covaw(p,q)+cove(p,q))/sum(fsgroupsoff))
+              if (locfsgroups.gt.0) then
+                matrfs(p,q,1,i+3)=fs(p,q)+((covaw(p,q)+cove(p,q))/sum(fsgroupsoff))
+              else
+                matrfs(p,q,1,i+3)=fs(p,q)
+              end if
               matrfs(p,q,1,i+23)=hs(p,q)
               matrfs(p,q,1,i+43)=0.0
               matrfs(p,q,1,i+63)=(0.5*covas(p,q))+(0.5*covad(p,q))
@@ -2784,7 +2826,7 @@ subroutine invrt(a,ia,n)
             ! full-sib groups
             do i=1,20
               do j=1,20
-                if (i.eq.j) then
+                if (i.eq.j .and. i.le.locfsgroups) then
                   matrfs(p,q,i+3,j+3)=covas(p,q)+covad(p,q)+covc(p,q)+ &
                     & (((covaw(p,q)+cove(p,q))*(fsgroupsoff(i)-(fsgroupsoff(i)/sum(fsgroupsoff))))/(fsgroupsoff(i)**2))
                 else
@@ -2807,14 +2849,18 @@ subroutine invrt(a,ia,n)
             ! full-sib groups - progeny groups
             do i=1,20
               do j=1,20
-                matrfs(p,q,i+3,j+63)=(0.5*covas(p,q))+(0.5*covad(p,q))+ &
-                  & (0.5*covaw(p,q)/sum(fsgroupsoff))
+                if (locfsgroups.gt.0) then
+                  matrfs(p,q,i+3,j+63)=(0.5*covas(p,q))+(0.5*covad(p,q))+ &
+                    & (0.5*covaw(p,q)/sum(fsgroupsoff))
+                else
+                  matrfs(p,q,i+3,j+63)=(0.5*covas(p,q))+(0.5*covad(p,q))
+                end if
               end do
             end do
             ! half-sib groups
             do i=1,20
               do j=1,20
-                if (i.eq.j) then
+                if (i.eq.j .and. i.le.lochsgroups) then
                   matrfs(p,q,i+23,j+23)=covas(p,q)+(covad(p,q)/hsgroupsdams(i))+ &
                     & (covc(p,q)/hsgroupsdams(i))+(covaw(p,q)/hsgroupsoff(i))+ &
                     & (cove(p,q)/hsgroupsoff(i))
@@ -2826,7 +2872,7 @@ subroutine invrt(a,ia,n)
             ! half-sib groups - mean ebv dams of half-sib groups
             do i=1,20
               do j=1,20
-                if (i.eq.j) then
+                if (i.eq.j .and. i.le.lochsgroups) then
                   matrfs(p,q,i+23,j+43)=(0.5*d(p,q))/hsgroupsdams(i)
                 else
                   matrfs(p,q,i+23,j+43)=0.0
@@ -2842,7 +2888,7 @@ subroutine invrt(a,ia,n)
             ! mean ebv dams of half-sib groups
             do i=1,20
               do j=1,20
-                if (i.eq.j) then
+                if (i.eq.j .and. i.le.lochsgroups) then
                   matrfs(p,q,i+43,j+43)=d(p,q)/hsgroupsdams(i)
                 else
                   matrfs(p,q,i+43,j+43)=0.0
@@ -2912,16 +2958,26 @@ subroutine invrt(a,ia,n)
             ! own performance - all groups
             do i=1,20
               matrhs(p,q,1,i+3)=hs(p,q)
-              matrhs(p,q,1,i+23)=covas(p,q)+(covad(p,q)/sum(hsgroupsdams))+ &
-                & ((covaw(p,q)+cove(p,q))/sum(hsgroupsoff))
-              matrhs(p,q,1,i+43)=(0.5*d(p,q))/sum(hsgroupsdams)
+              if (lochsgroups.gt.0) then
+                matrhs(p,q,1,i+23)=covas(p,q)+(covad(p,q)/sum(hsgroupsdams))+ &
+                  & ((covaw(p,q)+cove(p,q))/sum(hsgroupsoff))
+                matrhs(p,q,1,i+43)=(0.5*d(p,q))/sum(hsgroupsdams)
+              else
+                matrhs(p,q,1,i+23)=covas(p,q)
+                matrhs(p,q,1,i+43)=0.0
+              end if
               matrhs(p,q,1,i+63)=0.5*hs(p,q)
             end do
             ! ebv dam -  all groups
             do i=1,20
               matrhs(p,q,2,i+3)=0.0
-              matrhs(p,q,2,i+23)=(0.5*d(p,q))/sum(hsgroupsdams)
-              matrhs(p,q,2,i+43)=d(p,q)/sum(hsgroupsdams)
+              if (lochsgroups.gt.0) then
+                matrhs(p,q,2,i+23)=(0.5*d(p,q))/sum(hsgroupsdams)
+                matrhs(p,q,2,i+43)=d(p,q)/sum(hsgroupsdams)
+              else
+                matrhs(p,q,2,i+23)=0.0
+                matrhs(p,q,2,i+43)=0.0
+              end if
               matrhs(p,q,2,i+63)=0.0
             end do
             ! ebv sire - all groups
@@ -2940,14 +2996,22 @@ subroutine invrt(a,ia,n)
             ! full-sib groups - half-sib groups
             do i=1,20
               do j=1,20
-                matrhs(p,q,i+3,j+23)=covas(p,q)+(covad(p,q)/sum(hsgroupsdams))+ &
-                  & ((covaw(p,q)+cove(p,q))/sum(hsgroupsoff))
+                if (lochsgroups.gt.0) then
+                  matrhs(p,q,i+3,j+23)=covas(p,q)+(covad(p,q)/sum(hsgroupsdams))+ &
+                    & ((covaw(p,q)+cove(p,q))/sum(hsgroupsoff))
+                else
+                  matrhs(p,q,i+3,j+23)=covas(p,q)
+                end if
               end do
             end do
             ! full-sib groups - mean ebv dams of half-sib groups
             do i=1,20
               do j=1,20
-                matrhs(p,q,i+3,j+43)=(0.5*d(p,q))/sum(hsgroupsdams)
+                if (lochsgroups.gt.0) then
+                  matrhs(p,q,i+3,j+43)=(0.5*d(p,q))/sum(hsgroupsdams)
+                else
+                  matrhs(p,q,i+3,j+43)=0.0
+                end if
               end do
             end do
             ! full-sib groups - progeny groups
@@ -2959,7 +3023,7 @@ subroutine invrt(a,ia,n)
             ! half-sib groups
             do i=1,20
               do j=1,20
-                if (i.eq.j) then
+                if (i.eq.j .and. lochsgroups.gt.0) then
                   matrhs(p,q,i+23,j+23)=covas(p,q)+ &
                     & (covad(p,q)*((sum(hsgroupsdams)-(hsgroupsoff(i)/sum(hsgroupsoff)))/(sum(hsgroupsdams))**2))+ &
                     & ((covaw(p,q)+cove(p,q))*(sum(hsgroupsdams)-(hsgroupsoff(i)/sum(hsgroupsoff)))/ &
@@ -2972,7 +3036,7 @@ subroutine invrt(a,ia,n)
             ! half-sib groups - mean ebv dams of half-sib groups
             do i=1,20
               do j=1,20
-                if (i.eq.j) then
+                if (i.eq.j .and. i.le.lochsgroups) then
                   matrhs(p,q,i+23,j+43)=0.5*d(p,q)*((hsgroupsdams(i)-1)/(hsgroupsdams(i)**2))
                 else
                   matrhs(p,q,i+23,j+43)=0.0
@@ -2982,14 +3046,18 @@ subroutine invrt(a,ia,n)
             ! half-sib groups - progeny groups
             do i=1,20
               do j=1,20
-                matrhs(p,q,i+23,j+63)=(0.5*covas(p,q))+(0.5*covad(p,q)/sum(hsgroupsdams))+ &
-                  & (0.5*covaw(p,q)/sum(hsgroupsoff))
+                if (lochsgroups.gt.0) then
+                  matrhs(p,q,i+23,j+63)=(0.5*covas(p,q))+(0.5*covad(p,q)/sum(hsgroupsdams))+ &
+                    & (0.5*covaw(p,q)/sum(hsgroupsoff))
+                else
+                  matrhs(p,q,i+23,j+63)=0.5*covas(p,q)
+                end if
               end do
             end do
             ! mean ebv dams of half-sib groups
             do i=1,20
               do j=1,20
-                if (i.eq.j) then
+                if (i.eq.j .and. i.le.lochsgroups) then
                   matrhs(p,q,i+43,j+43)=d(p,q)*((hsgroupsdams(i)-1)/(hsgroupsdams(i)**2))
                 else
                   matrhs(p,q,i+43,j+43)=0.0
@@ -2999,7 +3067,11 @@ subroutine invrt(a,ia,n)
             ! mean ebv of the dams of half-sib groups - progeny groups
             do i=1,20
               do j=1,20
-                matrhs(p,q,i+43,j+63)=(0.25*d(p,q))/(sum(hsgroupsdams))
+                if (lochsgroups.gt.0) then
+                  matrhs(p,q,i+43,j+63)=(0.25*d(p,q))/(sum(hsgroupsdams))
+                else
+                  matrhs(p,q,i+43,j+63)=0.0
+                end if
               end do
             end do
             ! progeny groups

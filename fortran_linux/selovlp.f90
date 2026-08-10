@@ -751,7 +751,8 @@
                   & ototalresponse,rih(p),srealg,sb,sinvp,totalh,initindsel,ev,tempev, &
                   & fs,hs,s,d,fsgroupsoff,hsgroupsoff,proggroupsoffs,proggroupsoffd, &
                   & hsgroupsdams,proggroupsdams,covcprog,pvalcl(p), &
-                  & nsires,neffdams,noffs,corrfs(p),corrhs(p))
+                  & nsires,neffdams,noffs,corrfs(p),corrhs(p), &
+                  & fsgroups,hsgroups,proggroups)
                 call ovlp_cov_update(ntraits,osigmai(p),covp,covas, &
                   & covaw,covc,cove,covapaq,sumits(p),sits,srealg,sb, &
                   & sinvp,ks,tempev,scovapi,fs,hs,s)
@@ -764,7 +765,8 @@
                   & ototalresponse,rih(p),srealg,sb,sinvp,totalh,initindsel,ev,tempev, &
                   & fs,hs,s,d,fsgroupsoff,hsgroupsoff,proggroupsoffs,proggroupsoffd, &
                   & hsgroupsdams,proggroupsdams,covcprog,pvalcl(p), &
-                  & nsires,neffdams,noffd,corrfs(p),corrhs(p))
+                  & nsires,neffdams,noffd,corrfs(p),corrhs(p), &
+                  & fsgroups,hsgroups,proggroups)
                 call ovlp_cov_update(ntraits,osigmai(p),covp,covad, &
                   & covaw,covc,cove,covapaq,sumits(p),sits,srealg,sb, &
                   & sinvp,kd,tempev,dcovapi,fs,hs,d)

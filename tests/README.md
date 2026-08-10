@@ -98,40 +98,62 @@ regression" or "definitely safe to regenerate" - check whether the affected
 value is genuinely near a rounding boundary (as `blup1`'s was) before doing
 either.
 
-## Known residual issue: unconfigured group-type matrix blocks
+## Resolved: unconfigured group-type matrix blocks
 
-`selroutines.f90`'s `selection_index` builds `matp`/`matrhs`/`matrfs`
-"maximum matrix" blocks by unconditionally looping `i=1,20`/`j=1,20` for
-full-sib, half-sib, and progeny groups, regardless of whether that many
-groups - or *any* groups of that type - were actually configured for the
-run. `fsgroupsoff`/`hsgroupsoff`/`hsgroupsdams`/`proggroupsdams`/
-`proggroupsoffs`/`proggroupsoffd` (fixed `real, dimension(20)` in
-`selparameters.f90`) are zero-initialized before use (see `sel1s`/`sel2s`/
-`sel3s` in `seldiscrete.f90` and `ovlp` in `selovlp.f90`), which closes a
-genuine uninitialized-read bug for indices beyond a *partially* configured
-group count (confirmed via a `-finit-real=snan -ffpe-trap=invalid,zero,overflow`
-debug build that segfaulted at `selroutines.f90:1539` before the fix).
-However, when a group *type* isn't used at all (e.g. no progeny groups
-configured, true for all current fixtures), the same unconditional loops
-still divide by those now-well-defined-but-zero array slots, which is
-mathematically undefined (`0.0/0.0` when a numerator term is also legitimately
-zero for some trait pair) and would trap under stricter FPE flags than this
-project's normal build uses. This is confirmed **harmless in practice** for
-every current fixture - `tests/run_tests.sh` passes 8/8 in the normal
-(non-trapping) `-g -O2 -Wall` build, because the affected matrix cells
-correspond to information-source codes none of the current fixtures select,
-so the garbage/Inf values are computed but never read. It remains a latent
-risk for a future fixture that mixes group types in a way that does read
-those cells (a fully surgical fix would require threading actual
-`fsgroups`/`hsgroups`/`proggroups` counts into `selection_index`'s argument
-list, rather than relying on the fixed 20-slot loop bound - out of scope
-for the zero-init fix above).
+`selroutines.f90`'s `selection_index` and `intra_sd` build their
+`matp`/`matrhs`/`matrfs` "maximum matrix" blocks by looping `i=1,20`/
+`j=1,20` for full-sib, half-sib, and progeny groups. A prior fix
+zero-initialized the six group arrays (`fsgroupsoff`/`hsgroupsoff`/
+`hsgroupsdams`/`proggroupsdams`/`proggroupsoffs`/`proggroupsoffd`, fixed
+`real, dimension(20)` in `selparameters.f90`), closing an
+uninitialized-read bug for indices beyond a *partially* configured group
+count. That still left every division by those arrays running
+unconditionally even when a group *type* wasn't configured at all (or an
+index exceeded its actual count within a configured type), which is
+mathematically undefined (`x/0.0` or `0.0/0.0`) and traps under
+`-ffpe-trap=invalid,zero,overflow`.
+
+Both subroutines now take `fsgroups`/`hsgroups`/`proggroups` as arguments
+(matching the pattern `info_sources` already used) and guard every
+division statement so it only executes when the specific group index is
+actually configured (`i.le.locfsgroups` etc., not just "some groups of
+this type exist" - a partially-configured count needs the same guard as a
+fully-unconfigured one). Verified via a `-finit-real=snan
+-finit-integer=-999999999 -ffpe-trap=invalid,zero,overflow -fbacktrace`
+debug build: `test1`/`test2s`/`test3s` now run without a single trap
+(previously traps at `selroutines.f90:1539` and `:1571`). See `advgrp` in
+`manifest.txt` for a fixture built specifically to exercise the
+previously-never-tested "progeny groups configured and selected" path
+alongside a fully-unconfigured full-sib type.
+
+`blup1` still traps under the strict FPE build, but at an unrelated line
+(`selroutines.f90:1800`, `sqrt` of a negative `sigmai` variance component)
+that this fix does not touch - see "Known residual issue" below.
+
+## Known residual issue: negative `sigmai` under strict FPE traps
+
+`selection_index` computes `locrih=(sqrt(sigmai/sigmah))` at
+`selroutines.f90:1800`. For `blup1` (and `advgrp`, which shares `blup1`'s
+half-sib-only info-source pattern), `sigmai` comes out **negative**
+(confirmed via debugger: `sigmai=-84.9`, `sigmah=782.8`), so `sqrt` of a
+negative ratio traps under `-ffpe-trap=invalid`. This is unrelated to the
+group-matrix-block fix above - `locfsgroups`/`lochsgroups`/`locprogroups`
+are threaded through correctly, and this line was simply unreachable
+before today's fix removed the earlier crash blocking execution from ever
+getting this far. It's confirmed harmless for actual output: both `blup1`
+and `advgrp` pass byte-for-byte in the normal (non-trapping) `-g -O2
+-Wall` build. Likely a numerical-precision artifact of a near-singular
+matrix inversion elsewhere in the routine (a variance component shouldn't
+legitimately go negative). Not yet investigated further - out of scope for
+the group-matrix-block fix.
 
 ## Adding a new fixture
 
-There are currently 4 fixtures: `test1` (3-trait discrete 1-stage),
-`test2s` (discrete 2-stage), `test3s` (discrete 3-stage), and `blup1`
-(discrete 1-stage isolating the BLUP-only inbreeding path). Overlapping
+There are currently 5 fixtures: `test1` (3-trait discrete 1-stage),
+`test2s` (discrete 2-stage), `test3s` (discrete 3-stage), `blup1`
+(discrete 1-stage isolating the BLUP-only inbreeding path), and `advgrp`
+(discrete 1-stage isolating the unconfigured/partially-configured
+group-type matrix-block guards, including progeny groups). Overlapping
 generations (`ovlp`) has no fixture yet. New fixtures must come from
 actually running a real binary with a valid, non-singular parameter set -
 do not hand-write expected output.
