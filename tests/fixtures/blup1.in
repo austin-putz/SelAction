@@ -1,0 +1,52 @@
+         1 ! stage selection
+  blup1    ! filenames
+         3 ! number of traits
+         n ! different indices for sires and dams
+  eADG     ! name of trait  1
+         i ! use of eADG    
+  ADG      ! name of trait  2
+         b ! use of ADG     
+     5.000 ! economic value ADG     
+  FCR      ! name of trait  3
+         b ! use of FCR     
+   -27.000 ! economic value FCR     
+         y ! use of common environment
+    25.000 ! phenotypic variance eADG    
+     0.200 ! heritability eADG    
+     0.050 ! common environmental effect eADG    
+    95.000 ! phenotypic variance ADG     
+     0.300 ! heritability ADG     
+     0.050 ! common environmental effect ADG     
+     0.040 ! phenotypic variance FCR     
+     0.200 ! heritability FCR     
+     0.050 ! common environmental effect FCR     
+         n ! full-sib groups ?
+         y ! half-sib groups ?
+         1 ! number of hsgroups
+   200.000 ! number of dams in hsgroup   1
+     9.000 ! number of animals in hsgroup  1
+         n ! progeny groups ?
+         2 ! info source eADG    
+        24 ! info source eADG    
+        -1 ! info source eADG    
+         2 ! info source ADG     
+        24 ! info source ADG     
+        -1 ! info source ADG     
+         2 ! info source FCR     
+        24 ! info source FCR     
+        -1 ! info source FCR     
+     0.250 ! phenotypic correlation between eADG     and ADG     
+     0.250 !    genetic correlation between eADG     and ADG     
+     0.050 !   com.env. correlation between eADG     and ADG     
+     0.100 ! phenotypic correlation between eADG     and FCR     
+     0.100 !    genetic correlation between eADG     and FCR     
+     0.050 !   com.env. correlation between eADG     and FCR     
+    -0.500 ! phenotypic correlation between ADG      and FCR     
+    -0.500 !    genetic correlation between ADG      and FCR     
+    -0.050 !   com.env. correlation between ADG      and FCR     
+    10.000 ! number of sires
+   200.000 ! number of dams
+     5.000 ! male candidates per dam
+     5.000 ! female candidates per dam
+     0.010 ! proportion sires
+     0.200 ! proportion dams

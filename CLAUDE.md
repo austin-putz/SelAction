@@ -57,6 +57,7 @@ There is no top-level Makefile in this repository. Each platform directory is co
 | `manual/` | User manual + program description (Markdown + PDF) | Reference documentation |
 | `docs/` | LaTeX technical reports on the underlying methods | Reference documentation |
 | `examples/` | Sample input files and a worked GUI example | Reference/test fixtures |
+| `tests/` | Canonical `.in`/`.out` regression fixtures + `run_tests.sh`, shared across all platform builds and the R port | Working |
 
 ### Module Dependencies (all three of fortran_orig/fortran_linux/fortran_mac)
 
@@ -96,9 +97,10 @@ Main programs (mssel.f90, msseld.f90, msselo.f90)
 
 ### Testing
 
-- No automated test suite — testing is done through program execution with sample data (see `examples/` and `fortran_linux/test1.in` / `test1.out`).
-- `make test` / `make docs` referenced in older versions of this file do not exist — there is no build system beyond the direct `gfortran` commands above.
-- **TODO**: once an automated test suite exists (e.g. comparing `fortran_linux` output against `test1.out` in CI), add a GitHub Actions workflow that runs it and add a real build/test-status badge to `README.md`. Until then, don't add a CI/build-status badge — there'd be nothing behind it but the compile step, which isn't the same as correctness.
+- Canonical regression fixtures live in `tests/fixtures/` (not inside any platform directory), so `fortran_linux`, `fortran_mac`, a future `fortran_windows`, and an eventual C++ port all validate against the same `.in`/`.out` pairs instead of drifting copies. Run `tests/run_tests.sh [platform_dir]` (defaults to `fortran_linux`); see `tests/README.md` for the fixture format, the manifest that maps fixtures to valid binaries, and — important if adding fixtures — the 8-character filename constraint imposed by `character (len=8) :: fnam` in `selparameters.f90`.
+- Fixtures: `test1` (3-trait discrete 1-stage, ported from the original distribution's smoke test), `test2s` (discrete 2-stage, `sel2s`), `test3s` (discrete 3-stage, `sel3s`), `blup1` (discrete 1-stage isolating the BLUP-specific branch of the inbreeding calculation). All four validate against both `mssel` and `msseld`. Overlapping generations (`ovlp` in `selovlp.f90`) has no fixture yet — `selovlp.f90:174` assigns to the module-level allocatable array `pheninfo` before it's ever allocated (allocation happens later, at line 330), which crashes `mssel`/`msselo` with a runtime "Assignment of scalar to unallocated array" error for any input reaching that point; this bug is inherited unchanged from `fortran_orig/selovlp.f90`, so it predates the Linux/Mac forks and isn't something the fixture work introduced.
+- `make test` / `make docs` referenced in older versions of this file do not exist — there is no build system beyond the direct `gfortran` commands above and `tests/run_tests.sh`.
+- **TODO**: wire `tests/run_tests.sh` into a GitHub Actions workflow and add a real build/test-status badge to `README.md`. Until then, don't add a CI/build-status badge — there'd be nothing behind it but the compile step, which isn't the same as correctness.
 
 ## Common Issues
 
@@ -109,7 +111,7 @@ Main programs (mssel.f90, msseld.f90, msselo.f90)
 
 ## Related Project
 
-A separate R package, `SelActionR`, reimplements this program's selection index theory for a modern scriptable interface (targeting CRAN). It lives in its own repository, not this one. This repository is its validation reference — R outputs should be checked against `fortran_linux/test1.in`/`test1.out` and the `examples/` outputs.
+A separate R package, `SelActionR`, reimplements this program's selection index theory for a modern scriptable interface (targeting CRAN). It lives in its own repository, not this one. This repository is its validation reference — R outputs should be checked against the fixtures in `tests/fixtures/` (see `tests/README.md`) and the `examples/` outputs.
 
 ## Documentation Resources
 

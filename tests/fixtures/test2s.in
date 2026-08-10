@@ -1,0 +1,54 @@
+         2 ! stage selection
+  test2s   ! filenames
+         3 ! number of traits
+         n ! different indices for sires and dams
+  eADG     ! name of trait  1
+         i ! use of eADG    
+  ADG      ! name of trait  2
+         b ! use of ADG     
+     5.000 ! economic value ADG     
+  FCR      ! name of trait  3
+         b ! use of FCR     
+   -27.000 ! economic value FCR     
+         y ! use of common environment
+    25.000 ! phenotypic variance eADG    
+     0.200 ! heritability eADG    
+     0.050 ! common environmental effect eADG    
+    95.000 ! phenotypic variance ADG     
+     0.300 ! heritability ADG     
+     0.050 ! common environmental effect ADG     
+     0.040 ! phenotypic variance FCR     
+     0.200 ! heritability FCR     
+     0.050 ! common environmental effect FCR     
+         n ! full-sib groups ?
+         n ! half-sib groups ?
+         n ! progeny groups ?
+         1 ! info source eADG    
+        -1 ! info source eADG    
+         2 ! info source eADG     in stage 2
+        -1 ! info source eADG     in stage 2
+         1 ! info source ADG     
+        -1 ! info source ADG     
+         2 ! info source ADG      in stage 2
+        -1 ! info source ADG      in stage 2
+         1 ! info source FCR     
+        -1 ! info source FCR     
+         2 ! info source FCR      in stage 2
+        -1 ! info source FCR      in stage 2
+     0.250 ! phenotypic correlation between eADG     and ADG     
+     0.250 ! genetic correlation between eADG     and ADG     
+     0.050 ! com.env. correlation between eADG     and ADG     
+     0.100 ! phenotypic correlation between eADG     and FCR     
+     0.100 ! genetic correlation between eADG     and FCR     
+     0.050 ! com.env. correlation between eADG     and FCR     
+    -0.500 ! phenotypic correlation between ADG      and FCR     
+    -0.500 ! genetic correlation between ADG      and FCR     
+    -0.050 ! com.env. correlation between ADG      and FCR     
+    10.000 ! number of sires
+   200.000 ! number of dams
+     5.000 ! number of male offspring per dam
+     5.000 ! number of female offspring per dam
+     0.100 ! proportion sires in stage 1
+     0.100 ! proportion sires in stage 2
+     0.400 ! proportion dams in stage 1
+     0.500 ! proportion dams in stage 2

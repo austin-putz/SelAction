@@ -1,0 +1,19 @@
+# Fixture manifest.
+#
+# Format (colon-separated, 3 fields):
+#   <base_name>:<binaries>:<description>
+#
+# base_name  - shared stem of <base_name>.in / <base_name>.out in this directory.
+#              Must be <= 8 characters - see tests/README.md ("Filename length
+#              constraint") for why.
+# binaries   - comma-separated list of binary names (as built by the gfortran
+#              commands in README.md/CLAUDE.md) this fixture is valid input for.
+#              A fixture must only list binaries whose interactive prompt
+#              sequence actually matches what's encoded in <base_name>.in - see
+#              tests/README.md before adding an entry.
+# description - short human-readable summary of what the fixture exercises.
+
+test1:mssel,msseld:3-trait discrete 1-stage selection, FS/HS groups, common environmental effects (ported from the original SelAction distribution's smoke test)
+test2s:mssel,msseld:3-trait discrete 2-stage selection (sel2s), own performance in stage 1 then added BLUP breeding values in stage 2, no FS/HS/progeny groups, same genetic parameters as test1
+test3s:mssel,msseld:3-trait discrete 3-stage selection (sel3s), own performance in stage 1, BLUP breeding values added in stage 2, FS+HS group information added in stage 3, same genetic parameters and FS/HS group sizes as test1
+blup1:mssel,msseld:3-trait discrete 1-stage selection (sel1s) isolating the BLUP-specific branch of the inbreeding calculation (dFmtblup/hyper_correct in selinbreeding.f90): all 3 traits use only BLUP breeding values (code 2) plus the half-sib group (code 24) as information sources, terminated by -1 - no own performance or full-sib info, unlike test1's mixed source list; same genetic parameters and HS group size as test1
