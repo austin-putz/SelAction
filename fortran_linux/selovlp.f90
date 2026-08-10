@@ -171,6 +171,15 @@
 
 	! economic values in temparray set to zero
 	tempev=0
+
+        ! pheninfo/proginfo/posgcorr must be allocated before use; moved
+        ! forward from where they were previously allocated (much later,
+        ! after the progeny-group input block) since ntraits/nclass are
+        ! already known by this point. posgcorr previously had no
+        ! allocate at all in this routine.
+        allocate(pheninfo(2*nclass,ntraits), proginfo(2*nclass,ntraits))
+        allocate(posgcorr(ntraits))
+
 	pheninfo="n"
         posgcorr="n"
         desttraits="n"
@@ -326,8 +335,7 @@
           end do
         end if
 
-        ! initialise source array
-        allocate(pheninfo(2*nclass,ntraits), proginfo(2*nclass,ntraits))
+        ! initialise source array (pheninfo/proginfo/posgcorr now allocated earlier, see above)
 
         tempsource=0
 
