@@ -98,6 +98,7 @@ Main programs (mssel.f90, msseld.f90, msselo.f90)
 
 - No automated test suite — testing is done through program execution with sample data (see `examples/` and `fortran_linux/test1.in` / `test1.out`).
 - `make test` / `make docs` referenced in older versions of this file do not exist — there is no build system beyond the direct `gfortran` commands above.
+- **TODO**: once an automated test suite exists (e.g. comparing `fortran_linux` output against `test1.out` in CI), add a GitHub Actions workflow that runs it and add a real build/test-status badge to `README.md`. Until then, don't add a CI/build-status badge — there'd be nothing behind it but the compile step, which isn't the same as correctness.
 
 ## Common Issues
 

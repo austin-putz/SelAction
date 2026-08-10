@@ -1,6 +1,23 @@
 # SelAction: Selection Index Program for Animal Breeding
 
+[![License: GPL v3](https://img.shields.io/badge/license-GPLv3-blue.svg)](LICENSE)
+[![Repo Status: Active](https://www.repostatus.org/badges/latest/active.svg)](https://www.repostatus.org/#active)
+[![Language: Fortran](https://img.shields.io/badge/language-Fortran-734f96.svg)](https://fortran-lang.org/)
+[![gfortran](https://img.shields.io/badge/gfortran-4.6%2B-orange.svg)](https://gcc.gnu.org/fortran/)
+
 A comprehensive multi-trait selection index program for animal breeding applications, calculating genetic response and inbreeding effects for various selection schemes.
+
+## Citation
+
+Please cite the original paper from Rutten *et al.* using the following:
+
+**Rutten, M.J.M., Bijma, P., Woolliams, J.A., & Van Arendonk, J.A.M. (2002)**. SelAction: Software to predict selection response and rate of inbreeding in livestock breeding programs. Journal of Heredity, 93(6), 456-458. [https://doi.org/10.1093/jhered/93.6.456](https://doi.org/10.1093/jhered/93.6.456)
+
+When the full software package is up and running, we'll provide a citation for that as well. 
+
+## Bug Reports
+
+Email :e-mail: putz.austin@gmail.com with a full report
 
 ## Table of Contents
 
@@ -382,29 +399,35 @@ An R package reimplementation, `SelActionR`, is being developed as a separate pr
 
 ## License
 
-No license file is currently included in this repository. The original Fortran code was authored by Marc J.M. Rutten and Piter Bijma at Wageningen University — terms of reuse and redistribution should be confirmed with the original authors/institution before this repository is used beyond personal/research reference.
+This project is licensed under the **GNU General Public License v3.0 (GPLv3)** — see [`LICENSE`](LICENSE) for the full text.
+
+The original Fortran code was authored by Marc J.M. Rutten and Piter Bijma at Wageningen University. Peter Bijma gave direct permission (via email) to release this repository, including the original code, under GPLv3.
+
+> [!CAUTION]
+> **NO WARRANTY** — This software is provided **as-is**, without warranty of any kind, express or
+> implied. The authors accept **no liability** for any damages or losses arising from its use.
 
 ## References
 
 ### Primary References
 
-1. **Rutten, M.J.M. and Bijma, P. (2000)**. SelAction: Multi-trait Selection Index Software. Animal Breeding and Genetics Group, Wageningen University.
-2. **Smith, H.F. (1936)**. A discriminant function for plant selection. Annals of Eugenics, 7, 240-250.
-3. **Hazel, L.N. (1943)**. The genetic basis for constructing selection indexes. Genetics, 28, 476-490.
+1. **Rutten, M.J.M. and Bijma, P. (2000)**. SelAction: Multi-trait Selection Index Software. Animal Breeding and Genetics Group, Wageningen University. *(Internal technical documentation — no stable public link found; see the [Citation](#citation) section above for the peer-reviewed companion paper.)*
+2. **Smith, H.F. (1936)**. A discriminant function for plant selection. Annals of Eugenics, 7, 240-250. [https://doi.org/10.1111/j.1469-1809.1936.tb02143.x](https://doi.org/10.1111/j.1469-1809.1936.tb02143.x)
+3. **Hazel, L.N. (1943)**. The genetic basis for constructing selection indexes. Genetics, 28, 476-490. [https://doi.org/10.1093/genetics/28.6.476](https://doi.org/10.1093/genetics/28.6.476)
 
 ### Inbreeding Theory
 
-4. **Bijma, P. and Woolliams, J.A. (2000)**. Prediction of rates of inbreeding in populations selected on best linear unbiased prediction of breeding value. Genetics, 156, 361-373.
-5. **Wray, N.R., Woolliams, J.A. and Thompson, R. (1990)**. Methods for predicting rates of inbreeding in selected populations. Theoretical and Applied Genetics, 80, 503-512.
+4. **Bijma, P. and Woolliams, J.A. (2000)**. Prediction of rates of inbreeding in populations selected on best linear unbiased prediction of breeding value. Genetics, 156, 361-373. [https://doi.org/10.1093/genetics/156.1.361](https://doi.org/10.1093/genetics/156.1.361)
+5. **Wray, N.R., Woolliams, J.A. and Thompson, R. (1990)**. Methods for predicting rates of inbreeding in selected populations. Theoretical and Applied Genetics, 80, 503-512. [https://doi.org/10.1007/BF00226752](https://doi.org/10.1007/BF00226752)
 
 ### Selection Theory
 
-6. **Bulmer, M.G. (1971)**. The effect of selection on genetic variability. American Naturalist, 105, 201-211.
-7. **Lynch, M. and Walsh, B. (1998)**. Genetics and Analysis of Quantitative Traits. Sinauer Associates, Sunderland, MA.
+6. **Bulmer, M.G. (1971)**. The effect of selection on genetic variability. American Naturalist, 105, 201-211. [https://doi.org/10.1086/282718](https://doi.org/10.1086/282718)
+7. **Lynch, M. and Walsh, B. (1998)**. Genetics and Analysis of Quantitative Traits. Sinauer Associates, Sunderland, MA. [https://global.oup.com/academic/product/genetics-and-analysis-of-quantitative-traits-9780878934812](https://global.oup.com/academic/product/genetics-and-analysis-of-quantitative-traits-9780878934812)
 
 ### Implementation Details
 
-8. **Press, W.H., Teukolsky, S.A., Vetterling, W.T. and Flannery, B.P. (2007)**. Numerical Recipes in Fortran 90: The Art of Parallel Scientific Computing. Cambridge University Press.
+8. **Press, W.H., Teukolsky, S.A., Vetterling, W.T. and Flannery, B.P. (1996)**. Numerical Recipes in Fortran 90: The Art of Parallel Scientific Computing (2nd ed., Vol. 2). Cambridge University Press. [https://dl.acm.org/doi/10.5555/232468](https://dl.acm.org/doi/10.5555/232468)
 
 ---
 
