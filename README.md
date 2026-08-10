@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="logos/SelAction_Logo_ChatGPT_v1.png" alt="SelAction logo" width="260">
+</p>
+
 # SelAction: Selection Index Program for Animal Breeding
 
 [![License: GPL v3](https://img.shields.io/badge/license-GPLv3-blue.svg)](LICENSE)
@@ -124,7 +128,7 @@ gfortran -o msselo seltools.f90 selparameters.f90 selroutines.f90 \
          selovlp.f90 msselo.f90
 ```
 
-All three binaries have been built and smoke-tested against `fortran_linux/test1.in` with this exact sequence.
+All three binaries build with this exact sequence. `mssel` and `msseld` are verified against the regression fixture in `tests/fixtures/test1.in` — run `tests/run_tests.sh` to check (see `tests/README.md`). `msselo` only accepts overlapping-generation input, which that fixture isn't, so it has no fixture of its own yet.
 
 ### macOS (known broken — see Known Issues)
 
