@@ -228,10 +228,10 @@ rhohsff=rhsff-rhsff*(1-rhsff*rhsff)*(1.4075/REAL(m)+1.4581/REAL(f))
       pffs=(1.0-rhofsff)*pf + rhofsff*MAX(pf,1.0/REAL(m))
       pmhs=(1.0-rhohsmm)*pm + rhohsmm*MAX(pm,1.0/REAL(m))
       pfhs=(1.0-rhohsff)*pf + rhohsff*MAX(pf,1.0/REAL(m))
-      call trunc(pmfs,xmfs,imfs,kmfs)
-      call trunc(pffs,xffs,iffs,kffs)
-      call trunc(pmhs,xmhs,imhs,kmhs)
-      call trunc(pfhs,xfhs,ifhs,kfhs)
+      call trunc(pval=pmfs,xval=xmfs,ival=imfs,kval=kmfs)
+      call trunc(pval=pffs,xval=xffs,ival=iffs,kval=kffs)
+      call trunc(pval=pmhs,xval=xmhs,ival=imhs,kval=kmhs)
+      call trunc(pval=pfhs,xval=xfhs,ival=ifhs,kval=kfhs)
   ELSE
       pmfs=pm
       pmhs=pm
