@@ -73,13 +73,68 @@ Running a fixture against a binary it wasn't written for doesn't error
 usefully - confirm the fixture's stage-selection answer matches the binary
 before adding a manifest entry.
 
+## Numerical precision and the reference toolchain
+
+These fixtures are captured by actually running a real binary and diffing
+byte-for-byte, so they're sensitive to the exact `gfortran` build that
+produced them. The canonical reference toolchain used to capture the
+current fixtures is:
+
+```
+GNU Fortran (Ubuntu 15.2.0-16ubuntu1) 15.2.0
+```
+
+For most fixtures this doesn't matter - the underlying computation is well
+away from any rounding boundary. But a fixture can legitimately contain a
+coefficient that's genuinely close to zero (e.g. `blup1`'s BLUP index weight
+for a non-breeding-goal trait, after 25 rounds of `sel1s`'s iterative
+BLUP-equilibrium loop) - right at the display precision limit. For values
+like that, ordinary compiler-version-level floating-point differences
+(instruction scheduling, FMA contraction, vectorization, libm rounding) can
+flip the last displayed digit or the sign of a near-zero value with no bug
+involved at all. If `run_tests.sh` fails with a diff isolated to a single
+near-zero or last-digit value, don't assume it's either "definitely a
+regression" or "definitely safe to regenerate" - check whether the affected
+value is genuinely near a rounding boundary (as `blup1`'s was) before doing
+either.
+
+## Known residual issue: unconfigured group-type matrix blocks
+
+`selroutines.f90`'s `selection_index` builds `matp`/`matrhs`/`matrfs`
+"maximum matrix" blocks by unconditionally looping `i=1,20`/`j=1,20` for
+full-sib, half-sib, and progeny groups, regardless of whether that many
+groups - or *any* groups of that type - were actually configured for the
+run. `fsgroupsoff`/`hsgroupsoff`/`hsgroupsdams`/`proggroupsdams`/
+`proggroupsoffs`/`proggroupsoffd` (fixed `real, dimension(20)` in
+`selparameters.f90`) are zero-initialized before use (see `sel1s`/`sel2s`/
+`sel3s` in `seldiscrete.f90` and `ovlp` in `selovlp.f90`), which closes a
+genuine uninitialized-read bug for indices beyond a *partially* configured
+group count (confirmed via a `-finit-real=snan -ffpe-trap=invalid,zero,overflow`
+debug build that segfaulted at `selroutines.f90:1539` before the fix).
+However, when a group *type* isn't used at all (e.g. no progeny groups
+configured, true for all current fixtures), the same unconditional loops
+still divide by those now-well-defined-but-zero array slots, which is
+mathematically undefined (`0.0/0.0` when a numerator term is also legitimately
+zero for some trait pair) and would trap under stricter FPE flags than this
+project's normal build uses. This is confirmed **harmless in practice** for
+every current fixture - `tests/run_tests.sh` passes 8/8 in the normal
+(non-trapping) `-g -O2 -Wall` build, because the affected matrix cells
+correspond to information-source codes none of the current fixtures select,
+so the garbage/Inf values are computed but never read. It remains a latent
+risk for a future fixture that mixes group types in a way that does read
+those cells (a fully surgical fix would require threading actual
+`fsgroups`/`hsgroups`/`proggroups` counts into `selection_index`'s argument
+list, rather than relying on the fixed 20-slot loop bound - out of scope
+for the zero-init fix above).
+
 ## Adding a new fixture
 
-There is currently one fixture (`test1`, 3-trait discrete 1-stage). The
-matrix should grow to cover 2-stage, 3-stage, overlapping generations, and
-the BLUP inbreeding path, but new fixtures must come from actually running a
-real binary with a valid, non-singular parameter set - do not hand-write
-expected output.
+There are currently 4 fixtures: `test1` (3-trait discrete 1-stage),
+`test2s` (discrete 2-stage), `test3s` (discrete 3-stage), and `blup1`
+(discrete 1-stage isolating the BLUP-only inbreeding path). Overlapping
+generations (`ovlp`) has no fixture yet. New fixtures must come from
+actually running a real binary with a valid, non-singular parameter set -
+do not hand-write expected output.
 
 1. Build the binaries in `fortran_linux/` (see root `README.md`).
 2. Prepare a `.in` file (an existing one is the easiest starting template),

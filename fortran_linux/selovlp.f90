@@ -169,6 +169,17 @@
           end if
         end do
 
+	! group arrays (dimension 20) are only populated for p=1..hsgroups/
+	! fsgroups/proggroups by the read loops below; selection_index in
+	! selroutines.f90 unconditionally sums/indexes the full 20 elements,
+	! so unused slots must be zeroed here rather than left uninitialized.
+	fsgroupsoff=0.0
+	hsgroupsoff=0.0
+	hsgroupsdams=0.0
+	proggroupsdams=0.0
+	proggroupsoffs=0.0
+	proggroupsoffd=0.0
+
 	! economic values in temparray set to zero
 	tempev=0
 

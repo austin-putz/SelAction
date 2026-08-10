@@ -72,7 +72,7 @@ FCR            0.050   -0.050    1.000
   
   INDEX INFORMATION
   
-     ebv of the dam                       for eADG      (   0.000)
+     ebv of the dam                       for eADG      (  -0.000)
      ebv of the sire                      for eADG      (   0.157)
      information of hs-group            1 for eADG      (  -0.314)
      mean ebv of the dams of hs-group   1 for eADG      (   0.157)
@@ -125,7 +125,7 @@ FCR            0.050   -0.050    1.000
  ADG     
          trait units :      1.586          1.060          2.646
       economic units :      7.928          5.299         13.228
- % of total response :     57.376         38.350         95.726
+ % of total response :     57.377         38.350         95.726
   
  FCR     
          trait units :     -0.013         -0.009         -0.022

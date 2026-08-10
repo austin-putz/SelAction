@@ -65,6 +65,17 @@
         allocate(sits(ntraits), dits(ntraits), sits2(ntraits), dits2(ntraits))
         allocate(sits3(ntraits), dits3(ntraits), sitst(ntraits), ditst(ntraits))
 
+	! group arrays (dimension 20) are only populated for p=1..hsgroups/
+	! fsgroups/proggroups by the read loops below; selection_index in
+	! selroutines.f90 unconditionally sums/indexes the full 20 elements,
+	! so unused slots must be zeroed here rather than left uninitialized.
+	fsgroupsoff=0.0
+	hsgroupsoff=0.0
+	hsgroupsdams=0.0
+	proggroupsdams=0.0
+	proggroupsoffs=0.0
+	proggroupsoffd=0.0
+
 	! economic values in temparray set to zero
 	do i=1,ntraits
 	  tempev(i,1)=0
@@ -1186,6 +1197,17 @@
         allocate(v(2,2), dumv(2,2), g(2,1), beta(2,1))
         allocate(sits(ntraits), dits(ntraits), sits2(ntraits), dits2(ntraits))
         allocate(sits3(ntraits), dits3(ntraits), sitst(ntraits), ditst(ntraits))
+
+	! group arrays (dimension 20) are only populated for p=1..hsgroups/
+	! fsgroups/proggroups by the read loops below; selection_index in
+	! selroutines.f90 unconditionally sums/indexes the full 20 elements,
+	! so unused slots must be zeroed here rather than left uninitialized.
+	fsgroupsoff=0.0
+	hsgroupsoff=0.0
+	hsgroupsdams=0.0
+	proggroupsdams=0.0
+	proggroupsoffs=0.0
+	proggroupsoffd=0.0
 
 	! economic values in temparray set to zero
 	tempev=0
@@ -2788,6 +2810,17 @@
 
 
         allocate(v(2,2), dumv(2,2), g(2,1), beta(2,1))
+
+	! group arrays (dimension 20) are only populated for p=1..hsgroups/
+	! fsgroups/proggroups by the read loops below; selection_index in
+	! selroutines.f90 unconditionally sums/indexes the full 20 elements,
+	! so unused slots must be zeroed here rather than left uninitialized.
+	fsgroupsoff=0.0
+	hsgroupsoff=0.0
+	hsgroupsdams=0.0
+	proggroupsdams=0.0
+	proggroupsoffs=0.0
+	proggroupsoffd=0.0
 
 	! economic values in temparray set to zero
 	tempev=0
