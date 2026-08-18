@@ -1,8 +1,8 @@
 # Regression tests
 
 Canonical, platform-agnostic input/output fixtures for validating every
-implementation of SelAction against each other: `fortran_linux`, `fortran_mac`,
-a future `fortran_windows`, and an eventual C++ port. Fixtures live here, not
+implementation of SelAction against each other: `fortran_linux` today, and a
+future `fortran_mac`, `fortran_windows`, and an eventual C++ port. Fixtures live here, not
 inside a platform directory, so there is exactly one source of truth for
 "what should this input produce" - every platform's runner points back at
 this same directory instead of carrying its own copy that can drift out of
@@ -27,12 +27,13 @@ tests/
 
 ```bash
 tests/run_tests.sh                # against fortran_linux (default)
-tests/run_tests.sh fortran_mac    # against another platform dir
+tests/run_tests.sh fortran_mac    # once that directory exists, run against it instead
 ```
 
 Binaries listed in `manifest.txt` that aren't built in the target platform
-directory are skipped (not failed), so the suite runs against partially-built
-platforms like `fortran_mac`.
+directory are skipped (not failed), so the suite can run against a
+partially-built platform (useful once `fortran_mac/` exists and is being
+brought up incrementally).
 
 ## How a fixture is invoked
 
@@ -210,16 +211,86 @@ reproduction detail.
 All 5 fixtures now run completely trap-clean under the strict SNaN/FPE
 build for both `mssel` and `msseld`.
 
+## Resolved: `ccprog` uninitialized-read in overlapping generations (`selovlp.f90`)
+
+Building the first overlapping-generations fixture (`ovlp2`, below) surfaced
+a genuine uninitialized-read bug distinct from the ones already documented
+above, and specific to `ovlp` - none of the discrete-generation fixtures
+exercise this code path. `ccprog(ntraits)` (the progeny-test common-
+environmental effect, "c-square") is `allocate`d but only ever `read` into
+when `initprog.eq."y" .and. initc.eq."y"` (`selovlp.f90:599`, progeny groups
+*and* common environment both enabled). But `progsigmac(p)=ccprog(p)*
+sigmap(p)` (`:623`) and `ocovcprog(o,p,q)=ccorr(p,q)*(sqrt(progsigmac(p))*
+sqrt(progsigmac(q)))` (`:661`) read every element of `ccprog` unconditionally,
+regardless of whether progeny groups or common environment were configured
+at all.
+
+Under a normal build this silently read whatever garbage happened to be in
+the freshly `allocate`d memory - for the `ovlp2` fixture's specific
+allocation pattern that garbage happened to be zero-ish and didn't visibly
+affect output, which is exactly why this class of bug is dangerous to leave
+unfixed rather than proof it's harmless. Under `-finit-real=snan
+-ffpe-trap=invalid,zero,overflow`, `ccprog` is poisoned with a signalling
+NaN, so `sqrt(progsigmac(p))` at `:661` traps immediately (confirmed via
+`gdb`/backtrace pointing directly at that line). This is the same
+uninitialized-read *shape* as the `fsgroupsoff`/`hsgroupsoff`/etc. bug fixed
+above, just in `selovlp.f90` instead of `selroutines.f90`, and inherited
+unchanged from `fortran_orig/selovlp.f90` (confirmed present there too).
+
+Fixed the same way: `ccprog=0.0` added to the existing block of
+zero-initializations at the top of `ovlp` (`selovlp.f90:~176-187`, alongside
+`fsgroupsoff`/`hsgroupsoff`/etc.), so the unconditional reads downstream are
+deterministic zero instead of uninitialized memory when progeny groups or
+common environment aren't both configured. Verified: `ovlp2`'s output is
+byte-identical before and after the fix (this fixture's uninitialized memory
+happened to be already zero-ish), and the strict SNaN/FPE build now runs
+`ovlp2` to `end of output` with no trap. A fixture that actually configures
+progeny groups + common environment together (exercising `ccprog` with a
+real nonzero value) is a good candidate for a future `ovlp` fixture, since
+`ovlp2` deliberately doesn't configure progeny groups at all.
+
+## Overlapping generations (`ovlp2`) fixture
+
+`ovlp` (`selovlp.f90`) previously had no regression fixture at all - see the
+"Resolved: ..." sections above in this file and in `CLAUDE.md` for the
+allocation-order segfault that made it unusable in the first place. It's
+also structurally different enough from the discrete-generation fixtures
+(`test1`/`test2s`/`test3s`/`blup1`/`advgrp`) that a passing discrete suite
+gives zero confidence about `ovlp`'s correctness: `msselo` (built from
+`selovlp.f90`, not `seldiscrete.f90`) has its own interactive prompt
+sequence - per-sex age classes, propagating info sources forward across
+age classes via a `next age-class / -1 to end` loop, and its own generation-
+interval computation - none of which is reachable through `mssel`/`msseld`.
+
+`ovlp2` is a 2-trait scenario (`wt`, `gr`) with `nclass=2` (2 age classes
+per sex, 4 effective classes internally: sire classes 1-2, dam classes
+3-4), truncation selection (`t`), own performance as the only info source
+in every age class (entered per-class rather than propagated forward, to
+exercise both the explicit-entry and the `next age-class` prompt path), no
+full-sib/half-sib/progeny groups, and common environment disabled. It's
+deliberately not exhaustive - no groups, no BLUP breeding values, no
+info-source propagation across a gap of more than one age class - but it's
+enough to run `ovlp`'s core control flow (multi-age-class input, the
+generation-interval calculation, the 25-round covariance-update loop) for
+the first time under regression testing, and it's what surfaced the
+`ccprog` bug above. Verified reproducible (re-running `msselo` against its
+own generated `ovlp2.in` reproduces `ovlp2.out` byte-for-byte) and trap-clean
+under the strict `-finit-real=snan -ffpe-trap=invalid,zero,overflow` build.
+
+A fixture with fs/hs/progeny groups and BLUP breeding values under
+overlapping generations remains a good next addition, but isn't required to
+have *some* `ovlp` regression coverage in place.
+
 ## Adding a new fixture
 
-There are currently 5 fixtures: `test1` (3-trait discrete 1-stage),
+There are currently 6 fixtures: `test1` (3-trait discrete 1-stage),
 `test2s` (discrete 2-stage), `test3s` (discrete 3-stage), `blup1`
-(discrete 1-stage isolating the BLUP-only inbreeding path), and `advgrp`
+(discrete 1-stage isolating the BLUP-only inbreeding path), `advgrp`
 (discrete 1-stage isolating the unconfigured/partially-configured
-group-type matrix-block guards, including progeny groups). Overlapping
-generations (`ovlp`) has no fixture yet. New fixtures must come from
-actually running a real binary with a valid, non-singular parameter set -
-do not hand-write expected output.
+group-type matrix-block guards, including progeny groups), and `ovlp2`
+(overlapping generations, 2-trait, 2-age-class-per-sex - see above). New
+fixtures must come from actually running a real binary with a valid,
+non-singular parameter set - do not hand-write expected output.
 
 1. Build the binaries in `fortran_linux/` (see root `README.md`).
 2. Prepare a `.in` file (an existing one is the easiest starting template),

@@ -180,6 +180,13 @@
 	proggroupsoffs=0.0
 	proggroupsoffd=0.0
 
+	! ccprog (progeny-test common-environmental effect) is only read below
+	! when initprog.eq."y" .and. initc.eq."y", but progsigmac/ocovcprog use
+	! it unconditionally a few hundred lines later - zero it here so those
+	! reads are deterministic instead of uninitialized when progeny groups
+	! or common environment aren't both configured.
+	ccprog=0.0
+
 	! economic values in temparray set to zero
 	tempev=0
 

@@ -7,14 +7,14 @@
 # Usage:
 #   tests/run_tests.sh [platform_dir]
 #
-# platform_dir defaults to fortran_linux. Pass fortran_mac, a future
-# fortran_windows, or a future cpp/ build dir to run the same fixtures
-# against that implementation instead - the fixtures never change.
+# platform_dir defaults to fortran_linux. Once a fortran_mac, fortran_windows,
+# or cpp/ build dir exists, pass its name to run the same fixtures against
+# that implementation instead - the fixtures never change.
 #
 # Binaries listed in manifest.txt that don't exist in platform_dir are
 # skipped (with a warning), not failed - this lets the harness run against
-# partially-built platforms (e.g. fortran_mac, which currently only builds
-# mssel) without the whole suite refusing to run.
+# a partially-built platform (e.g. a fortran_mac port that only builds mssel
+# so far) without the whole suite refusing to run.
 
 set -u
 

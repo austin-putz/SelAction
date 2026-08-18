@@ -1,0 +1,47 @@
+         o ! selection
+  ovlp2    ! filenames
+         2 ! number of traits
+    10.000 ! number of sires
+    50.000 ! number of dams
+     3.000 ! number of male offspring per dam
+     3.000 ! number of female offspring per dam
+         2 ! number of age classes per sex
+         t ! method of selection
+    80.000 ! number of animals in age-class   2
+    80.000 ! number of animals in age-class   4
+  wt       ! name of trait  1
+         b ! use of wt      
+     5.000 ! economic value wt      
+  gr       ! name of trait  2
+         b ! use of gr      
+    -2.000 ! economic value gr      
+         n ! use of common environment
+   100.000 ! phenotypic variance wt      
+     0.300 ! heritability wt      
+    50.000 ! phenotypic variance gr      
+     0.250 ! heritability gr      
+         n ! full-sib groups ?
+         n ! half-sib groups ?
+         n ! progeny groups ?
+         1 ! info source wt       for age class   1
+        -1 ! info source wt       for age class   1
+         1 ! info source gr       for age class   1
+        -1 ! info source gr       for age class   1
+         2 ! next age-class 
+         1 ! info source wt       for age class   2
+        -1 ! info source wt       for age class   2
+         1 ! info source gr       for age class   2
+        -1 ! info source gr       for age class   2
+        -1 ! next age-class 
+         1 ! info source wt       for age class   3
+        -1 ! info source wt       for age class   3
+         1 ! info source gr       for age class   3
+        -1 ! info source gr       for age class   3
+         4 ! next age-class 
+         1 ! info source wt       for age class   4
+        -1 ! info source wt       for age class   4
+         1 ! info source gr       for age class   4
+        -1 ! info source gr       for age class   4
+        -1 ! next age-class 
+     0.200 ! phenotypic correlation between wt       and gr      
+     0.300 ! genetic correlation between wt       and gr      

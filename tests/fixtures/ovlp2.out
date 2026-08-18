@@ -1,0 +1,131 @@
+  
+             *************************************************
+             *   Multi-Trait Index Selection Software MSSEL  *
+             *                 developed by:                 *
+             *                                               *
+             *        Marc J.M. Rutten and Piter Bijma       *
+             *                                               *
+             *                  version 1.1                  *
+             *                                               *
+             *       Animal Breeding and Genetics Group      *
+             *          Wageningen University, 2000          *
+             *************************************************
+  
+  
+  TRAITS
+  
+    wt      
+    gr      
+  
+  
+   TRAIT PARAMETERS
+   
+        phenotypic variance  heritability
+wt            100.000           0.300
+gr             50.000           0.250
+  
+   PHENOTYPIC CORRELATIONS
+   
+             wt       gr      
+wt             1.000
+gr             0.200    1.000
+  
+   GENETIC CORRELATIONS
+   
+             wt       gr      
+wt             1.000
+gr             0.300    1.000
+  
+  
+  BREEDING GOAL INFORMATION
+  
+          5.000 * wt      
+         -2.000 * gr      
+  
+   POPULATION SIZE
+   
+                      number of selected sires :   10.000
+                       number of selected dams :   50.000
+ number of male selection candidates per dam   :    3.000
+ number of female selection candidates per dam :    3.000
+  
+    selected proportion sires in age class   1 :   0.067 x    150.0 =   10.021
+    selected proportion sires in age class   2 :   0.001 x     80.0 =    0.108
+     selected proportion dams in age class   3 :   0.303 x    150.0 =   45.467
+     selected proportion dams in age class   4 :   0.057 x     80.0 =    4.533
+  
+ generation interval :  1.15  cohort intervals
+  
+  
+  INDEX INFORMATION:
+  
+  age class            1
+     own performance                      for wt        (   1.251)
+  
+     own performance                      for gr        (  -0.307)
+  
+  age class            2
+     own performance                      for wt        (   1.251)
+  
+     own performance                      for gr        (  -0.307)
+  
+  age class            3
+     own performance                      for wt        (   1.251)
+  
+     own performance                      for gr        (  -0.307)
+  
+  age class            4
+     own performance                      for wt        (   1.251)
+  
+     own performance                      for gr        (  -0.307)
+  
+  
+              ******************   RESULTS   *******************
+  
+  EQUILIBRIUM PARAMETERS
+  
+        phenotypic variance  heritability
+wt             95.085           0.264
+gr             49.955           0.249
+  
+   PHENOTYPIC CORRELATIONS
+  
+   
+             wt       gr      
+wt             1.000
+gr             0.198    1.000
+  
+   GENETIC CORRELATIONS
+  
+             wt       gr      
+wt             1.000
+gr             0.302    1.000
+  
+  
+  RESPONSE
+                            sires           dams          total
+ wt      
+         trait units :      2.107          1.328          3.435
+      economic units :     10.537          6.640         17.177
+ % of total response :     63.792         40.203        103.995
+  
+ gr      
+         trait units :      0.202          0.128          0.330
+      economic units :     -0.405         -0.255         -0.660
+ % of total response :     -2.451         -1.544         -3.995
+  
+  TOTAL RESPONSE
+                            sires           dams          total
+      economic units :     10.132          6.385         16.517
+  
+  
+ age class  1  index variance :      142.993  accuracy of index :  0.501
+ age class  2  index variance :      142.993  accuracy of index :  0.501
+ age class  3  index variance :      142.993  accuracy of index :  0.501
+ age class  4  index variance :      142.993  accuracy of index :  0.501
+  
+       breeding goal variance :      570.185
+  
+  
+  
+                       ******  end of output  ******
