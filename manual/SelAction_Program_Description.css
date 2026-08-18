@@ -1,0 +1,165 @@
+:root {
+  --text: #1d2129;
+  --muted: #5b6472;
+  --bg: #ffffff;
+  --bg-alt: #f6f7f9;
+  --border: #e1e4e8;
+  --link: #0a58a8;
+  --link-visited: #6f42c1;
+  --accent: #0a58a8;
+  --max-width: 860px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --text: #d8dee4;
+    --muted: #9aa4af;
+    --bg: #14171c;
+    --bg-alt: #1b1f26;
+    --border: #2b3038;
+    --link: #6cb6ff;
+    --link-visited: #b393f5;
+    --accent: #6cb6ff;
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  padding: 3rem 1.5rem 6rem;
+  background: var(--bg);
+  color: var(--text);
+  font-family: "Segoe UI", "Helvetica Neue", Arial, "Liberation Sans", sans-serif;
+  font-size: 17px;
+  line-height: 1.65;
+}
+
+body > * {
+  max-width: var(--max-width);
+  margin-left: auto;
+  margin-right: auto;
+}
+
+h1, h2, h3, h4 {
+  font-weight: 600;
+  line-height: 1.3;
+  color: var(--text);
+}
+
+h1 {
+  font-size: 2rem;
+  margin: 0 0 0.25em;
+  border-bottom: 3px solid var(--accent);
+  padding-bottom: 0.4em;
+}
+
+h2 {
+  font-size: 1.4rem;
+  margin-top: 2.2em;
+  margin-bottom: 0.6em;
+  padding-top: 0.3em;
+  border-top: 1px solid var(--border);
+}
+
+h3 {
+  font-size: 1.1rem;
+  margin-top: 1.6em;
+  margin-bottom: 0.5em;
+}
+
+p {
+  margin: 0 0 1.1em;
+}
+
+a {
+  color: var(--link);
+  text-decoration: none;
+  border-bottom: 1px solid color-mix(in srgb, var(--link) 40%, transparent);
+}
+
+a:hover {
+  border-bottom-color: var(--link);
+}
+
+a:visited {
+  color: var(--link-visited);
+}
+
+ul, ol {
+  margin: 0 0 1.1em;
+  padding-left: 1.4em;
+}
+
+li {
+  margin-bottom: 0.4em;
+}
+
+li > strong {
+  color: var(--text);
+}
+
+strong {
+  font-weight: 600;
+}
+
+hr {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: 2.5em 0;
+}
+
+code {
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+  background: var(--bg-alt);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 0.1em 0.4em;
+  font-size: 0.9em;
+}
+
+/* Byline block right under the H1 */
+h1 + p {
+  color: var(--muted);
+  font-size: 0.95rem;
+  margin-top: 0.6em;
+}
+
+/* References section: each entry is its own paragraph, hanging indent */
+#references ~ p {
+  font-size: 0.96rem;
+  margin-bottom: 0.9em;
+  padding-left: 1.6em;
+  text-indent: -1.6em;
+  color: var(--muted);
+}
+
+#references ~ p a {
+  color: var(--link);
+}
+
+/* Math rendered by MathJax */
+mjx-container {
+  color: var(--text);
+}
+
+::selection {
+  background: color-mix(in srgb, var(--accent) 30%, transparent);
+}
+
+@media print {
+  body {
+    padding: 0;
+    font-size: 12pt;
+  }
+  a {
+    color: var(--text);
+    border-bottom: none;
+  }
+}
