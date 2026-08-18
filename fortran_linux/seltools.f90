@@ -322,7 +322,25 @@ real function rawl3(p,nw,nfs,nhs,tfs,ths)
    !     print *,"bbc",bbc
 	sibc=((1.-rhobc2)**bbc)*sib
 	bbc=(log(sibc)-log(sia))/log(1.-rhobc)
-	ba=(b-bbc*y)/(1.-y)
+	if (abs(1.-y).lt.1.0e-6) then
+          ! y=factor(ths) reaches exactly 1.0 when ths (the half-sib
+          ! correlation passed in) is exactly 1.0 -- e.g. blup1/advgrp's
+          ! corrhs briefly overshoots 1.0 during early BLUP-equilibrium
+          ! convergence and gets clamped to exactly 1.0 by selroutines.f90
+          ! before calling rawl3. At y=1 the "ba" term's weight in the
+          ! original b=ba*(1.-y)+ac*y combination (line 317) is exactly
+          ! zero, so solving for ba here is mathematically indeterminate,
+          ! not just numerically sensitive -- (1.-y) is an exact zero,
+          ! not a near-zero. bbc is the nearest legitimate, already-finite
+          ! quantity available, and using it makes the y=factor(tfs)
+          ! recombination below (b=ba*(1.-ynew)+bbc*ynew) degrade
+          ! gracefully to b=bbc regardless of ynew. See
+          ! plans/investigate-rawl3-log-domain-trap.md for the reproduction
+          ! and reasoning.
+          ba=bbc
+        else
+          ba=(b-bbc*y)/(1.-y)
+        end if
         dumfs=tfs ! marc
 
 	y=factor(dumfs)

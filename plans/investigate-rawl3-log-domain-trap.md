@@ -2,11 +2,60 @@
 
 ## Status
 
-Not started. Discovered while verifying the `sigmai` guard fix
-(`plans/investigate-negative-sigmai.md`, implemented). With both
-`sqrt(sigmai...)` sites guarded, `blup1`/`advgrp` under the strict
-SNaN/FPE-trap build now execute one level further and trap inside
-`rawl3` (`fortran_linux/seltools.f90:167-339`) instead.
+**Implemented.** The title of this document turned out to be wrong on two
+counts, both corrected by direct reproduction (gdb + an instrumented
+scratch build) rather than assumed:
+
+1. **Not a `log()`-domain trap.** The trap is an exact division by zero at
+   `seltools.f90:325`, `ba=(b-bbc*y)/(1.-y)`, where
+   `y=factor(dumhs)`/`dumhs=ths`. `factor(x)=.63*exp(3.36*(x-1))
+   +.37*exp(86*(x-1))` evaluates to **exactly** `1.0` when `x=1`, so
+   whenever `ths` (mapped from `corrhs`) is clamped to exactly `1.0` at
+   the call site (`selroutines.f90:2174`), `(1.-y)` is an exact zero, not
+   a near-zero. Confirmed via gdb at the crash: `tfs=1, ths=1` exactly,
+   `sigmai=99.4` (positive). The `rhoc`/`rhoc2`/`rhobc`/`rhobc2` terms the
+   original title suspected are all comfortably `<1` in this
+   reproduction and were never the issue.
+2. **Not round-1-only.** Instrumenting a scratch copy to log every
+   `rawl3` call's `corrfs`/`corrhs` showed `corrhs` hits exactly `1.0`
+   only on **round 2** of `sel1s`'s 25-round loop for both `blup1` and
+   `advgrp` (round 1's `corrhs` is negative, not `>=1`; by round 3 it
+   settles to ~0.94 and never returns to exactly `1.0`, including at
+   round 25, the round that reaches display). Still self-correcting for
+   these two fixtures' output today, but "round 1 only" was the wrong
+   mental model — a different fixture's convergence trajectory could in
+   principle hit this on the final round, which would not be harmless.
+
+Also observed, not itself a bug: `corrfs` (`tfs`) converges to and stays
+at exactly `1.0` for `blup1` through round 25. This never crashes (only
+the `ths`-derived weight `y` is used in the divide at line 325), but it's
+a genuine converged steady-state value for this fixture's info-source
+pattern, not transient noise.
+
+**Fix**: guarded the division at `seltools.f90:325` with an epsilon check
+(`abs(1.-y).lt.1.0e-6`), falling back to `ba=bbc`. Chosen because at
+`y=1` exactly, the `ba` term's weight in the original combination
+(`b=ba*(1.-y)+ac*y`, line 317) is exactly zero — solving for `ba` is
+mathematically indeterminate, not just numerically sensitive — and `bbc`
+is the nearest already-finite, legitimately-computed quantity, making the
+downstream `y=factor(tfs)` recombination (line 333) degrade gracefully to
+`b=bbc` regardless of `tfs`'s value.
+
+**Scope decision**: the fix lives inside `rawl3` itself (not at a call
+site), since 8 of `rawl3`'s 10 call sites (all in `seldiscrete.f90`) pass
+`tfs`/`ths` with **no pre-clamp to `[-1,1]` at all** — a per-call-site fix
+would have missed most of the call surface. The fix is scoped narrowly to
+the one confirmed, reproduced division-by-zero; it does **not**
+speculatively harden `rawl3`'s other domain assumptions (e.g.
+`log(1.-rhoc)` for the 8 unclamped `seldiscrete.f90` callers, which could
+in principle pass `tfs`/`ths` outside `[-1,1]`) since none of those are
+reproduced by any current fixture — that would be validation for a
+scenario that hasn't been shown to happen.
+
+All 10 regression checks remain byte-identical. All 5 fixtures now run
+completely trap-clean under the strict SNaN/FPE-trap build for both
+`mssel` and `msseld` (previously `blup1`/`advgrp` trapped here; `test1`/
+`test2s`/`test3s` were already clean from the `sigmai` fix).
 
 ## Context
 

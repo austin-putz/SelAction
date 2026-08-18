@@ -160,30 +160,55 @@ nonzero `sigmai` is fine (finite, self-corrects by round 2); only the two
 `sqrt` sites needed guarding.
 
 With both sites guarded, `test1`/`test2s`/`test3s` are fully trap-clean.
-`blup1`/`advgrp` now trap one level deeper, inside `rawl3`
-(`seltools.f90`) - see "Known residual issue: `rawl3` log-domain trap"
-below.
+`blup1`/`advgrp` then trapped one level deeper, inside `rawl3`
+(`seltools.f90`) - see "Resolved: `rawl3` division-by-zero under strict
+FPE traps" below.
 
-## Known residual issue: `rawl3` log-domain trap
+## Resolved: `rawl3` division-by-zero under strict FPE traps
 
 With the `sigmai` guards above in place, `blup1`/`advgrp` under the strict
-FPE build now trap inside `rawl3` (`seltools.f90:167-339`, a general
-selection-differential utility called from **10 sites** across
-`selroutines.f90`/`seldiscrete.f90` - not specific to this path). The
-trap is inside one of several `log(1.-rho...)`-style calls, fed by
-`corrfs`/`corrhs` (already clamped to `[-1,1]` before the call at
-`selroutines.f90:~2170`), suggesting a boundary-adjacent correlation value
-- itself a residual echo of round 1's transient negative `sigmai` -
-pushes an intermediate `rho...` term outside `log`'s valid domain.
+FPE build trapped one level deeper, inside `rawl3`
+(`seltools.f90:167-339`, a general selection-differential utility called
+from **10 sites** across `selroutines.f90`/`seldiscrete.f90` - not
+specific to this path). This was initially suspected to be a
+`log(1.-rho...)` domain trap, but direct reproduction (gdb on the actual
+crash, plus an instrumented scratch build logging every call) showed
+that guess was wrong on two counts:
 
-Not yet investigated: which specific `log()` call traps, whether it's the
-same round-1-transient pattern as `sigmai` (self-corrects and never
-reaches display) or a genuine domain-safety gap in `rawl3` independent of
-this path, and whether other current or future fixtures could hit it via
-a different route (`rawl3` is used far more broadly than the `sigmai`
-sites were). Confirmed **harmless for actual output today**: `blup1`/
-`advgrp` still pass byte-for-byte in the normal, non-trapping build.
-Deferred as a separate follow-up.
+- **It's an exact division by zero**, not a log-domain issue:
+  `ba=(b-bbc*y)/(1.-y)` at `seltools.f90:325`, where `y=factor(ths)` and
+  `factor(x)=.63*exp(3.36*(x-1))+.37*exp(86*(x-1))` evaluates to
+  **exactly** `1.0` when `x=1`. Whenever `ths` (mapped from `corrhs`) is
+  clamped to exactly `1.0` at the call site (`selroutines.f90:2174`),
+  `(1.-y)` is an exact zero. Confirmed via gdb at the crash: `tfs=1,
+  ths=1` exactly, `sigmai=99.4` (positive, well past the negative-`sigmai`
+  round). The `rhoc`/`rhoc2`/`rhobc`/`rhobc2` terms were all comfortably
+  `<1` and were never the problem.
+- **It's not round-1-only.** Logging every `rawl3` call for `blup1`/
+  `advgrp` showed `corrhs` hits exactly `1.0` only on round 2 of the
+  25-round loop (round 1's `corrhs` is negative; from round 3 onward it
+  settles below `1.0` and never returns to exactly `1.0`, including at
+  round 25, the round that reaches display) - still self-correcting for
+  these two fixtures today, but a different fixture's convergence
+  trajectory could in principle hit this on the final round.
+
+Fixed by guarding the division at `seltools.f90:325`
+(`if (abs(1.-y).lt.1.0e-6) then ba=bbc else ...`) - `bbc` is the fallback
+because at `y=1` exactly, `ba`'s weight in the original combination is
+zero anyway, making it mathematically indeterminate to solve for; `bbc`
+is the nearest already-finite quantity and keeps the downstream
+recombination continuous. The fix lives inside `rawl3` itself rather than
+at a call site, because 8 of its 10 call sites (all in `seldiscrete.f90`)
+pass `tfs`/`ths` with no pre-clamp to `[-1,1]` at all - a call-site fix
+would have missed most of the call surface. It is scoped narrowly to this
+one reproduced division-by-zero; `rawl3`'s other domain assumptions
+(e.g. `log(1.-rhoc)` for those 8 unclamped callers) are not
+speculatively hardened, since no current fixture reproduces a problem
+there. See `plans/investigate-rawl3-log-domain-trap.md` for the full
+reproduction detail.
+
+All 5 fixtures now run completely trap-clean under the strict SNaN/FPE
+build for both `mssel` and `msseld`.
 
 ## Adding a new fixture
 
