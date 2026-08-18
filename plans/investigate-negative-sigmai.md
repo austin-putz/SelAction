@@ -2,13 +2,25 @@
 
 ## Status
 
-Not started. Discovered while verifying the unconfigured-group-type
-matrix-block fix (`plans/fix-unconfigured-group-type-matrix-blocks.md`,
-implemented). That fix's SNaN/FPE-trap verification removed an earlier
-crash, which let execution reach further into `selection_index` than any
-previous run — and revealed this next, unrelated crash. Confirmed
-unrelated to the group-block fix: `locfsgroups`/`lochsgroups`/
-`locprogroups` are threaded through correctly at the trap site.
+**Implemented.** Root cause confirmed: `sigmai` goes transiently negative
+on round 1 of `sel1s`'s 25-round BLUP-equilibrium loop for fixtures
+without own performance as an info source (`blup1`/`advgrp`) — a
+round-1-only numerical artifact, fully overwritten by round 2's
+`covariance_update` (verified: `srih`/`drih`/`response`/`totalresponse`
+are overwritten, not accumulated, each round). The two `sqrt(sigmai...)`
+sites (`selroutines.f90:1800` and `:2190`/`:2195`) are now guarded
+(`if (sigmai.ge.0.0) ... else ... = 0.0`). A source-level clamp
+(`sigmai=max(sigmai,0.0)`) was tried first and **rejected**: it breaks
+`corrfs`/`corrhs`'s division by `sigmai` (turns it into an exact `x/0.0`,
+tripping a real P-value bounds check even in the normal build) — confirmed
+by testing, not assumed. See `tests/README.md` ("Resolved: negative
+`sigmai` under strict FPE traps") for full detail.
+
+All 10 regression checks remain byte-identical; `test1`/`test2s`/`test3s`
+are now fully trap-clean. `blup1`/`advgrp` still trap under the strict
+FPE build, but one level deeper now — inside `rawl3` (`seltools.f90`), a
+separate, broader utility. Written up as its own follow-up:
+`plans/investigate-rawl3-log-domain-trap.md`.
 
 ## Context
 

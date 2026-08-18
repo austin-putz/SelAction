@@ -1797,7 +1797,23 @@ subroutine invrt(a,ia,n)
  !       print *,"sigmai ",sigmai
   !      print *,"sigmah ",sigmah
 
-	locrih=(sqrt(sigmai/sigmah))
+	if (sigmai.ge.0.0) then
+          locrih=(sqrt(sigmai/sigmah))
+        else
+          ! sigmai (the index's own variance) can come out transiently
+          ! negative on round 1 of sel1s's BLUP-equilibrium loop when own
+          ! performance isn't an info source (e.g. blup1/advgrp fixtures)
+          ! -- a numerical artifact of the naive round-1 starting weights,
+          ! not a legitimate variance. locrih here is never fed back into
+          ! the iteration and is fully overwritten by round 2, so this is
+          ! a round-1-only display value with no effect on converged
+          ! output. corrfs/corrhs/locresponse below still divide/sqrt by
+          ! the (possibly negative) sigmai directly -- clamping sigmai
+          ! itself to 0.0 was tried and rejected: it turns corrfs/corrhs's
+          ! division into an exact x/0.0, which trips a real downstream
+          ! P-value bounds check. See plans/investigate-negative-sigmai.md.
+          locrih=0.0
+        end if
    !     print *,"rih",locrih
 
         ! calculate intra-class correlations
@@ -2170,13 +2186,26 @@ subroutine invrt(a,ia,n)
         end do
 
         ! calculate response per trait per generation
-        do j=1,locntraits
-          locresponse(j)=(ii*covapi(j))/(sqrt(sigmai))
-        end do
+        if (sigmai.ge.0.0) then
+          do j=1,locntraits
+            locresponse(j)=(ii*covapi(j))/(sqrt(sigmai))
+          end do
+        else
+          ! same round-1-only transient as the locrih guard above -- these
+          ! values are overwritten (not accumulated) by covariance_update
+          ! every round, so a round-1 placeholder never reaches display.
+          do j=1,locntraits
+            locresponse(j)=0.0
+          end do
+        end if
 
         ! calculate total response per generation
      !   print *,"derde sqrt"
-        loctotalresponse=ii*(sqrt(sigmai))
+        if (sigmai.ge.0.0) then
+          loctotalresponse=ii*(sqrt(sigmai))
+        else
+          loctotalresponse=0.0
+        end if
  !       print *,"local totalresponse",loctotalresponse
 
       !	do p=1,sumits

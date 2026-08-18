@@ -126,26 +126,64 @@ debug build: `test1`/`test2s`/`test3s` now run without a single trap
 previously-never-tested "progeny groups configured and selected" path
 alongside a fully-unconfigured full-sib type.
 
-`blup1` still traps under the strict FPE build, but at an unrelated line
+`blup1` traps under the strict FPE build at an unrelated line
 (`selroutines.f90:1800`, `sqrt` of a negative `sigmai` variance component)
-that this fix does not touch - see "Known residual issue" below.
+that this fix does not touch - see "Resolved: negative `sigmai`" below.
 
-## Known residual issue: negative `sigmai` under strict FPE traps
+## Resolved: negative `sigmai` under strict FPE traps (two sites)
 
-`selection_index` computes `locrih=(sqrt(sigmai/sigmah))` at
-`selroutines.f90:1800`. For `blup1` (and `advgrp`, which shares `blup1`'s
-half-sib-only info-source pattern), `sigmai` comes out **negative**
-(confirmed via debugger: `sigmai=-84.9`, `sigmah=782.8`), so `sqrt` of a
-negative ratio traps under `-ffpe-trap=invalid`. This is unrelated to the
-group-matrix-block fix above - `locfsgroups`/`lochsgroups`/`locprogroups`
-are threaded through correctly, and this line was simply unreachable
-before today's fix removed the earlier crash blocking execution from ever
-getting this far. It's confirmed harmless for actual output: both `blup1`
-and `advgrp` pass byte-for-byte in the normal (non-trapping) `-g -O2
--Wall` build. Likely a numerical-precision artifact of a near-singular
-matrix inversion elsewhere in the routine (a variance component shouldn't
-legitimately go negative). Not yet investigated further - out of scope for
-the group-matrix-block fix.
+`selection_index` computes `sigmai` fresh on every call
+(`selroutines.f90:1787`) as the selection index's own variance. For
+`blup1`/`advgrp`'s info-source pattern (BLUP breeding values + half-sib
+group, no own performance), `sigmai` comes out **transiently negative on
+round 1** of `sel1s`'s 25-round BLUP-equilibrium loop (confirmed via
+debugger: `sigmai=-84.9`, `sigmah=782.8` for `blup1`) - a numerical
+artifact of the naive round-1 starting weights, not a legitimate variance.
+`test1`'s richer info-source list (which includes own performance) never
+hits this; `sqrt` of the negative ratio traps under `-ffpe-trap=invalid`
+at two sites: `locrih=(sqrt(sigmai/sigmah))` (`:1800`) and
+`locresponse`/`loctotalresponse=...sqrt(sigmai)` (`:2190`/`:2195`).
+
+Both are guarded (`if (sigmai.ge.0.0) ... else ... = 0.0`), verified safe
+because neither value survives past round 1: `covariance_update`
+*overwrites* (not accumulates) `response`/`totalresponse`/`srih`/`drih`
+every round, so only round 25's (already-positive, converged) value ever
+reaches display or feeds the next round. Confirmed via a full regression
+run: all 5 fixtures byte-identical before and after the guard. A **third**
+fix - clamping `sigmai` itself to `0.0` at the source - was tried and
+rejected: `corrfs`/`corrhs` (`selroutines.f90:~1969`/`~2144`) also divide
+by `sigmai` directly, and flooring it to exactly `0.0` turns that into an
+`x/0.0` that trips a real downstream P-value bounds check
+(`-error-20- : P-value out of bounds`) even in the *normal*, non-trapping
+build - confirmed by testing, not assumed. Division by the negative-but-
+nonzero `sigmai` is fine (finite, self-corrects by round 2); only the two
+`sqrt` sites needed guarding.
+
+With both sites guarded, `test1`/`test2s`/`test3s` are fully trap-clean.
+`blup1`/`advgrp` now trap one level deeper, inside `rawl3`
+(`seltools.f90`) - see "Known residual issue: `rawl3` log-domain trap"
+below.
+
+## Known residual issue: `rawl3` log-domain trap
+
+With the `sigmai` guards above in place, `blup1`/`advgrp` under the strict
+FPE build now trap inside `rawl3` (`seltools.f90:167-339`, a general
+selection-differential utility called from **10 sites** across
+`selroutines.f90`/`seldiscrete.f90` - not specific to this path). The
+trap is inside one of several `log(1.-rho...)`-style calls, fed by
+`corrfs`/`corrhs` (already clamped to `[-1,1]` before the call at
+`selroutines.f90:~2170`), suggesting a boundary-adjacent correlation value
+- itself a residual echo of round 1's transient negative `sigmai` -
+pushes an intermediate `rho...` term outside `log`'s valid domain.
+
+Not yet investigated: which specific `log()` call traps, whether it's the
+same round-1-transient pattern as `sigmai` (self-corrects and never
+reaches display) or a genuine domain-safety gap in `rawl3` independent of
+this path, and whether other current or future fixtures could hit it via
+a different route (`rawl3` is used far more broadly than the `sigmai`
+sites were). Confirmed **harmless for actual output today**: `blup1`/
+`advgrp` still pass byte-for-byte in the normal, non-trapping build.
+Deferred as a separate follow-up.
 
 ## Adding a new fixture
 
