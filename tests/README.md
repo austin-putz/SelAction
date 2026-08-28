@@ -277,18 +277,130 @@ the first time under regression testing, and it's what surfaced the
 own generated `ovlp2.in` reproduces `ovlp2.out` byte-for-byte) and trap-clean
 under the strict `-finit-real=snan -ffpe-trap=invalid,zero,overflow` build.
 
-A fixture with fs/hs/progeny groups and BLUP breeding values under
-overlapping generations remains a good next addition, but isn't required to
-have *some* `ovlp` regression coverage in place.
+## Resolved: `initblup` uninitialized read (`info_sources`/`info_sourcesovlp`/`info_sources2`/`info_sources3`)
+
+Building `ovlpgrp` (below) surfaced a genuine uninitialized-read bug distinct
+from every other one documented in this file, and present in **four**
+subroutines in `selroutines.f90`, not just the `ovlp`-specific one:
+`info_sources` (discrete 1-stage), `info_sourcesovlp` (`ovlp`),
+`info_sources2` (discrete 2-stage), and `info_sources3` (discrete 3-stage).
+Each declares a local `character(len=1) :: initblup` that is set to `"y"`
+only when info source code 2 (BLUP breeding values) is read, checked in the
+condition `... .and. initblup.eq."y"` that decides whether a half-sib-group
+code (24-43) should trigger the auto-generated "mean EBV of the dams of the
+half-sib group" code (44-63), and explicitly reset to `"n"` at the end of
+the subroutine before every return - **except** on the very first call to
+that subroutine within an entire program run, where nothing has assigned it
+yet and its value is undefined (ordinary Fortran local-variable semantics:
+undefined until first assigned, not zero-initialized).
+
+For `ovlpgrp`'s scenario (own performance + full-sib + half-sib + progeny
+groups, no BLUP source at all - see below), this should never trigger the
+44-63 branch, since no call in the entire run ever reads source code 2. A
+`-O2 -Wall` build happened to produce the correct output regardless (the
+undefined value on the first-ever call happened not to equal `"y"` for that
+particular compile), but a separate `-O0 -fcheck=bounds` build of the exact
+same source, run against the exact same input, printed extra "mean ebv of
+the dams of hs-group" lines that should not have been possible given the
+info-source list actually entered - proof that `initblup`'s value on that
+first call was compiler/build-dependent garbage, not a deterministic result
+of the input. This is not a hypothetical: it actually flipped the printed
+group-covariance information on a build/optimization-level basis, which is
+exactly the kind of value-dependent, hard-to-notice bug this file's
+FPE-trap/SNaN builds exist to catch - it just happened to need a *different*
+build variant (`-fcheck=bounds`, not `-ffpe-trap`) to surface, since reading
+one uninitialized character doesn't trip a floating-point trap.
+
+Fixed by explicitly initializing `initblup="n"` at the top of all four
+subroutines, alongside each one's existing `locpheninfo="n"`/`presone="n"`-
+style initialization block. Verified: after the fix, `-O2 -Wall`,
+`-O0 -fcheck=bounds,do,mem,pointer`, and the strict `-finit-real=snan
+-ffpe-trap=invalid,zero,overflow` build all produce byte-identical output
+for `ovlpgrp.in`, and the full pre-existing 11-fixture suite still passes
+unchanged (this fix touches code shared by `mssel`/`msseld`/`msselo` alike).
+
+## Known issue: BLUP breeding values + groups under overlapping generations
+
+While building `ovlpgrp`, combining a group (full-sib/half-sib/progeny) with
+a BLUP breeding-value info source (code 2) under `ovlp` - with or without
+own performance also present - was found to break the 25-round truncation-
+selection equilibrium loop: `pvalcl` (the per-age-class selected proportion)
+is driven to exactly `0.0` for *every* age class by the time the final
+round completes, even though it starts nonzero after the initial setup.
+Symptoms downstream of that vary by exact input (a `-fcheck=bounds` build
+Fortran-errors on an out-of-bounds `ocovp` access at line ~1231, caused by a
+"find the first age-class with `pvalcl>0`" search loop finding none and
+falling through with a stale loop-index value; a normal build instead just
+prints an all-zero response with `NaN` percentages, or in one adversarial
+combination, `-error-10-: matrix is singular`).
+
+This is **not** the same class of bug as everything else in this file. It
+was deliberately *not* fixed, for a specific reason: the exact same
+info-source combination (BLUP + half-sib group, no own performance) is
+precisely what `blup1`/`advgrp` use under **discrete** generations, and it
+works correctly there, going through the *same* `selection_index` subroutine
+in `selroutines.f90` that `ovlp` calls. That rules out the shared P-matrix
+math being wrong - the bug has to be in `ovlp`-specific code around that
+call (most likely `ovlp_cov_update`, `selroutines.f90:2403-2483`, the
+covariance-propagation routine with no discrete-generation counterpart to
+cross-check against - or the truncation root-finder, `trunc_delta`/
+`riddr_root`). Diagnosing *why* the equilibrium collapses requires
+understanding what those routines are supposed to compute for the
+auto-generated "mean EBV of the dams of a half-sib group" (code 44-63) term
+across successive rounds, which has no internal derivation in this repo to
+check against (`docs/selovlp_report.tex` is an empty stub - see
+`plans/document.md`). Per the triage rule already recorded in `CLAUDE.md`,
+this needs the original theory (Peter Bijma / Jack Dekkers, or the original
+manual) before it's touched, not a guess.
+
+**Practical consequence for fixtures**: `ovlpgrp` (below) deliberately does
+not use BLUP breeding values as an info source, even though exercising BLUP
+under `ovlp` was part of the original goal - own performance + all three
+group types was used instead, since that combination is confirmed to work
+correctly. A fixture that isolates and reproduces this BLUP+group breakage
+precisely (analogous to how `advgrp` isolates the unconfigured-group-type
+guards) would be a good target once someone with the underlying theory can
+say what the correct behavior should be - but capturing *broken* output as
+a "expected" regression baseline before that would just cement the bug.
+
+## Overlapping generations with groups (`ovlpgrp`) fixture
+
+`ovlp2` (above) only ever selects "own performance" as an info source, so
+two `ovlp`-specific code paths had never executed under any fixture:
+`info_sourcesovlp`'s group-code branches (full-sib/half-sib/progeny, codes
+4-83) and `ovlp_cov_update`'s handling of the `fs`/`hs` covariance terms
+`selection_index` passes back for them - `ovlp_cov_update` has no discrete-
+generation counterpart (discrete generations use a different routine,
+`covai_update`), so nothing else in this suite exercises it.
+
+`ovlpgrp` is a 2-trait scenario (`wt`, `gr`), `nclass=2`, truncation
+selection, common environment **enabled** (unlike `ovlp2`), with all three
+group types configured (1 full-sib, 1 half-sib, 1 progeny group, sized like
+the already-vetted `test1`/`advgrp` values) and selected as info sources -
+paired with own performance, not BLUP, per the known issue above - in every
+one of the 4 effective age classes. Output is plausible: response direction
+matches each trait's economic-value sign, percentages of total response sum
+close to 100%, and index variance/accuracy differ sensibly between the sire
+and dam age classes given the population's `nsires < ndams` asymmetry.
+Verified reproducible, and trap-clean under both the strict SNaN/FPE build
+and a full `-fcheck=bounds,do,mem,pointer` build (the latter added
+specifically because of what building this fixture found - see the
+`initblup` section above).
+
+`ovlpgrp` doesn't cover BLUP breeding values under overlapping generations
+at all (see the known issue above for why), nor does it cover a partially-
+/unconfigured group type the way `advgrp` does for discrete generations -
+both remain good follow-up work.
 
 ## Adding a new fixture
 
-There are currently 6 fixtures: `test1` (3-trait discrete 1-stage),
+There are currently 7 fixtures: `test1` (3-trait discrete 1-stage),
 `test2s` (discrete 2-stage), `test3s` (discrete 3-stage), `blup1`
 (discrete 1-stage isolating the BLUP-only inbreeding path), `advgrp`
 (discrete 1-stage isolating the unconfigured/partially-configured
-group-type matrix-block guards, including progeny groups), and `ovlp2`
-(overlapping generations, 2-trait, 2-age-class-per-sex - see above). New
+group-type matrix-block guards, including progeny groups), `ovlp2`
+(overlapping generations, 2-trait, 2-age-class-per-sex), and `ovlpgrp`
+(overlapping generations with all three group types - see above). New
 fixtures must come from actually running a real binary with a valid,
 non-singular parameter set - do not hand-write expected output.
 

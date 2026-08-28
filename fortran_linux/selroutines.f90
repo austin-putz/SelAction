@@ -340,6 +340,7 @@ subroutine invrt(a,ia,n)
 	end if
 
  12900  locpheninfo="n"
+        initblup="n"
         do i=1,84
           loctempsource(locp,i)=0
         end do
@@ -503,6 +504,7 @@ subroutine invrt(a,ia,n)
         end if
 
  12900  locpheninfo="n"
+        initblup="n"
         do i=1,84
           loctempsource(locq,locp,i)=0
         end do
@@ -673,6 +675,7 @@ subroutine invrt(a,ia,n)
         presfs="n"
         preshs="n"
         presprog="n"
+        initblup="n"
         do i=1,84
           loctempsourcems2(locp,i)=loctempsource(locp,i)
         end do
@@ -879,6 +882,7 @@ subroutine invrt(a,ia,n)
         presfs="n"
         preshs="n"
         presprog="n"
+        initblup="n"
         do i=1,84
           loctempsourcems2(locp,i)=loctempsource(locp,i)
         end do
