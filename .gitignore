@@ -27,3 +27,6 @@ docs/*.synctex.gz
 
 # OS cruft
 .DS_Store
+
+# macOS debug-symbol bundles from gfortran -g
+*.dSYM/

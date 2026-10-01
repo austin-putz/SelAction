@@ -66,12 +66,12 @@ SelAction is a Fortran-based program developed by Marc J.M. Rutten and Piter Bij
 |-----------|-------------|--------|
 | `fortran_orig/` | Original Fortran code from Peter Bijma | Reference only — never modified |
 | `fortran_linux/` | Linux-compatible fork of the original code | Working — recommended for use |
-| `fortran_mac/` | macOS-compatible fork of the original code | **Not started** — next planned step, see [macOS](#macos-not-started-yet) below |
+| `fortran_mac/` | macOS fork, started from `fortran_linux/` | Working — verified on macOS (Intel, gfortran 14.2), see [macOS](#macos) below |
 | `manual/` | User manual and program description (Markdown + original PDF) | Complete |
 | `docs/` | LaTeX technical reports on the underlying methods | Complete |
 | `examples/` | Sample input files and a worked GUI-based example | Complete |
 
-`fortran_linux/` is **not** a rewrite — it's `fortran_orig/` with the minimum changes needed to satisfy a modern gfortran compiler (array-constructor syntax, line-continuation formatting, a couple of local-variable renames, one added `USE` statement). There is no separate "2.0" or "modernized" codebase; earlier drafts of this documentation referenced one, but it was never built and has been removed from these docs. The macOS fork will follow the same approach once work on it starts.
+`fortran_linux/` is **not** a rewrite — it's `fortran_orig/` with the minimum changes needed to satisfy a modern gfortran compiler (array-constructor syntax, line-continuation formatting, a couple of local-variable renames, one added `USE` statement). There is no separate "2.0" or "modernized" codebase; earlier drafts of this documentation referenced one, but it was never built and has been removed from these docs. `fortran_mac/` follows the same approach: it's a copy of `fortran_linux/` plus only the fixes made since (see `NEWS.md`).
 
 ### Files (present in `fortran_orig/` and `fortran_linux/` today; same set expected once `fortran_mac/` exists)
 
@@ -92,7 +92,7 @@ SelAction is a Fortran-based program developed by Marc J.M. Rutten and Piter Bij
 ### Prerequisites
 
 - **Fortran Compiler**: gfortran (GNU Fortran) 4.6 or later
-- **Operating System**: Linux (macOS support planned, not yet built — see below)
+- **Operating System**: Linux or macOS
 - **Memory**: Minimum 512 MB RAM (depends on problem size)
 
 ### Installing gfortran
@@ -130,9 +130,22 @@ gfortran -o msselo seltools.f90 selparameters.f90 selroutines.f90 \
 
 All three binaries build with this exact sequence and are covered by regression fixtures in `tests/fixtures/` — run `tests/run_tests.sh` to check (see `tests/README.md`). `mssel`/`msseld` validate against five discrete-generation fixtures; `msselo` validates against `ovlp2`, an overlapping-generations fixture.
 
-### macOS (not started yet)
+### macOS
 
-There is no `fortran_mac/` directory in this repo yet — an earlier attempt diverged too far from `fortran_orig/` to be worth debugging and was deleted. The macOS port is the next planned step: start from a fresh copy of `fortran_linux/` (the known-working reference above) and apply only the minimum changes a macOS gfortran toolchain needs, the same way `fortran_linux/` was derived from `fortran_orig/`. Until then, build and test on Linux (a Linux VM/container works fine on a Mac in the meantime).
+Install gfortran with Homebrew (`brew install gcc` - gfortran ships inside Homebrew's `gcc` formula; Apple's own `gcc` is clang and has no Fortran compiler). Then use the same commands, same file order, from `fortran_mac/`:
+
+```bash
+cd fortran_mac/
+
+gfortran -o mssel seltools.f90 selparameters.f90 selroutines.f90 \
+         selinbreeding.f90 selovlp.f90 seldiscrete.f90 mssel.f90
+gfortran -o msseld seltools.f90 selparameters.f90 selroutines.f90 \
+         selinbreeding.f90 seldiscrete.f90 msseld.f90
+gfortran -o msselo seltools.f90 selparameters.f90 selroutines.f90 \
+         selovlp.f90 msselo.f90
+```
+
+Verified with GNU Fortran 14.2.0 on macOS (x86_64): all three binaries build without errors and pass every fixture (`tests/run_tests.sh fortran_mac`). No macOS-specific source changes were needed; `fortran_mac/` differs from `fortran_linux/` only by bug fixes listed in `NEWS.md`.
 
 ### Original version (reference only)
 
@@ -342,8 +355,7 @@ See `examples/output_discrete_1_stage/` for a complete 3-trait, single-stage wor
 
 ## Known Issues
 
-- **macOS build doesn't exist yet.** `fortran_mac/` was deleted after an earlier attempt diverged too far from `fortran_orig/` to debug; it's the next planned step, starting fresh from `fortran_linux/`. Use `fortran_linux/` — including on macOS via a Linux VM/container — until that port exists.
-- **`selroutines.f90` contains dead, duplicated code.** Somewhere in its history, the entire `dFmtblup` inbreeding function (and its helpers `create_C`, `Poissoncorr`, `hyper_correct`) got copy-pasted into `selroutines.f90` in addition to living in `selinbreeding.f90`/`MODULE Inbreeding` where it's actually used. This is present in `fortran_orig/` too — it's not something introduced by the Linux fork. It only becomes a build error because `selinbreeding.f90` does `USE selroutines` unrestricted, which collides with its own `dFmtblup`. `fortran_linux/selinbreeding.f90` fixes this with `USE selroutines, ONLY: trunc` (the one symbol it actually needs); `fortran_orig/` is untouched by that fix, so `mssel`/`msseld` from `fortran_orig/` still won't build even with correct file order. The macOS port will need the same fix.
+- **`selroutines.f90` contains dead, duplicated code.** Somewhere in its history, the entire `dFmtblup` inbreeding function (and its helpers `create_C`, `Poissoncorr`, `hyper_correct`) got copy-pasted into `selroutines.f90` in addition to living in `selinbreeding.f90`/`MODULE Inbreeding` where it's actually used. This is present in `fortran_orig/` too — it's not something introduced by the Linux fork. It only becomes a build error because `selinbreeding.f90` does `USE selroutines` unrestricted, which collides with its own `dFmtblup`. `fortran_linux/selinbreeding.f90` fixes this with `USE selroutines, ONLY: trunc` (the one symbol it actually needs); `fortran_orig/` is untouched by that fix, so `mssel`/`msseld` from `fortran_orig/` still won't build even with correct file order. `fortran_mac/` carries the same fix.
 - **Singular matrix errors**: usually caused by inconsistent genetic parameters (correlation matrices that aren't positive definite) — check inputs before assuming a code bug.
 - **Module not found / build order**: always compile `seltools.f90` → `selparameters.f90` → `selroutines.f90` → `selinbreeding.f90`/`selovlp.f90`/`seldiscrete.f90` → the main program, in that order (see [Installation and Compilation](#installation-and-compilation)). The main program must always come last.
 
