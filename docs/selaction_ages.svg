@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 250" role="img" aria-label="Sire and dam age class weighting">
+  <defs><style>text{font-family:Arial,Helvetica,sans-serif;fill:#14243b}.head{font-size:17px;font-weight:700}.small{font-size:13px;fill:#476276}.s{fill:#e5f0ed;stroke:#2d756b;stroke-width:1.5}.d{fill:#e9eef5;stroke:#4f719b;stroke-width:1.5}.out{fill:#f7f8fa;stroke:#8294a5;stroke-width:1.4}.arrow{stroke:#647e90;stroke-width:2;fill:none;marker-end:url(#a)}</style><marker id="a" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L8 4L0 8Z" fill="#647e90"/></marker></defs>
+  <rect width="900" height="250" fill="white"/>
+  <text class="head" x="25" y="31">Each age class has its own index and selected fraction</text>
+  <text class="small" x="25" y="80">Sires</text><text class="small" x="25" y="164">Dams</text>
+  <rect class="s" x="92" y="52" width="125" height="55" rx="8"/><text x="112" y="76">Age 1</text><text class="small" x="112" y="96">weight wₛ,₁</text>
+  <rect class="s" x="238" y="52" width="125" height="55" rx="8"/><text x="258" y="76">Age 2</text><text class="small" x="258" y="96">weight wₛ,₂</text>
+  <rect class="s" x="384" y="52" width="125" height="55" rx="8"/><text x="404" y="76">Age K</text><text class="small" x="404" y="96">weight wₛ,K</text>
+  <rect class="d" x="92" y="136" width="125" height="55" rx="8"/><text x="112" y="160">Age 1</text><text class="small" x="112" y="180">weight wᵈ,₁</text>
+  <rect class="d" x="238" y="136" width="125" height="55" rx="8"/><text x="258" y="160">Age 2</text><text class="small" x="258" y="180">weight wᵈ,₂</text>
+  <rect class="d" x="384" y="136" width="125" height="55" rx="8"/><text x="404" y="160">Age K</text><text class="small" x="404" y="180">weight wᵈ,K</text>
+  <path class="arrow" d="M518 80H580V124H610"/><path class="arrow" d="M518 164H580V124H610"/>
+  <rect class="out" x="611" y="78" width="262" height="95" rx="9"/><text class="head" x="629" y="106">Annual response</text><text class="small" x="629" y="132">weighted sire + dam paths</text><text class="small" x="629" y="153">divided by generation interval L</text>
+  <text class="small" x="25" y="226">Selected counts also weight the across-age covariance mixture.</text>
+</svg>

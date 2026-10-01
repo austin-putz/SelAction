@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 230" role="img" aria-label="Three stages of joint selection">
+  <defs><style>text{font-family:Arial,Helvetica,sans-serif;fill:#14243b}.head{font-size:17px;font-weight:700}.small{font-size:13px;fill:#476276}.box{fill:#f4f8fb;stroke:#94adbd;stroke-width:1.4}.pass{fill:#e6f1ee;stroke:#2f796b;stroke-width:1.5}.arrow{stroke:#57748a;stroke-width:2;fill:none;marker-end:url(#a)}</style><marker id="a" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L8 4L0 8Z" fill="#57748a"/></marker></defs>
+  <rect width="900" height="230" fill="white"/>
+  <text class="head" x="25" y="32">Candidates survive correlated index thresholds</text>
+  <rect class="box" x="25" y="66" width="180" height="95" rx="9"/><text class="head" x="42" y="95">Stage 1</text><text class="small" x="42" y="121">Z₁ &gt; t₁</text><text class="small" x="42" y="144">fraction p₁</text>
+  <rect class="box" x="252" y="66" width="180" height="95" rx="9"/><text class="head" x="269" y="95">Stage 2</text><text class="small" x="269" y="121">Z₂ &gt; t₂</text><text class="small" x="269" y="144">fraction p₂ of survivors</text>
+  <rect class="box" x="479" y="66" width="180" height="95" rx="9"/><text class="head" x="496" y="95">Stage 3</text><text class="small" x="496" y="121">Z₃ &gt; t₃</text><text class="small" x="496" y="144">fraction p₃ of survivors</text>
+  <rect class="pass" x="706" y="66" width="169" height="95" rx="9"/><text class="head" x="723" y="95">Selected</text><text class="small" x="723" y="121">joint tail event</text><text class="small" x="723" y="144">P = p₁p₂p₃</text>
+  <path class="arrow" d="M205 114H243"/><path class="arrow" d="M432 114H470"/><path class="arrow" d="M659 114H697"/>
+  <text class="small" x="25" y="203">Thresholds solve successive 1-, 2-, and 3-dimensional normal tail probabilities.</text>
+</svg>
