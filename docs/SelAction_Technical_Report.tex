@@ -226,7 +226,7 @@ n_{g,c}=N_{g,c}\bar\Phi\left(\frac{x_g-m_{g,c}}{\sqrt{V_{I,g,c}}}\right),\qquad
 m_{g,c}=-(c-1)\Delta H_g^{\mathrm{year}},\qquad
 \sum_c n_{s,c}=M,\quad\sum_c n_{d,c}=F.
 \end{equation}
-\src{trunc\_delta} clips each standardized threshold to $[-3,3]$, and \src{riddr\_root} solves the count equation. A standard survival function and one-dimensional root finder can replace these numerical tools while retaining the clip for numerical agreement.
+\src{trunc\_delta} evaluates each standardized threshold with the exact normal survival function ($\bar\Phi$, computed by \src{sdutt1} via the Fortran \src{erfc} intrinsic), and \src{riddr\_root} solves the count equation with $x_g$ bracketed within $\pm 8$ index standard deviations of each class mean. Earlier versions approximated $\bar\Phi$ by Gauss--Hermite quadrature, which is inaccurate beyond about 4 standard deviations, and clipped standardized thresholds to $[-3,3]$; that clip forced at least $\bar\Phi(3)\approx 0.135\%$ of every age class to be selected (see \src{NEWS.md}).
 \begin{figure}[ht]
 \centering\includegraphics[width=.86\linewidth]{selaction_ages.pdf}
 \caption{Selected age classes determine each parental path, the generation interval, and the covariance mixture. Editable XML/SVG source: \src{selaction\_ages.svg}.}\label{fig:ages}
