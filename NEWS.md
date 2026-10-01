@@ -9,6 +9,44 @@
   directory; fixes below marked *(fortran_mac only)* have not been applied to
   `fortran_linux/`.
 
+## Changes to results (overlapping generations)
+
+* **Truncation selection under overlapping generations (`ovlp`) now selects
+  the requested number of sires and dams.** Two bugs in the original
+  threshold search (`selovlp.f90`, present in `fortran_orig/` too) are fixed.
+  This changes `msselo` output for many inputs. *(fortran_mac only)*
+
+  1. *Search bracket too narrow.* Each round, `riddr_root` looks for the
+     truncation threshold at which the selected number equals `nsires`/`ndams`,
+     but searched only within ±1.5 index SD of each age-class mean. The
+     threshold could therefore never be more than 1.5 SD above the youngest
+     class, so at least P(Z > 1.5) = 6.7% of that class was always selected.
+     When the target needed more intense selection, the root was not
+     bracketed and `riddr_root` gave up silently, leaving the proportions at
+     the bracket edge. Example: the `ovlpgrp` fixture asks for 10 sires from
+     1500 candidates but selected 67.5 (output reported "number of selected
+     sires: 10.000" while the age-class lines summed to 67.5); runs with 5,
+     10, 20 or 40 sires all gave identical results. The bracket is now ±3 SD,
+     matching the ±3 SD clamp already applied inside `trunc_delta`.
+  2. *Proportions taken from the wrong point.* `trunc_delta` updates
+     `pvalcl`/`nselec` (the per-age-class selected proportions) as a side
+     effect of every evaluation, and `riddr_root` can exit right after
+     evaluating its bracket midpoint rather than the root. The proportions used
+     in the next round then did not match the threshold found. After
+     convergence this periodically knocked the equilibrium loop off its fixed
+     point (every ~9-11 rounds), so the reported round-25 values depended on
+     where a kick happened to land - and differed by ~1% between `-O0` and
+     `-O2` builds. `trunc_delta` is now re-evaluated at the returned root.
+
+  Verified: in a sweep of 72 overlapping-generation inputs (BLUP, groups,
+  common environment on/off, two population sizes) plus both fixtures, every
+  run now hits its sire and dam targets, `-O0` and `-O2` agree, and the strict
+  debug build runs trap-free. Old and new code agree (to within the ~1%
+  kick effect) wherever the old bracket happened to contain the root (>= 6.7%
+  of young sires selected). Regenerated fixtures: `ovlpgrp` (total response
+  for wt 4.755 -> 5.577; sires 67.5 -> 10 selected) and `ovlp2` (3.435 ->
+  3.441; it was already near its target by coincidence).
+
 ## Bug fixes
 
 * `covai_update()` (`selroutines.f90`) no longer takes the unused `realp`
@@ -27,9 +65,34 @@
 
 ## Known issues
 
-* BLUP breeding values combined with a full-sib/half-sib/progeny group under
-  overlapping generations (`ovlp`) still give an all-zero response / `NaN`.
-  See `tests/README.md`.
+* The previously documented "BLUP + group under `ovlp` gives an all-zero
+  response / `NaN`" could not be reproduced, before or after the fix above,
+  in a 72-input sweep of BLUP combined with full-sib, half-sib and progeny
+  groups. The input that originally triggered it was not recorded. It may
+  have been the silent root-finder failure fixed above, but that is not
+  confirmed. Kept open until a reproducing input turns up.
+* BLUP (code 2) as the *only* info source gives a zero response, which is
+  correct (parental EBVs carry no information without phenotypes), but the
+  "% of total response" lines then print meaningless values instead of
+  0 or n/a.
+* If a selection target needs fewer than about 0.13% (P(Z > 3)) selected per
+  age class, `trunc_delta`'s ±3 SD clamp still makes the root unreachable,
+  and `riddr_root` still fails silently. A warning should be added.
+
+## Questions for Peter Bijma / Jack Dekkers
+
+1. Was the ±1.5 SD search bracket in `selovlp.f90` deliberate, or just a
+   starting range? Is ±3 SD (matching the clamp in `trunc_delta`) acceptable?
+2. Is the ±3 SD clamp in `trunc_delta` there because of the accuracy of
+   `sdutt1` in the far tail, or for another reason?
+3. With the fix, the equilibrium breeding-goal variance in `ovlpgrp` is
+   U-shaped in the number of sires (549 at 5 sires, 515 at 40, 519 at 150)
+   and index accuracy *rises* as sire selection gets more intense (0.707 ->
+   0.725). The old code shows the same upward trend for 100-150 sires, so
+   this is model behaviour, not the fix. Is that expected (e.g. from the
+   between-age-class term in the covariance update), or worth a look?
+4. Do you recall an input where BLUP + groups under overlapping generations
+   gave an all-zero response?
 
 # Earlier history (before NEWS.md, summarised from git log)
 

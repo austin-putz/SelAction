@@ -11,7 +11,7 @@
         use selroutines
 
 	implicit none
-        real :: genints_local, genintd_local, genint_local
+        real :: genints_local, genintd_local, genint_local, rootdelta
 
 
         print *,"filename? (max = 8 characters)"
@@ -958,8 +958,8 @@
      !       print *,"stotalresponse",stotalresponse
             do p=1,nclass
               if (osigmai(p).gt.0.0) then
-                xln=((0.0)-((p-1)*stotalresponse))-(1.5*(sqrt(osigmai(p))))
-                xhn=((0.0)-((p-1)*stotalresponse))+(1.5*(sqrt(osigmai(p))))
+                xln=((0.0)-((p-1)*stotalresponse))-(3.0*(sqrt(osigmai(p))))
+                xhn=((0.0)-((p-1)*stotalresponse))+(3.0*(sqrt(osigmai(p))))
               end if
               if (xln.lt.xl) then
                 xl=xln
@@ -971,6 +971,10 @@
             initindsel="s"
          !   print *," sires"
             call riddr_root(trunc_delta,zriddr,xl,xh,tol)
+            ! trunc_delta sets pvalcl/nselec as a side effect, and riddr_root can
+            ! exit right after evaluating its bracket midpoint, so re-evaluate at the
+            ! returned root to make pvalcl/nselec match it
+            rootdelta=trunc_delta(zriddr)
 
             ! dams
             xl=0.0
@@ -979,8 +983,8 @@
             xhn=0.0
             do p=nclass+1,2*nclass
               if (osigmai(p).gt.0.0) then
-                xln=((0.0)-((p-nclass-1)*dtotalresponse))-(1.5*(sqrt(osigmai(p))))
-                xhn=((0.0)-((p-nclass-1)*dtotalresponse))+(1.5*(sqrt(osigmai(p))))
+                xln=((0.0)-((p-nclass-1)*dtotalresponse))-(3.0*(sqrt(osigmai(p))))
+                xhn=((0.0)-((p-nclass-1)*dtotalresponse))+(3.0*(sqrt(osigmai(p))))
               end if
               if (xln.lt.xl) then
                 xl=xln
@@ -992,6 +996,10 @@
             initindsel="d"
      !       print *," dams"
             call riddr_root(trunc_delta,zriddr,xl,xh,tol)
+            ! trunc_delta sets pvalcl/nselec as a side effect, and riddr_root can
+            ! exit right after evaluating its bracket midpoint, so re-evaluate at the
+            ! returned root to make pvalcl/nselec match it
+            rootdelta=trunc_delta(zriddr)
             oi=0.0
             ok=0.0
      !       print *," "

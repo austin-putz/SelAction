@@ -319,49 +319,55 @@ style initialization block. Verified: after the fix, `-O2 -Wall`,
 for `ovlpgrp.in`, and the full pre-existing 11-fixture suite still passes
 unchanged (this fix touches code shared by `mssel`/`msseld`/`msselo` alike).
 
-## Known issue: BLUP breeding values + groups under overlapping generations
+## Resolved: truncation threshold search under overlapping generations (`ovlp2`/`ovlpgrp` regenerated)
 
-While building `ovlpgrp`, combining a group (full-sib/half-sib/progeny) with
-a BLUP breeding-value info source (code 2) under `ovlp` - with or without
-own performance also present - was found to break the 25-round truncation-
-selection equilibrium loop: `pvalcl` (the per-age-class selected proportion)
-is driven to exactly `0.0` for *every* age class by the time the final
-round completes, even though it starts nonzero after the initial setup.
-Symptoms downstream of that vary by exact input (a `-fcheck=bounds` build
-Fortran-errors on an out-of-bounds `ocovp` access at line ~1231, caused by a
-"find the first age-class with `pvalcl>0`" search loop finding none and
-falling through with a stale loop-index value; a normal build instead just
-prints an all-zero response with `NaN` percentages, or in one adversarial
-combination, `-error-10-: matrix is singular`).
+Each round of `ovlp`'s 25-round equilibrium loop, `riddr_root`
+(`selroutines.f90`, Ridders' method from Numerical Recipes) solves
+`trunc_delta(x)=0` for the truncation threshold `x` at which the number
+selected across age classes equals `nsires` (or `ndams`). Two bugs, both
+inherited from `fortran_orig/`:
 
-This is **not** the same class of bug as everything else in this file. It
-was deliberately *not* fixed, for a specific reason: the exact same
-info-source combination (BLUP + half-sib group, no own performance) is
-precisely what `blup1`/`advgrp` use under **discrete** generations, and it
-works correctly there, going through the *same* `selection_index` subroutine
-in `selroutines.f90` that `ovlp` calls. That rules out the shared P-matrix
-math being wrong - the bug has to be in `ovlp`-specific code around that
-call (most likely `ovlp_cov_update`, `selroutines.f90:2403-2483`, the
-covariance-propagation routine with no discrete-generation counterpart to
-cross-check against - or the truncation root-finder, `trunc_delta`/
-`riddr_root`). Diagnosing *why* the equilibrium collapses requires
-understanding what those routines are supposed to compute for the
-auto-generated "mean EBV of the dams of a half-sib group" (code 44-63) term
-across successive rounds, which has no internal derivation in this repo to
-check against (`docs/selovlp_report.tex` is an empty stub - see
-`plans/document.md`). Per the triage rule already recorded in `CLAUDE.md`,
-this needs the original theory (Peter Bijma / Jack Dekkers, or the original
-manual) before it's touched, not a guess.
+1. **Bracket too narrow.** `selovlp.f90` searched only within ±1.5 index SD
+   of each age-class mean, so the threshold could never exceed +1.5 SD over
+   the youngest class: at least P(Z>1.5)=0.0668 of it was always selected.
+   When the target required more intense selection, `fa*fb>0`, the root was
+   not bracketed and `riddr_root` returned silently with `pvalcl` left at
+   the bracket edge. `ovlpgrp` (10 sires from 1000+500 candidates) actually
+   selected 67.5 sires, and its old expected output reported "number of
+   selected sires : 10.000" alongside age-class lines summing to 67.5.
+   `ovlp2` looked right only because 0.0668 x 150 is about 10. Now ±3 SD,
+   matching the ±3 SD clamp on `dumt` inside `trunc_delta` (the function
+   is flat beyond it, so a wider bracket gains nothing).
+2. **Side effect taken at the wrong point.** `trunc_delta` writes
+   `pvalcl`/`nselec`/`genints`/`genintd` on every call, and `riddr_root`'s
+   `ABS(d-zriddr)<tol` exit fires right after evaluating the bracket
+   midpoint `c`, not the root. After convergence that exit is the usual
+   one, so the loop was periodically kicked off its fixed point (every
+   ~9-11 rounds) and round 25's reported values depended on where a kick
+   landed - roughly 1% differences between `-O0` and `-O2`. `selovlp.f90`
+   now calls `trunc_delta(zriddr)` once more after each `riddr_root`.
 
-**Practical consequence for fixtures**: `ovlpgrp` (below) deliberately does
-not use BLUP breeding values as an info source, even though exercising BLUP
-under `ovlp` was part of the original goal - own performance + all three
-group types was used instead, since that combination is confirmed to work
-correctly. A fixture that isolates and reproduces this BLUP+group breakage
-precisely (analogous to how `advgrp` isolates the unconfigured-group-type
-guards) would be a good target once someone with the underlying theory can
-say what the correct behavior should be - but capturing *broken* output as
-a "expected" regression baseline before that would just cement the bug.
+Verification: a 72-input sweep (BLUP code 2 alone and with each group type,
+with/without own performance and common environment, two population sizes)
+plus both fixtures - every run hits its sire/dam targets, `-O0`/`-O2` agree,
+and the strict SNaN/FPE/`-fcheck=all` build is trap-free. Varying `nsires`
+on `ovlpgrp` shows old and new code agree wherever the old bracket contained
+the root (>= 67.5 sires); below that, the old code returned identical output
+for 5/10/20/40 sires. `ovlp2.out`/`ovlpgrp.out` were regenerated with GNU
+Fortran 14.2.0 on macOS x86_64 (`fortran_mac/msselo`). Open questions for the
+original authors are listed in `NEWS.md`.
+
+## Previously reported: BLUP breeding values + groups under overlapping generations
+
+Earlier notes recorded that combining BLUP (code 2) with a group under `ovlp`
+drove `pvalcl` to 0 in every age class (all-zero response / `NaN`, or
+`-error-10-: matrix is singular`). This could **not** be reproduced, before
+or after the fix above, in the 72-input sweep; the triggering input was not
+saved. It may have been the silent root-finder failure above, but that is
+not confirmed. BLUP as the *only* source gives a zero response, which is
+correct (no phenotypic information) - only its "% of total response" line
+is meaningless. If the collapse is seen again, save the `.in` file as a
+fixture candidate.
 
 ## Overlapping generations with groups (`ovlpgrp`) fixture
 
@@ -377,7 +383,7 @@ generation counterpart (discrete generations use a different routine,
 selection, common environment **enabled** (unlike `ovlp2`), with all three
 group types configured (1 full-sib, 1 half-sib, 1 progeny group, sized like
 the already-vetted `test1`/`advgrp` values) and selected as info sources -
-paired with own performance, not BLUP, per the known issue above - in every
+paired with own performance - in every
 one of the 4 effective age classes. Output is plausible: response direction
 matches each trait's economic-value sign, percentages of total response sum
 close to 100%, and index variance/accuracy differ sensibly between the sire
@@ -387,8 +393,9 @@ and a full `-fcheck=bounds,do,mem,pointer` build (the latter added
 specifically because of what building this fixture found - see the
 `initblup` section above).
 
-`ovlpgrp` doesn't cover BLUP breeding values under overlapping generations
-at all (see the known issue above for why), nor does it cover a partially-
+`ovlpgrp.out` was regenerated after the threshold-search fix above (it
+previously selected 67.5 sires instead of 10). `ovlpgrp` doesn't cover BLUP
+breeding values under overlapping generations, nor does it cover a partially-
 /unconfigured group type the way `advgrp` does for discrete generations -
 both remain good follow-up work.
 
