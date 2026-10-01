@@ -49,6 +49,19 @@
 
 ## Bug fixes
 
+* Overlapping generations (`msselo`) now prints a WARNING in the output file
+  and on screen when the requested number of sires or dams cannot be
+  selected. Previously this failed silently. It happens when selection is
+  more intense than `trunc_delta` can represent: its ±3 SD clamp means at
+  least P(Z > 3) = 0.135% of *every* age class is always selected, so e.g.
+  1 sire from 1000 + 500 candidates gives about 2 sires. Checked: no false
+  warnings across the 74 inputs used for the fix above. No change to any
+  numbers. *(fortran_mac only)*
+* "% of total response" now prints `n/a` when the total response rounds to
+  0.000. Previously it divided by a near-zero total and printed meaningless
+  values (e.g. 10.198 / 54.813 with BLUP as the only info source under
+  `ovlp`). Applies to `ovlp` and to `sel1s`/`sel2s`/`sel3s`. All fixtures
+  byte-identical. *(fortran_mac only)*
 * `covai_update()` (`selroutines.f90`) no longer takes the unused `realp`
   argument. Its four callers in `sel2s`/`sel3s` (`seldiscrete.f90`) passed
   `srealp`/`drealp`, which are never allocated - invalid Fortran, caught by
@@ -71,20 +84,29 @@
   groups. The input that originally triggered it was not recorded. It may
   have been the silent root-finder failure fixed above, but that is not
   confirmed. Kept open until a reproducing input turns up.
-* BLUP (code 2) as the *only* info source gives a zero response, which is
-  correct (parental EBVs carry no information without phenotypes), but the
-  "% of total response" lines then print meaningless values instead of
-  0 or n/a.
-* If a selection target needs fewer than about 0.13% (P(Z > 3)) selected per
-  age class, `trunc_delta`'s ±3 SD clamp still makes the root unreachable,
-  and `riddr_root` still fails silently. A warning should be added.
+* BLUP (code 2) as the *only* info source under `ovlp` runs to an all-zero
+  response (correct: parental EBVs carry no information without phenotypes;
+  percentages now show `n/a`). Discrete generations instead refuse this input
+  with a "no phenotypic information sources" message; `ovlp` lacks that check
+  and should probably get it.
+* The ±3 SD clamp in `trunc_delta` also acts as a floor: every age class
+  contributes at least 0.135% of its animals, even when the threshold is far
+  above it. In both `ovlp` fixtures the older sire class sits exactly on this
+  floor (`ovlp2`: 0.108 of 80; `ovlpgrp`: 0.675 of 500). `sdutt1` (10-point
+  Gauss quadrature) is accurate to ~0.03% out to 4 SD but fails beyond ~4.5 SD
+  (off by 14x at 5 SD), which may be why the clamp exists. Replacing `sdutt1`
+  in `trunc_delta` with the exact tail (Fortran's `erfc`) would remove the
+  clamp and the floor, but changes results (`ovlpgrp` total for wt about
+  5.58 -> 5.9), so it waits on question 2 below.
 
 ## Questions for Peter Bijma / Jack Dekkers
 
 1. Was the ±1.5 SD search bracket in `selovlp.f90` deliberate, or just a
    starting range? Is ±3 SD (matching the clamp in `trunc_delta`) acceptable?
 2. Is the ±3 SD clamp in `trunc_delta` there because of the accuracy of
-   `sdutt1` in the far tail, or for another reason?
+   `sdutt1` in the far tail, or for another reason? It forces at least
+   0.135% of every age class to be selected (see Known issues). Would
+   computing the tail exactly (`erfc`) and dropping the clamp be acceptable?
 3. With the fix, the equilibrium breeding-goal variance in `ovlpgrp` is
    U-shaped in the number of sires (549 at 5 sires, 515 at 40, 519 at 150)
    and index accuracy *rises* as sire selection gets more intense (0.707 ->

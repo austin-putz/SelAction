@@ -365,8 +365,8 @@ drove `pvalcl` to 0 in every age class (all-zero response / `NaN`, or
 or after the fix above, in the 72-input sweep; the triggering input was not
 saved. It may have been the silent root-finder failure above, but that is
 not confirmed. BLUP as the *only* source gives a zero response, which is
-correct (no phenotypic information) - only its "% of total response" line
-is meaningless. If the collapse is seen again, save the `.in` file as a
+correct (no phenotypic information); its "% of total response" lines now
+print `n/a` instead of dividing by a near-zero total. If the collapse is seen again, save the `.in` file as a
 fixture candidate.
 
 ## Overlapping generations with groups (`ovlpgrp`) fixture

@@ -11,7 +11,7 @@
         use selroutines
 
 	implicit none
-        real :: genints_local, genintd_local, genint_local, rootdelta
+        real :: genints_local, genintd_local, genint_local, rootdelta, missdelta_s, missdelta_d
 
 
         print *,"filename? (max = 8 characters)"
@@ -712,6 +712,9 @@
 
         ! index calculations
         call racine
+        ! selected minus requested sires/dams in the last round (truncation only)
+        missdelta_s=0.0
+        missdelta_d=0.0
         selrounds=25
         oresponse=0
         do o=1,selrounds
@@ -975,6 +978,7 @@
             ! exit right after evaluating its bracket midpoint, so re-evaluate at the
             ! returned root to make pvalcl/nselec match it
             rootdelta=trunc_delta(zriddr)
+            missdelta_s=rootdelta
 
             ! dams
             xl=0.0
@@ -1000,6 +1004,7 @@
             ! exit right after evaluating its bracket midpoint, so re-evaluate at the
             ! returned root to make pvalcl/nselec match it
             rootdelta=trunc_delta(zriddr)
+            missdelta_d=rootdelta
             oi=0.0
             ok=0.0
      !       print *," "
@@ -1121,6 +1126,24 @@
         write(unit=20, fmt=*) "  "
         write(unit=20, fmt='(a49,f8.3)') "                      number of selected sires : ",nsires
         write(unit=20, fmt='(a49,f8.3)') "                       number of selected dams : ",ndams
+        if (abs(missdelta_s).gt.0.01*nsires) then
+          ! no threshold selects exactly this many: selection is more intense than
+          ! trunc_delta can represent (its +/-3 SD clamp floors each age class at
+          ! P(Z>3)=0.135% selected), so the numbers below are only approximate
+          write(unit=20, fmt='(a,f10.3,a)') "  WARNING: requested number of sires cannot be met; selected ", &
+            & nsires+missdelta_s," (too intense: >= 0.135% of every age class is selected)"
+          print '(a,f10.3,a)', "  WARNING: requested number of sires cannot be met; selected ", &
+            & nsires+missdelta_s," (too intense: >= 0.135% of every age class is selected)"
+        end if
+        if (abs(missdelta_d).gt.0.01*ndams) then
+          ! no threshold selects exactly this many: selection is more intense than
+          ! trunc_delta can represent (its +/-3 SD clamp floors each age class at
+          ! P(Z>3)=0.135% selected), so the numbers below are only approximate
+          write(unit=20, fmt='(a,f10.3,a)') "  WARNING: requested number of dams cannot be met; selected ", &
+            & ndams+missdelta_d," (too intense: >= 0.135% of every age class is selected)"
+          print '(a,f10.3,a)', "  WARNING: requested number of dams cannot be met; selected ", &
+            & ndams+missdelta_d," (too intense: >= 0.135% of every age class is selected)"
+        end if
         write(unit=20, fmt='(a49,f8.3)') " number of male selection candidates per dam   : ",noffs
         write(unit=20, fmt='(a49,f8.3)') " number of female selection candidates per dam : ",noffd
         write(unit=20, fmt=*) " "
@@ -1283,16 +1306,24 @@
             write(unit=20, fmt=*) xtraits(p)
             write(unit=20, fmt=11020) 0.5*sresponse(p),0.5*dresponse(p),oresponse(p)
             write(unit=20, fmt=11022) 0.5*sresponse(p)*tempev(p,1),0.5*dresponse(p)*tempev(p,1),oresponse(p)*tempev(p,1)
-            write(unit=20, fmt=11023) ((0.5*sresponse(p)*tempev(p,1))/ototalresponse)*100, &
-              & ((0.5*dresponse(p)*tempev(p,1))/ototalresponse)*100, &
-              & ((oresponse(p)*tempev(p,1))/ototalresponse)*100
+            if (abs(ototalresponse).lt.0.0005) then
+              write(unit=20, fmt=11099)
+            else
+              write(unit=20, fmt=11023) ((0.5*sresponse(p)*tempev(p,1))/ototalresponse)*100, &
+                & ((0.5*dresponse(p)*tempev(p,1))/ototalresponse)*100, &
+                & ((oresponse(p)*tempev(p,1))/ototalresponse)*100
+            end if
             write(unit=20, fmt=*) " "
             print *, xtraits(p)
             print 11020, 0.5*sresponse(p),0.5*dresponse(p),oresponse(p)
             print 11022, 0.5*sresponse(p)*tempev(p,1),0.5*dresponse(p)*tempev(p,1),oresponse(p)*tempev(p,1)
-            print 11023, ((0.5*sresponse(p)*tempev(p,1))/ototalresponse)*100, &
-              & ((0.5*dresponse(p)*tempev(p,1))/ototalresponse)*100, &
-              & ((oresponse(p)*tempev(p,1))/ototalresponse)*100
+            if (abs(ototalresponse).lt.0.0005) then
+              print 11099
+            else
+              print 11023, ((0.5*sresponse(p)*tempev(p,1))/ototalresponse)*100, &
+                & ((0.5*dresponse(p)*tempev(p,1))/ototalresponse)*100, &
+                & ((oresponse(p)*tempev(p,1))/ototalresponse)*100
+            end if
             print *, " "
          end if
         end do
@@ -1404,6 +1435,8 @@
         11021 format(f10.3," ! number of male offspring per dam")
         11022 format("      economic units : ",f10.3,5x,f10.3,5x,f10.3)
         11023 format(" % of total response : ",f10.3,5x,f10.3,5x,f10.3)
+        ! total response rounds to 0.000, so percentages of it are meaningless
+        11099 format(" % of total response : ",7x,"n/a",12x,"n/a",12x,"n/a")
 	11024 format(5x,a33,i3," for ",a8,"  (",f8.3,")")
 
         11025 format(a10," ! method of selection")

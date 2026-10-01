@@ -1003,16 +1003,24 @@
             write(unit=20, fmt=*) xtraits(p)
             write(unit=20, fmt=11020) 0.5*sresponse(p),0.5*dresponse(p),response(p)
             write(unit=20, fmt=11025) 0.5*sresponse(p)*tempev(p,1),0.5*dresponse(p)*tempev(p,1),response(p)*tempev(p,1)
-            write(unit=20, fmt=11023) ((0.5*sresponse(p)*tempev(p,1))/totalresponse)*100, &
-              & ((0.5*dresponse(p)*tempev(p,1))/totalresponse)*100, &
-              & ((response(p)*tempev(p,1))/totalresponse)*100
+            if (abs(totalresponse).lt.0.0005) then
+              write(unit=20, fmt=11099)
+            else
+              write(unit=20, fmt=11023) ((0.5*sresponse(p)*tempev(p,1))/totalresponse)*100, &
+                & ((0.5*dresponse(p)*tempev(p,1))/totalresponse)*100, &
+                & ((response(p)*tempev(p,1))/totalresponse)*100
+            end if
             write(unit=20, fmt=*) " "
             print *, xtraits(p)
             print 11020, 0.5*sresponse(p),0.5*dresponse(p),response(p)
             print 11025, 0.5*sresponse(p)*tempev(p,1),0.5*dresponse(p)*tempev(p,1),response(p)*tempev(p,1)
-            print 11023, ((0.5*sresponse(p)*tempev(p,1))/totalresponse)*100, &
-              & ((0.5*dresponse(p)*tempev(p,1))/totalresponse)*100, &
-              & ((response(p)*tempev(p,1))/totalresponse)*100
+            if (abs(totalresponse).lt.0.0005) then
+              print 11099
+            else
+              print 11023, ((0.5*sresponse(p)*tempev(p,1))/totalresponse)*100, &
+                & ((0.5*dresponse(p)*tempev(p,1))/totalresponse)*100, &
+                & ((response(p)*tempev(p,1))/totalresponse)*100
+            end if
             print *, " "
          end if
         end do
@@ -1123,6 +1131,8 @@
         11020 format("         trait units : ",f10.3,5x,f10.3,5x,f10.3)
         11025 format("      economic units : ",f10.3,5x,f10.3,5x,f10.3)
         11023 format(" % of total response : ",f10.3,5x,f10.3,5x,f10.3)
+        ! total response rounds to 0.000, so percentages of it are meaningless
+        11099 format(" % of total response : ",7x,"n/a",12x,"n/a",12x,"n/a")
 
         11021 format(f10.3," ! male candidates per dam")
         11028 format(f10.3," ! female candidates per dam")
@@ -2332,16 +2342,24 @@
             write(unit=20, fmt=*) xtraits(p)
             write(unit=20, fmt=11020) 0.5*sresponsec(p),0.5*dresponsec(p),responsec(p)
             write(unit=20, fmt=11022) 0.5*sresponsec(p)*tempev(p,1),0.5*dresponsec(p)*tempev(p,1),responsec(p)*tempev(p,1)
-            write(unit=20, fmt=11023) ((0.5*sresponsec(p)*tempev(p,1))/totalresponsec)*100, &
-              & ((0.5*dresponsec(p)*tempev(p,1))/totalresponsec)*100, &
-              & ((responsec(p)*tempev(p,1))/totalresponsec)*100
+            if (abs(totalresponsec).lt.0.0005) then
+              write(unit=20, fmt=11099)
+            else
+              write(unit=20, fmt=11023) ((0.5*sresponsec(p)*tempev(p,1))/totalresponsec)*100, &
+                & ((0.5*dresponsec(p)*tempev(p,1))/totalresponsec)*100, &
+                & ((responsec(p)*tempev(p,1))/totalresponsec)*100
+            end if
             write(unit=20, fmt=*) " "
             print *, xtraits(p)
             print 11020, 0.5*sresponsec(p),0.5*dresponsec(p),responsec(p)
             print 11022, 0.5*sresponsec(p)*tempev(p,1),0.5*dresponsec(p)*tempev(p,1),responsec(p)*tempev(p,1)
-            print 11023, ((0.5*sresponsec(p)*tempev(p,1))/totalresponsec)*100, &
-              & ((0.5*dresponsec(p)*tempev(p,1))/totalresponsec)*100, &
-              & ((responsec(p)*tempev(p,1))/totalresponsec)*100
+            if (abs(totalresponsec).lt.0.0005) then
+              print 11099
+            else
+              print 11023, ((0.5*sresponsec(p)*tempev(p,1))/totalresponsec)*100, &
+                & ((0.5*dresponsec(p)*tempev(p,1))/totalresponsec)*100, &
+                & ((responsec(p)*tempev(p,1))/totalresponsec)*100
+            end if
             print *, " "
          end if
         end do
@@ -2614,18 +2632,26 @@
               &  ((prs(p)*msstotalresponse2c)/tempev(p,1))+((prd(p)*msdtotalresponse2c)/tempev(p,1))
             write(unit=20, fmt=11022) prs(p)*msstotalresponse2c,prd(p)*msdtotalresponse2c, &
               & (prs(p)*msstotalresponse2c)+(prd(p)*msdtotalresponse2c)
-            write(unit=20, fmt=11023) ((prs(p)*msstotalresponse2c)/mstotalresponse2c)*100, &
-              & ((prd(p)*msdtotalresponse2c)/mstotalresponse2c)*100, &
-              & (((prs(p)*msstotalresponse2c)/mstotalresponse2c)*100)+(((prd(p)*msdtotalresponse2c)/mstotalresponse2c)*100)
+            if (abs(mstotalresponse2c).lt.0.0005) then
+              write(unit=20, fmt=11099)
+            else
+              write(unit=20, fmt=11023) ((prs(p)*msstotalresponse2c)/mstotalresponse2c)*100, &
+                & ((prd(p)*msdtotalresponse2c)/mstotalresponse2c)*100, &
+                & (((prs(p)*msstotalresponse2c)/mstotalresponse2c)*100)+(((prd(p)*msdtotalresponse2c)/mstotalresponse2c)*100)
+            end if
             write(unit=20, fmt=*) " "
             print *, xtraits(p)
             print 11020, (prs(p)*msstotalresponse2c)/tempev(p,1),(prd(p)*msdtotalresponse2c)/tempev(p,1), &
               &  ((prs(p)*msstotalresponse2c)/tempev(p,1))+((prd(p)*msdtotalresponse2c)/tempev(p,1))
             print 11022, prs(p)*msstotalresponse2c,prd(p)*msdtotalresponse2c, &
               & (prs(p)*msstotalresponse2c)+(prd(p)*msdtotalresponse2c)
-            print 11023, ((prs(p)*msstotalresponse2c)/mstotalresponse2c)*100, &
-              & ((prd(p)*msdtotalresponse2c)/mstotalresponse2c)*100, &
-              & (((prs(p)*msstotalresponse2c)/mstotalresponse2c)*100)+(((prd(p)*msdtotalresponse2c)/mstotalresponse2c)*100)
+            if (abs(mstotalresponse2c).lt.0.0005) then
+              print 11099
+            else
+              print 11023, ((prs(p)*msstotalresponse2c)/mstotalresponse2c)*100, &
+                & ((prd(p)*msdtotalresponse2c)/mstotalresponse2c)*100, &
+                & (((prs(p)*msstotalresponse2c)/mstotalresponse2c)*100)+(((prd(p)*msdtotalresponse2c)/mstotalresponse2c)*100)
+            end if
             print *, " "
          end if
         end do
@@ -2737,6 +2763,8 @@
         11020 format("         trait units : ",f10.3,5x,f10.3,5x,f10.3)
         11022 format("      economic units : ",f10.3,5x,f10.3,5x,f10.3)
         11023 format(" % of total response : ",f10.3,5x,f10.3,5x,f10.3)
+        ! total response rounds to 0.000, so percentages of it are meaningless
+        11099 format(" % of total response : ",7x,"n/a",12x,"n/a",12x,"n/a")
         11026 format(f10.3," ! proportion sires in stage 2")
         11028 format(f10.3," ! number of female offspring per dam")
 
@@ -4074,16 +4102,24 @@
             write(unit=20, fmt=*) xtraits(p)
             write(unit=20, fmt=11020) 0.5*sresponsec(p),0.5*dresponsec(p),responsec(p)
             write(unit=20, fmt=11022) 0.5*sresponsec(p)*tempev(p,1),0.5*dresponsec(p)*tempev(p,1),responsec(p)*tempev(p,1)
-            write(unit=20, fmt=11023) ((0.5*sresponsec(p)*tempev(p,1))/totalresponsec)*100, &
-              & ((0.5*dresponsec(p)*tempev(p,1))/totalresponsec)*100, &
-              & ((responsec(p)*tempev(p,1))/totalresponsec)*100
+            if (abs(totalresponsec).lt.0.0005) then
+              write(unit=20, fmt=11099)
+            else
+              write(unit=20, fmt=11023) ((0.5*sresponsec(p)*tempev(p,1))/totalresponsec)*100, &
+                & ((0.5*dresponsec(p)*tempev(p,1))/totalresponsec)*100, &
+                & ((responsec(p)*tempev(p,1))/totalresponsec)*100
+            end if
             write(unit=20, fmt=*) " "
             print *, xtraits(p)
             print 11020, 0.5*sresponsec(p),0.5*dresponsec(p),responsec(p)
             print 11022, 0.5*sresponsec(p)*tempev(p,1),0.5*dresponsec(p)*tempev(p,1),responsec(p)*tempev(p,1)
-            print 11023, ((0.5*sresponsec(p)*tempev(p,1))/totalresponsec)*100, &
-              & ((0.5*dresponsec(p)*tempev(p,1))/totalresponsec)*100, &
-              & ((responsec(p)*tempev(p,1))/totalresponsec)*100
+            if (abs(totalresponsec).lt.0.0005) then
+              print 11099
+            else
+              print 11023, ((0.5*sresponsec(p)*tempev(p,1))/totalresponsec)*100, &
+                & ((0.5*dresponsec(p)*tempev(p,1))/totalresponsec)*100, &
+                & ((responsec(p)*tempev(p,1))/totalresponsec)*100
+            end if
             print *, " "
          end if
         end do
@@ -4330,18 +4366,26 @@
               &  ((prs(p)*msstotalresponse2c)/tempev(p,1))+((prd(p)*msdtotalresponse2c)/tempev(p,1))
             write(unit=20, fmt=11022) prs(p)*msstotalresponse2c,prd(p)*msdtotalresponse2c, &
               & (prs(p)*msstotalresponse2c)+(prd(p)*msdtotalresponse2c)
-            write(unit=20, fmt=11023) ((prs(p)*msstotalresponse2c)/mstotalresponse2c)*100, &
-              & ((prd(p)*msdtotalresponse2c)/mstotalresponse2c)*100, &
-              & (((prs(p)*msstotalresponse2c)/mstotalresponse2c)*100)+(((prd(p)*msdtotalresponse2c)/mstotalresponse2c)*100)
+            if (abs(mstotalresponse2c).lt.0.0005) then
+              write(unit=20, fmt=11099)
+            else
+              write(unit=20, fmt=11023) ((prs(p)*msstotalresponse2c)/mstotalresponse2c)*100, &
+                & ((prd(p)*msdtotalresponse2c)/mstotalresponse2c)*100, &
+                & (((prs(p)*msstotalresponse2c)/mstotalresponse2c)*100)+(((prd(p)*msdtotalresponse2c)/mstotalresponse2c)*100)
+            end if
             write(unit=20, fmt=*) " "
             print *, xtraits(p)
             print 11020, (prs(p)*msstotalresponse2c)/tempev(p,1),(prd(p)*msdtotalresponse2c)/tempev(p,1), &
               &  ((prs(p)*msstotalresponse2c)/tempev(p,1))+((prd(p)*msdtotalresponse2c)/tempev(p,1))
             print 11022, prs(p)*msstotalresponse2c,prd(p)*msdtotalresponse2c, &
               & (prs(p)*msstotalresponse2c)+(prd(p)*msdtotalresponse2c)
-            print 11023, ((prs(p)*msstotalresponse2c)/mstotalresponse2c)*100, &
-              & ((prd(p)*msdtotalresponse2c)/mstotalresponse2c)*100, &
-              & (((prs(p)*msstotalresponse2c)/mstotalresponse2c)*100)+(((prd(p)*msdtotalresponse2c)/mstotalresponse2c)*100)
+            if (abs(mstotalresponse2c).lt.0.0005) then
+              print 11099
+            else
+              print 11023, ((prs(p)*msstotalresponse2c)/mstotalresponse2c)*100, &
+                & ((prd(p)*msdtotalresponse2c)/mstotalresponse2c)*100, &
+                & (((prs(p)*msstotalresponse2c)/mstotalresponse2c)*100)+(((prd(p)*msdtotalresponse2c)/mstotalresponse2c)*100)
+            end if
             print *, " "
          end if
         end do
@@ -4706,18 +4750,26 @@
               &  ((prs(p)*msstotalresponse3c)/tempev(p,1))+((prd(p)*msdtotalresponse3c)/tempev(p,1))
             write(unit=20, fmt=11022) prs(p)*msstotalresponse3c,prd(p)*msdtotalresponse3c, &
               & (prs(p)*msstotalresponse3c)+(prd(p)*msdtotalresponse3c)
-            write(unit=20, fmt=11023) ((prs(p)*msstotalresponse3c)/mstotalresponse3c)*100, &
-              & ((prd(p)*msdtotalresponse3c)/mstotalresponse3c)*100, &
-              & (((prs(p)*msstotalresponse3c)/mstotalresponse3c)*100)+(((prd(p)*msdtotalresponse3c)/mstotalresponse3c)*100)
+            if (abs(mstotalresponse3c).lt.0.0005) then
+              write(unit=20, fmt=11099)
+            else
+              write(unit=20, fmt=11023) ((prs(p)*msstotalresponse3c)/mstotalresponse3c)*100, &
+                & ((prd(p)*msdtotalresponse3c)/mstotalresponse3c)*100, &
+                & (((prs(p)*msstotalresponse3c)/mstotalresponse3c)*100)+(((prd(p)*msdtotalresponse3c)/mstotalresponse3c)*100)
+            end if
             write(unit=20, fmt=*) " "
             print *, xtraits(p)
             print 11020, (prs(p)*msstotalresponse3c)/tempev(p,1),(prd(p)*msdtotalresponse3c)/tempev(p,1), &
               &  ((prs(p)*msstotalresponse3c)+(prd(p)*msdtotalresponse3c)/2)/tempev(p,1)
             print 11022, prs(p)*msstotalresponse3c,prd(p)*msdtotalresponse3c, &
               & (prs(p)*msstotalresponse3c)+(prd(p)*msdtotalresponse3c)/2
-            print 11023, ((prs(p)*msstotalresponse3c)/mstotalresponse3c)*100, &
-              & ((prd(p)*msdtotalresponse3c)/mstotalresponse3c)*100, &
-              & (((prs(p)*msstotalresponse3c)/mstotalresponse3c)*100)+(((prd(p)*msdtotalresponse3c)/mstotalresponse3c)*100)
+            if (abs(mstotalresponse3c).lt.0.0005) then
+              print 11099
+            else
+              print 11023, ((prs(p)*msstotalresponse3c)/mstotalresponse3c)*100, &
+                & ((prd(p)*msdtotalresponse3c)/mstotalresponse3c)*100, &
+                & (((prs(p)*msstotalresponse3c)/mstotalresponse3c)*100)+(((prd(p)*msdtotalresponse3c)/mstotalresponse3c)*100)
+            end if
             print *, " "
          end if
         end do
@@ -4835,6 +4887,8 @@
         11020 format("         trait units : ",f10.3,5x,f10.3,5x,f10.3)
         11022 format("      economic units : ",f10.3,5x,f10.3,5x,f10.3)
         11023 format(" % of total response : ",f10.3,5x,f10.3,5x,f10.3)
+        ! total response rounds to 0.000, so percentages of it are meaningless
+        11099 format(" % of total response : ",7x,"n/a",12x,"n/a",12x,"n/a")
 
         close(unit=20)
 
