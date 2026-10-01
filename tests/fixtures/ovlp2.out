@@ -49,12 +49,12 @@ gr             0.300    1.000
  number of male selection candidates per dam   :    3.000
  number of female selection candidates per dam :    3.000
   
-    selected proportion sires in age class   1 :   0.066 x    150.0 =    9.892
-    selected proportion sires in age class   2 :   0.001 x     80.0 =    0.108
-     selected proportion dams in age class   3 :   0.303 x    150.0 =   45.465
-     selected proportion dams in age class   4 :   0.057 x     80.0 =    4.535
+    selected proportion sires in age class   1 :   0.066 x    150.0 =    9.947
+    selected proportion sires in age class   2 :   0.001 x     80.0 =    0.053
+     selected proportion dams in age class   3 :   0.304 x    150.0 =   45.530
+     selected proportion dams in age class   4 :   0.056 x     80.0 =    4.470
   
- generation interval :  1.15  cohort intervals
+ generation interval :  1.14  cohort intervals
   
   
   INDEX INFORMATION:
@@ -85,7 +85,7 @@ gr             0.300    1.000
   EQUILIBRIUM PARAMETERS
   
         phenotypic variance  heritability
-wt             95.084           0.264
+wt             95.083           0.264
 gr             49.955           0.249
   
    PHENOTYPIC CORRELATIONS
@@ -105,26 +105,26 @@ gr             0.302    1.000
   RESPONSE
                             sires           dams          total
  wt      
-         trait units :      2.113          1.328          3.441
-      economic units :     10.565          6.639         17.204
- % of total response :     63.864         40.131        103.995
+         trait units :      2.122          1.338          3.460
+      economic units :     10.611          6.690         17.302
+ % of total response :     63.782         40.213        103.995
   
  gr      
-         trait units :      0.203          0.128          0.330
-      economic units :     -0.406         -0.255         -0.661
- % of total response :     -2.453         -1.542         -3.995
+         trait units :      0.204          0.129          0.332
+      economic units :     -0.408         -0.257         -0.665
+ % of total response :     -2.450         -1.545         -3.995
   
   TOTAL RESPONSE
                             sires           dams          total
-      economic units :     10.159          6.384         16.543
+      economic units :     10.204          6.433         16.637
   
   
- age class  1  index variance :      142.983  accuracy of index :  0.501
- age class  2  index variance :      142.983  accuracy of index :  0.501
- age class  3  index variance :      142.983  accuracy of index :  0.501
- age class  4  index variance :      142.983  accuracy of index :  0.501
+ age class  1  index variance :      142.973  accuracy of index :  0.501
+ age class  2  index variance :      142.973  accuracy of index :  0.501
+ age class  3  index variance :      142.973  accuracy of index :  0.501
+ age class  4  index variance :      142.973  accuracy of index :  0.501
   
-       breeding goal variance :      570.163
+       breeding goal variance :      570.141
   
   
   

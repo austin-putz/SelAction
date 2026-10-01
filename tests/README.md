@@ -335,9 +335,9 @@ inherited from `fortran_orig/`:
    the bracket edge. `ovlpgrp` (10 sires from 1000+500 candidates) actually
    selected 67.5 sires, and its old expected output reported "number of
    selected sires : 10.000" alongside age-class lines summing to 67.5.
-   `ovlp2` looked right only because 0.0668 x 150 is about 10. Now ±3 SD,
-   matching the ±3 SD clamp on `dumt` inside `trunc_delta` (the function
-   is flat beyond it, so a wider bracket gains nothing).
+   `ovlp2` looked right only because 0.0668 x 150 is about 10. First widened
+   to ±3 SD to match the clamp then in `trunc_delta`; now ±8 SD (see the
+   next section).
 2. **Side effect taken at the wrong point.** `trunc_delta` writes
    `pvalcl`/`nselec`/`genints`/`genintd` on every call, and `riddr_root`'s
    `ABS(d-zriddr)<tol` exit fires right after evaluating the bracket
@@ -356,6 +356,25 @@ the root (>= 67.5 sires); below that, the old code returned identical output
 for 5/10/20/40 sires. `ovlp2.out`/`ovlpgrp.out` were regenerated with GNU
 Fortran 14.2.0 on macOS x86_64 (`fortran_mac/msselo`). Open questions for the
 original authors are listed in `NEWS.md`.
+
+## Changed: exact normal tail in `sdutt1`; `trunc_delta` clamp removed (`ovlp2`/`ovlpgrp` regenerated again)
+
+`sdutt1` (`seltools.f90`, upper normal tail P(Z>s)) used a 10/20-point
+Gauss-Hermite quadrature that is accurate to ~1e-5 within 3 SD but
+non-monotonic and wrong by orders of magnitude beyond ~4 SD. `trunc_delta`
+clamped its argument to ±3 SD, which made every age class contribute at
+least P(Z>3) = 0.135% of its animals - in both `ovlp` fixtures the older
+sire class sat exactly on that floor. `sdutt1` now returns
+`0.5*erfc(s/sqrt(2))` (exact to ~1e-16), the clamp is gone, and the
+`selovlp.f90` threshold bracket is ±8 SD.
+
+Verified in two steps: the swap alone (clamp kept) left 11/12 fixture
+checks byte-identical (`ovlpgrp` breeding goal variance 526.938 -> 526.937);
+removing the clamp left all 10 discrete-generation checks byte-identical and
+changed only `ovlp2`/`ovlpgrp`, which were regenerated (identical to an
+independently built prototype). All `sdutt1` arguments seen during the
+fixtures are within ±3.5 SD. Full accuracy table, before/after numbers and
+the 74-input sweep results are in `NEWS.md`.
 
 ## Previously reported: BLUP breeding values + groups under overlapping generations
 

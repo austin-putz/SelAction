@@ -953,6 +953,9 @@
           end do
           if (initsk.eq."t") then
             ! sires
+            ! bracket the threshold within +/-8 index sd of each age-class mean (was
+            ! +/-1.5, which forced >= 6.7% of the youngest class to be selected); at 8 sd
+            ! essentially no animals are selected, so any feasible target is bracketed
             tol=0.0000001
             xl=0.0
             xh=0.0
@@ -961,8 +964,8 @@
      !       print *,"stotalresponse",stotalresponse
             do p=1,nclass
               if (osigmai(p).gt.0.0) then
-                xln=((0.0)-((p-1)*stotalresponse))-(3.0*(sqrt(osigmai(p))))
-                xhn=((0.0)-((p-1)*stotalresponse))+(3.0*(sqrt(osigmai(p))))
+                xln=((0.0)-((p-1)*stotalresponse))-(8.0*(sqrt(osigmai(p))))
+                xhn=((0.0)-((p-1)*stotalresponse))+(8.0*(sqrt(osigmai(p))))
               end if
               if (xln.lt.xl) then
                 xl=xln
@@ -987,8 +990,8 @@
             xhn=0.0
             do p=nclass+1,2*nclass
               if (osigmai(p).gt.0.0) then
-                xln=((0.0)-((p-nclass-1)*dtotalresponse))-(3.0*(sqrt(osigmai(p))))
-                xhn=((0.0)-((p-nclass-1)*dtotalresponse))+(3.0*(sqrt(osigmai(p))))
+                xln=((0.0)-((p-nclass-1)*dtotalresponse))-(8.0*(sqrt(osigmai(p))))
+                xhn=((0.0)-((p-nclass-1)*dtotalresponse))+(8.0*(sqrt(osigmai(p))))
               end if
               if (xln.lt.xl) then
                 xl=xln
@@ -1127,22 +1130,20 @@
         write(unit=20, fmt='(a49,f8.3)') "                      number of selected sires : ",nsires
         write(unit=20, fmt='(a49,f8.3)') "                       number of selected dams : ",ndams
         if (abs(missdelta_s).gt.0.01*nsires) then
-          ! no threshold selects exactly this many: selection is more intense than
-          ! trunc_delta can represent (its +/-3 SD clamp floors each age class at
-          ! P(Z>3)=0.135% selected), so the numbers below are only approximate
+          ! no threshold within +/-8 index sd selects exactly this many, e.g. more
+          ! animals requested than there are candidates; numbers below are approximate
           write(unit=20, fmt='(a,f10.3,a)') "  WARNING: requested number of sires cannot be met; selected ", &
-            & nsires+missdelta_s," (too intense: >= 0.135% of every age class is selected)"
+            & nsires+missdelta_s," (check numbers of candidates per age class)"
           print '(a,f10.3,a)', "  WARNING: requested number of sires cannot be met; selected ", &
-            & nsires+missdelta_s," (too intense: >= 0.135% of every age class is selected)"
+            & nsires+missdelta_s," (check numbers of candidates per age class)"
         end if
         if (abs(missdelta_d).gt.0.01*ndams) then
-          ! no threshold selects exactly this many: selection is more intense than
-          ! trunc_delta can represent (its +/-3 SD clamp floors each age class at
-          ! P(Z>3)=0.135% selected), so the numbers below are only approximate
+          ! no threshold within +/-8 index sd selects exactly this many, e.g. more
+          ! animals requested than there are candidates; numbers below are approximate
           write(unit=20, fmt='(a,f10.3,a)') "  WARNING: requested number of dams cannot be met; selected ", &
-            & ndams+missdelta_d," (too intense: >= 0.135% of every age class is selected)"
+            & ndams+missdelta_d," (check numbers of candidates per age class)"
           print '(a,f10.3,a)', "  WARNING: requested number of dams cannot be met; selected ", &
-            & ndams+missdelta_d," (too intense: >= 0.135% of every age class is selected)"
+            & ndams+missdelta_d," (check numbers of candidates per age class)"
         end if
         write(unit=20, fmt='(a49,f8.3)') " number of male selection candidates per dam   : ",noffs
         write(unit=20, fmt='(a49,f8.3)') " number of female selection candidates per dam : ",noffd

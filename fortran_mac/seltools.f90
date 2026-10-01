@@ -696,18 +696,15 @@ real function rawl3(p,nw,nfs,nhs,tfs,ths)
 !                integrales de la loi normale de dimension 1           *
 !***********************************************************************
       implicit none
-      integer i,nrac
-      real*8 pi,rac2pi,s,ssum,w(40,40)
-      real*8 :: d1dutt,dutt1
-      common/pival/pi,rac2pi
-      common/herp/w
+      integer nrac
+      real*8 :: s,dutt1
 
-      ssum=0.e0
-      do 10 i=1,nrac
-        call sd1dutt(nrac,i,s,d1dutt)
-        ssum=ssum+w(i,nrac)*d1dutt
-  10   continue
-      dutt1=0.5e0+ssum/pi
+      ! upper normal tail P(Z>s), computed exactly with the Fortran 2008
+      ! erfc intrinsic. this replaced a gauss-hermite quadrature over the
+      ! herz/herp nodes, which was accurate to ~1e-5 within 3 sd but broke
+      ! down beyond ~4 sd (non-monotonic, wrong by orders of magnitude);
+      ! nrac is no longer used but kept so callers are unchanged
+      dutt1=0.5d0*erfc(s/sqrt(2.0d0))
 
       return
 !***********************************************************************

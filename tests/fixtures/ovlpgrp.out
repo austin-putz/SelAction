@@ -54,12 +54,12 @@ gr             0.050    1.000
  number of male selection candidates per dam   :    5.000
  number of female selection candidates per dam :    5.000
   
-    selected proportion sires in age class   1 :   0.009 x   1000.0 =    9.325
-    selected proportion sires in age class   2 :   0.001 x    500.0 =    0.675
-     selected proportion dams in age class   3 :   0.192 x   1000.0 =  191.768
-     selected proportion dams in age class   4 :   0.016 x    500.0 =    8.232
+    selected proportion sires in age class   1 :   0.010 x   1000.0 =   10.000
+    selected proportion sires in age class   2 :   0.000 x    500.0 =    0.000
+     selected proportion dams in age class   3 :   0.194 x   1000.0 =  193.937
+     selected proportion dams in age class   4 :   0.012 x    500.0 =    6.063
   
- generation interval :  1.16  cohort intervals
+ generation interval :  1.05  cohort intervals
   
   CHARACTERISTICS OF THE USED GROUPS
   
@@ -71,47 +71,47 @@ gr             0.050    1.000
   INDEX INFORMATION:
   
   age class            1
-     own performance                      for wt        (   0.702)
-     information of fs-group            1 for wt        (   0.713)
-     information of hs-group            1 for wt        (   0.584)
-     information of progeny group       1 for wt        (   2.986)
+     own performance                      for wt        (   0.700)
+     information of fs-group            1 for wt        (   0.681)
+     information of hs-group            1 for wt        (   0.524)
+     information of progeny group       1 for wt        (   2.969)
   
      own performance                      for gr        (  -0.181)
-     information of fs-group            1 for gr        (  -0.279)
-     information of hs-group            1 for gr        (  -0.282)
-     information of progeny group       1 for gr        (  -0.964)
+     information of fs-group            1 for gr        (  -0.271)
+     information of hs-group            1 for gr        (  -0.267)
+     information of progeny group       1 for gr        (  -0.957)
   
   age class            2
-     own performance                      for wt        (   0.702)
-     information of fs-group            1 for wt        (   0.713)
-     information of hs-group            1 for wt        (   0.584)
-     information of progeny group       1 for wt        (   2.986)
+     own performance                      for wt        (   0.700)
+     information of fs-group            1 for wt        (   0.681)
+     information of hs-group            1 for wt        (   0.524)
+     information of progeny group       1 for wt        (   2.969)
   
      own performance                      for gr        (  -0.181)
-     information of fs-group            1 for gr        (  -0.279)
-     information of hs-group            1 for gr        (  -0.282)
-     information of progeny group       1 for gr        (  -0.964)
+     information of fs-group            1 for gr        (  -0.271)
+     information of hs-group            1 for gr        (  -0.267)
+     information of progeny group       1 for gr        (  -0.957)
   
   age class            3
-     own performance                      for wt        (   1.002)
-     information of fs-group            1 for wt        (   1.017)
-     information of hs-group            1 for wt        (   0.831)
+     own performance                      for wt        (   0.997)
+     information of fs-group            1 for wt        (   0.968)
+     information of hs-group            1 for wt        (   0.744)
      information of progeny group       1 for wt        (   0.021)
   
-     own performance                      for gr        (  -0.228)
-     information of fs-group            1 for gr        (  -0.349)
-     information of hs-group            1 for gr        (  -0.368)
+     own performance                      for gr        (  -0.227)
+     information of fs-group            1 for gr        (  -0.337)
+     information of hs-group            1 for gr        (  -0.346)
      information of progeny group       1 for gr        (  -0.006)
   
   age class            4
-     own performance                      for wt        (   1.002)
-     information of fs-group            1 for wt        (   1.017)
-     information of hs-group            1 for wt        (   0.831)
+     own performance                      for wt        (   0.997)
+     information of fs-group            1 for wt        (   0.968)
+     information of hs-group            1 for wt        (   0.744)
      information of progeny group       1 for wt        (   0.021)
   
-     own performance                      for gr        (  -0.228)
-     information of fs-group            1 for gr        (  -0.349)
-     information of hs-group            1 for gr        (  -0.368)
+     own performance                      for gr        (  -0.227)
+     information of fs-group            1 for gr        (  -0.337)
+     information of hs-group            1 for gr        (  -0.346)
      information of progeny group       1 for gr        (  -0.006)
   
   
@@ -120,8 +120,8 @@ gr             0.050    1.000
   EQUILIBRIUM PARAMETERS
   
         phenotypic variance  heritability  com.env.effect
-wt             93.362           0.250           0.054
-gr             49.967           0.250           0.050
+wt             92.743           0.245           0.054
+gr             49.966           0.249           0.050
   
    PHENOTYPIC CORRELATIONS
   
@@ -134,7 +134,7 @@ gr             0.200    1.000
   
              wt       gr      
 wt             1.000
-gr             0.313    1.000
+gr             0.316    1.000
   
    COMMON ENVIRONMENTAL CORRELATIONS
   
@@ -145,26 +145,26 @@ gr             0.050    1.000
   RESPONSE
                             sires           dams          total
  wt      
-         trait units :      3.933          1.644          5.577
-      economic units :     19.664          8.219         27.884
- % of total response :     72.464         30.290        102.754
+         trait units :      4.165          1.743          5.908
+      economic units :     20.825          8.715         29.540
+ % of total response :     72.440         30.313        102.753
   
  gr      
-         trait units :      0.238          0.136          0.374
-      economic units :     -0.475         -0.272         -0.747
- % of total response :     -1.752         -1.002         -2.754
+         trait units :      0.251          0.145          0.396
+      economic units :     -0.501         -0.290         -0.791
+ % of total response :     -1.744         -1.009         -2.753
   
   TOTAL RESPONSE
                             sires           dams          total
-      economic units :     19.189          7.948         27.136
+      economic units :     20.324          8.424         28.748
   
   
- age class  1  index variance :      268.038  accuracy of index :  0.713
- age class  2  index variance :      268.038  accuracy of index :  0.713
- age class  3  index variance :      158.747  accuracy of index :  0.549
- age class  4  index variance :      158.747  accuracy of index :  0.549
+ age class  1  index variance :      254.762  accuracy of index :  0.705
+ age class  2  index variance :      254.762  accuracy of index :  0.705
+ age class  3  index variance :      147.016  accuracy of index :  0.536
+ age class  4  index variance :      147.016  accuracy of index :  0.536
   
-       breeding goal variance :      526.938
+       breeding goal variance :      512.125
   
   
   

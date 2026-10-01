@@ -2543,12 +2543,9 @@ subroutine invrt(a,ia,n)
       !        print *,"tmean(p)",tmean(p)
        !       print *,"sqrt(osigmai(p)",sqrt(osigmai(p))
               dumt=(x-tmean(p))/sqrt(osigmai(p))
-              if (dumt.gt.3.0) then
-                dumt=3.0
-              else if (dumt.lt.-3.0) then
-                dumt=-3.0
-              end if
         !      print *,"dumt",dumt
+              ! no clamp on dumt: sdutt1 is exact (erfc) for any value. the former
+              ! +/-3 clamp forced >= 0.135% of every age class to be selected
               call sdutt1(10,dumt,dumr)
          !     print *,"dumr",dumr
               pvalcl(p)=dumr
@@ -2580,12 +2577,9 @@ subroutine invrt(a,ia,n)
   !          print *,"tmean(p)",tmean(p)
    !         print *,"sqrt(osigmai(p)",sqrt(osigmai(p))
             dumt=(x-tmean(p))/sqrt(osigmai(p))
-            if (dumt.gt.3.0) then
-              dumt=3.0
-            else if (dumt.lt.-3.0) then
-              dumt=-3.0
-            end if
     !        print *,"dumt",dumt
+            ! no clamp on dumt: sdutt1 is exact (erfc) for any value. the former
+            ! +/-3 clamp forced >= 0.135% of every age class to be selected
             call sdutt1(10,dumt,dumr)
      !       print *,"dumr",dumr
             pvalcl(p)=dumr
