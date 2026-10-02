@@ -130,8 +130,9 @@ class was added - on top of the full value `trunc_delta` had left in
 `genints` in threshold mode (double-counting that class), and on top of an
 unassigned (in practice zero) value in specified-count mode. Fixed in all
 four places (`genints_local=genints_local+tempresponse`, and the same for
-dams). Present in `fortran_orig/` too. Checked against the class counts in
-the new output:
+dams). This error was introduced by variable renaming in the modernized
+fork; `fortran_orig/selovlp.f90` correctly accumulates both paths. Checked
+against the class counts in the new output:
 
 | | L before | L after | L by hand | total response before | after |
 |---|---|---|---|---|---|
@@ -252,7 +253,9 @@ fixtures byte-identical.
   earlier-stage source lists of `sel2s`/`sel3s` are not filtered for
   half-sib sources; only the final-stage list is. Unchanged from the
   original; not yet looked into.
-* `fortran_linux/` (and `fortran_orig/`) still have every bug fixed above.
+* `fortran_linux/` still has every bug fixed above. `fortran_orig/` has all
+  of them except the generation-interval error (change 3), which was
+  introduced in the Linux fork.
 
 ## Questions for Peter Bijma / Jack Dekkers
 
@@ -271,19 +274,27 @@ fixtures byte-identical.
 5. Generation interval (overlapping generations, change 3): we now compute
    L_g = sum_c c * n_g,c / sum_c n_g,c, with the youngest class at age 1 and
    classes weighted by the numbers selected, and L = (L_s + L_d)/2, which
-   divides both paths' responses. The original code only added the oldest
-   active class. Please confirm this is the intended definition (e.g. not
-   weighting by long-term genetic contributions, and youngest class = 1
-   rather than 0 or a separate age at first offspring).
+   divides both paths' responses. `fortran_orig/` already computes this;
+   the error fixed in change 3 was introduced in the Linux fork. Please
+   confirm the age-class interpretation (e.g. not weighting by long-term
+   genetic contributions, and youngest class = 1 rather than 0 or a
+   separate age at first offspring).
 6. `Poissoncorr` (`selroutines.f90`, finite-family inbreeding correction):
-   when M_s < 20 the selected fraction of the female pairs is adjusted to
-   (1-rho)p + rho*max(p, 1/M_s), i.e. with 1/M_s, not 1/M_d. Typo for 1/M_d,
-   or intended? Mixed sire-dam pairs reuse the male i,k and female t,p of
-   the same-sex adjustments - also intended?
+   when M_s < 20 both sexes use the published adjustment
+   (1-rho)p + rho*max(p, 1/M_s), representing the move towards selection
+   between sire families (Bijma and Woolliams 2000, Genetics 156:361, Eq. 13;
+   checked against the paper - the paper applied it for 5 and 10 sires and
+   in one extreme 20-sire scheme). At M_s = 20 this adjustment is switched
+   off while the beta terms in `hyper_correct` are switched on, so dF jumps
+   (4.590% at 19 sires to 4.682% at 20 in one test1 variant). What
+   motivated this cutoff? Same code in `fortran_orig/`.
 7. Three-stage selection (`sel3s`): the conditional correlation r_13|2 is
    set to 0 instead of (r13 - r12 r23)/sqrt((1-r12^2)(1-r23^2)), and stage
-   index correlations are approximated by ratios of accuracies capped at
-   0.93. What is the basis for both, and should r_13|2 be computed?
+   index correlations are ratios of accuracies capped at 0.93. For nested
+   optimal indices the ratio is exact and r_13|2 = 0 follows from it, but
+   not once the cap binds. Was the cap introduced for the numerical
+   integration, and should r_13|2 be computed so it stays correct when the
+   cap binds?
 8. With M_s = M_d (no paternal half sibs) half-sib sources are removed
    only from the final-stage source list; earlier-stage indices of two- and
    three-stage selection keep them if entered. Should they be removed there
@@ -292,8 +303,21 @@ fixtures byte-identical.
    table by copying blocks without transposing trait indices, and the EBV
    covariance matrices S, D are not exactly symmetric after the Bulmer
    update (the code evaluates G'P^-1G v separately from G'b). Should S and D
-   be symmetrised (and the blocks transposed), or is the asymmetry
-   negligible in your experience? Doing it would change results slightly.
+   be symmetrised (and the blocks transposed)? In our tests the asymmetry
+   decays to rounding level by about round 13 of 25 and symmetrising
+   changes no printed output, so the briefing lists this for information
+   only.
+10. Overlapping generations: the original program description says
+    intensities are adjusted for family structure (Meuwissen 1991) in each
+    sex-age class, but `ovlp` computes `rawl3` and discards it (same in
+    `fortran_orig/`). Was the correction meant to enter the response, and
+    how with a common truncation point across classes?
+11. Overlapping generations: the lag between age classes (class means in
+    the threshold search, lags in the covariance mixture) uses each sex's
+    own path response per year (`stotalresponse`/`dtotalresponse`, the
+    "let op" lines). Should it be the population gain for both sexes?
+    Effect <1% of response in our examples.
+
 
 # Earlier history (before NEWS.md, summarised from git log)
 

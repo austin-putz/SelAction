@@ -1,4 +1,4 @@
-"""Figures for the briefing to Peter Bijma and Jack Dekkers, in the house style
+"""Figures for the briefing to Piter Bijma and Jack Dekkers, in the house style
 of docs/selaction_*.svg (Arial, navy text, teal = sires, blue = dams).
 
     python3 make_figs.py ..
@@ -116,7 +116,6 @@ def deltaf():
     """test1-based grid, 50 dams, 20 female candidates per dam (p_f = 0.05)."""
     m = [3, 5, 10, 19, 20, 25]
     base = [10.183, 8.217, 6.134, 4.590, 4.682, 3.972]
-    var = [11.868, 9.514, 6.719, 4.624, 4.682, 3.972]
     X0, X1, Y0, Y1 = 90, 560, 60, 300
     ymin, ymax = 3.0, 12.5
 
@@ -136,27 +135,26 @@ def deltaf():
     b += f'  <text class="tiny" x="{X(19.5) + 6:.1f}" y="{Y0 + 2}">M_s &lt; 20 branch switches off</text>\n'
     def path(xs, ys, cls):
         return '  <path class="' + cls + '" d="M' + ' L'.join(f'{X(a):.1f} {Y(c):.1f}' for a, c in zip(xs, ys)) + '"/>\n'
-    b += path(m[:4], var[:4], 'pline')
     b += path(m[:4], base[:4], 'line').replace('class="line"', 'class="line" style="stroke:#2d756b;stroke-width:2"')
     b += path(m[4:], base[4:], 'line').replace('class="line"', 'class="line" style="stroke:#2d756b;stroke-width:2"')
     for a, c in zip(m, base):
         b += f'  <circle class="sdot" cx="{X(a):.1f}" cy="{Y(c):.1f}" r="5"/>\n'
-    for a, c in zip(m[:4], var[:4]):
-        b += f'  <circle class="pdot" cx="{X(a):.1f}" cy="{Y(c):.1f}" r="5"/>\n'
+    b += f'  <text class="tiny" x="{X(19) - 8:.1f}" y="{Y(4.590) + 20:.1f}" text-anchor="end">4.590%</text>\n'
+    b += f'  <text class="tiny" x="{X(20) + 8:.1f}" y="{Y(4.682) - 10:.1f}">4.682%</text>\n'
     lx, ly = 600, 90
-    b += f'  <circle class="sdot" cx="{lx}" cy="{ly}" r="6"/><text x="{lx + 14}" y="{ly + 5}">as coded: female fractions use 1/M_s</text>\n'
-    b += f'  <circle class="pdot" cx="{lx}" cy="{ly + 34}" r="6"/><text x="{lx + 14}" y="{ly + 39}">alternative: female fractions use 1/M_d</text>\n'
-    b += (f'  <text class="tiny" x="{lx}" y="{ly + 80}">Female selected fraction p_f = 0.05 is below 1/M_s</text>\n'
-          f'  <text class="tiny" x="{lx}" y="{ly + 97}">for M_s &lt; 20, so the choice matters here. With</text>\n'
-          f'  <text class="tiny" x="{lx}" y="{ly + 114}">p_f = 0.2 (as in the test fixtures) both give the</text>\n'
-          f'  <text class="tiny" x="{lx}" y="{ly + 131}">same answer. Note the rise from 19 to 20 sires,</text>\n'
-          f'  <text class="tiny" x="{lx}" y="{ly + 148}">where both the adjustment and the extra β terms</text>\n'
-          f'  <text class="tiny" x="{lx}" y="{ly + 165}">of hyper_correct switch at once.</text>\n')
-    return svg(920, 360, 'Predicted rate of inbreeding against number of sires, as coded and with the alternative', b)
+    b += f'  <circle class="sdot" cx="{lx}" cy="{ly}" r="6"/><text x="{lx + 14}" y="{ly + 5}">predicted ΔF, as coded</text>\n'
+    b += (f'  <text class="tiny" x="{lx}" y="{ly + 40}">One-stage variant of test1: 50 dams, 5 male</text>\n'
+          f'  <text class="tiny" x="{lx}" y="{ly + 57}">and 20 female candidates per dam,</text>\n'
+          f'  <text class="tiny" x="{lx}" y="{ly + 74}">p_f = 0.05, p_s = M_s / 250.</text>\n'
+          f'  <text class="tiny" x="{lx}" y="{ly + 108}">Between 19 and 20 sires the selected-fraction</text>\n'
+          f'  <text class="tiny" x="{lx}" y="{ly + 125}">adjustment (Bijma and Woolliams 2000, Eq. 13)</text>\n'
+          f'  <text class="tiny" x="{lx}" y="{ly + 142}">switches off and the β terms of hyper_correct</text>\n'
+          f'  <text class="tiny" x="{lx}" y="{ly + 159}">switch on, so predicted ΔF rises.</text>\n')
+    return svg(920, 360, 'Predicted rate of inbreeding against number of sires, with the jump at 20 sires', b)
 
 
 if __name__ == '__main__':
-    figs = {'fig_agelag': lag(2 * 20.961, 2 * 8.665), 'fig_interval': interval(), 'fig_deltaf': deltaf()}
+    figs = {'fig_agelag': lag(2 * 20.961, 2 * 8.665), 'fig_deltaf': deltaf()}
     for name, s in figs.items():
         with open(f'{OUT}/{name}.svg', 'w') as f:
             f.write(s)

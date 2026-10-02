@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 920 360" role="img" aria-label="Predicted rate of inbreeding against number of sires, as coded and with the alternative">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 920 360" role="img" aria-label="Predicted rate of inbreeding against number of sires, with the jump at 20 sires">
   <defs><style>
 text{font-family:Arial,Helvetica,sans-serif;fill:#14243b;font-size:14px}
 .head{font-size:17px;font-weight:700}
@@ -34,7 +34,6 @@ text{font-family:Arial,Helvetica,sans-serif;fill:#14243b;font-size:14px}
   <text class="small" x="325" y="340" text-anchor="middle">number of sires M_s (50 dams)</text>
   <path class="grid" d="M429.4 50V300" style="stroke:#c9a14a;stroke-dasharray:4 3"/>
   <text class="tiny" x="435.4" y="62">M_s &lt; 20 branch switches off</text>
-  <path class="pline" d="M142.2 76.0 L177.0 135.4 L264.1 206.0 L420.7 259.0"/>
   <path class="line" style="stroke:#2d756b;stroke-width:2" d="M142.2 118.5 L177.0 168.2 L264.1 220.8 L420.7 259.8"/>
   <path class="line" style="stroke:#2d756b;stroke-width:2" d="M438.1 257.5 L525.2 275.4"/>
   <circle class="sdot" cx="142.2" cy="118.5" r="5"/>
@@ -43,16 +42,14 @@ text{font-family:Arial,Helvetica,sans-serif;fill:#14243b;font-size:14px}
   <circle class="sdot" cx="420.7" cy="259.8" r="5"/>
   <circle class="sdot" cx="438.1" cy="257.5" r="5"/>
   <circle class="sdot" cx="525.2" cy="275.4" r="5"/>
-  <circle class="pdot" cx="142.2" cy="76.0" r="5"/>
-  <circle class="pdot" cx="177.0" cy="135.4" r="5"/>
-  <circle class="pdot" cx="264.1" cy="206.0" r="5"/>
-  <circle class="pdot" cx="420.7" cy="259.0" r="5"/>
-  <circle class="sdot" cx="600" cy="90" r="6"/><text x="614" y="95">as coded: female fractions use 1/M_s</text>
-  <circle class="pdot" cx="600" cy="124" r="6"/><text x="614" y="129">alternative: female fractions use 1/M_d</text>
-  <text class="tiny" x="600" y="170">Female selected fraction p_f = 0.05 is below 1/M_s</text>
-  <text class="tiny" x="600" y="187">for M_s &lt; 20, so the choice matters here. With</text>
-  <text class="tiny" x="600" y="204">p_f = 0.2 (as in the test fixtures) both give the</text>
-  <text class="tiny" x="600" y="221">same answer. Note the rise from 19 to 20 sires,</text>
-  <text class="tiny" x="600" y="238">where both the adjustment and the extra β terms</text>
-  <text class="tiny" x="600" y="255">of hyper_correct switch at once.</text>
+  <text class="tiny" x="412.7" y="279.8" text-anchor="end">4.590%</text>
+  <text class="tiny" x="446.1" y="247.5">4.682%</text>
+  <circle class="sdot" cx="600" cy="90" r="6"/><text x="614" y="95">predicted ΔF, as coded</text>
+  <text class="tiny" x="600" y="130">One-stage variant of test1: 50 dams, 5 male</text>
+  <text class="tiny" x="600" y="147">and 20 female candidates per dam,</text>
+  <text class="tiny" x="600" y="164">p_f = 0.05, p_s = M_s / 250.</text>
+  <text class="tiny" x="600" y="198">Between 19 and 20 sires the selected-fraction</text>
+  <text class="tiny" x="600" y="215">adjustment (Bijma and Woolliams 2000, Eq. 13)</text>
+  <text class="tiny" x="600" y="232">switches off and the β terms of hyper_correct</text>
+  <text class="tiny" x="600" y="249">switch on, so predicted ΔF rises.</text>
 </svg>

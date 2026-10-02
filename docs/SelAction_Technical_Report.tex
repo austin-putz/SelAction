@@ -22,7 +22,7 @@
 \title{SelAction: how selection response and inbreeding are predicted\\[4pt]
 \large A guide and mathematical specification of the \src{fortran\_mac/} source}
 \author{Source-based report for \src{fortran\_mac/}}
-\date{1 October 2026}
+\date{2 October 2026}
 \begin{document}
 \maketitle
 \begin{abstract}
@@ -32,7 +32,7 @@ SelAction predicts what a livestock breeding program will achieve: how fast the 
 
 %======================================================================
 \section{Introduction}\label{sec:intro}
-SelAction was developed at Wageningen University by Marc Rutten and Piter Bijma \cite{rutten2002}. Given a description of a breeding program (traits, genetic parameters, numbers of parents and offspring, available information) it predicts, deterministically and in seconds, the long-term response to selection and the rate of inbreeding. No simulation is involved: everything follows from selection-index theory and the theory of long-term genetic contributions.
+SelAction was described by Rutten, Bijma, Woolliams and van Arendonk \cite{rutten2002}. Given a description of a breeding program (traits, genetic parameters, numbers of parents and offspring, available information) it predicts, deterministically and in seconds, the long-term response to selection and the rate of inbreeding. No simulation is involved: everything follows from selection-index theory and the theory of long-term genetic contributions.
 
 \paragraph{How to read this report.}
 \begin{itemize}
@@ -64,7 +64,7 @@ Candidates are ranked on their index and the best fraction $p$ is kept. If the i
 \end{figure}
 
 \subsection{Family structure lowers the intensity}
-The formula $i=\phi(t)/p$ assumes the candidates are independent. They are not: full and half sibs share information (and indices that use family means give sibs very similar scores), so selected animals cluster in the best families. This reduces the effective number of independent candidates and therefore the realised intensity, especially in small populations \cite{rawlings1976,meuwissen1991}. SelAction uses an approximation based on these papers (routine \src{rawl3}, Appendix~\ref{app:rawlings}) that lowers $i$ according to family sizes and the correlation of index values within full- and half-sib families.
+The formula $i=\phi(t)/p$ describes truncation at a fixed threshold in a normal population. When a fixed number is selected from a finite set of related candidates, full and half sibs share information (and indices that use family means give sibs very similar scores), so selected animals cluster in the best families. This can reduce the realised selection differential, especially in small populations \cite{rawlings1976,meuwissen1991}. SelAction uses an approximation based on these papers (routine \src{rawl3}, Appendix~\ref{app:rawlings}) that adjusts $i$ according to family sizes and the correlation of index values within full- and half-sib families. This correction is applied with discrete generations; under overlapping generations it is computed but not used (Section~\ref{sec:overlap}).
 
 \subsection{The Bulmer effect and equilibrium}
 Selecting parents with high index values creates negative correlations (linkage disequilibrium) between the genes they carry, which reduces the genetic variance between families in the next generation \cite{bulmer1971}. After a few generations of the same selection the variance settles at a lower equilibrium, and so do the accuracy and the response. Predictions based on the unselected (base) population overstate long-term response; asymptotic responses can be up to a quarter lower \cite{wrayhill1989}. SelAction therefore repeats the cycle of ``build the index, select, update the variances'' 25 times and reports the result (Figure~\ref{fig:bulmer}).
@@ -298,7 +298,7 @@ Let $p_{g,j}$ be the fraction passing stage $j$ among the candidates entering it
 During the 25 rounds, $k_g$ comes from \src{trunc} at the cumulative fraction $P_{g,m}$: the equilibrium treats the scheme as single-stage truncation on the final index. The multistage structure is not fed back into the covariance update.
 \end{codenote}
 
-For nested indices the source approximates the correlation between stage indices by the ratio of accuracies, capped at 0.93:
+For nested indices the source uses the ratio of accuracies as the correlation between stage indices (exact for nested optimal indices), capped at 0.93:
 \begin{equation}\label{eq:stagecorr}
 r_{g,j\ell}=r_{IH,g,j}/r_{IH,g,\ell}\quad(j<\ell),\qquad
 r_{g,j\ell}\leftarrow\min(r_{g,j\ell},0.93).
@@ -316,7 +316,7 @@ of which only the first $m$ apply. Figure~\ref{fig:stages} shows the idea: the f
 \end{figure}
 
 \begin{codenote}
-The thresholds are found by Newton iteration in \src{sseuil1/2/3} (at most 20 steps, absolute tolerance $10^{-5}$ on the probability), using the general multivariate-normal routine \src{sdutt}. \src{sdutt} uses 10-point Gauss--Hermite quadrature, or an adaptive loop over 10 to 30 points when a threshold exceeds 2 in absolute value or a correlation exceeds 0.5; tails beyond 4--5 standard deviations are set to 0 or 1. If the tolerance has not been reached after 20 steps a warning is printed (screen and output file) and the last threshold is kept; the original failure test checked for 50 iterations and never fired. (Until October 2026 the tables stopped at 20 points, so the adaptive loop could silently return 0.25 or 0.125 for small fractions and high stage correlations; see \src{NEWS.md}.) In the boundary terms below, one-dimensional tails come from \src{sdutt1} (exact, via \src{erfc}) and two-dimensional tails from \src{sdutt2} with 20 points.
+The thresholds are found by Newton iteration in \src{sseuil1/2/3} (at most 20 steps, absolute tolerance $10^{-5}$ on the probability), using the general multivariate-normal routine \src{sdutt}. Its integral-transform approach follows Dutt \cite{dutt1973} as applied to quantitative genetics by Ducrocq and Colleau \cite{ducrocqcolleau1986}. \src{sdutt} uses 10-point Gauss--Hermite quadrature, or an adaptive loop over 10 to 30 points when a threshold exceeds 2 in absolute value or a correlation exceeds 0.5; tails beyond 4--5 standard deviations are set to 0 or 1. If the tolerance has not been reached after 20 steps a warning is printed (screen and output file) and the last threshold is kept; the original failure test checked for 50 iterations and never fired. (In the original code the tables stopped at 20 points, so the adaptive loop could silently return 0.25 or 0.125 for small fractions and high stage correlations; see \src{NEWS.md}.) In the boundary terms below, one-dimensional tails come from \src{sdutt1} (via \src{erfc}) and two-dimensional tails from \src{sdutt2} with 20 points.
 \end{codenote}
 
 The quantity of interest is the vector of mean stage indices among the finally selected, $\ve\mu_I=\E[\ve I\mid Z_j>t_j\text{ for all }j]$. For two stages, with correlation $r$ and cumulative fraction $P=P_{g,2}$, define
@@ -336,13 +336,13 @@ r_{\ell k\mid j}=
 \frac{r_{\ell k}-r_{j\ell}r_{jk}}
 {\sqrt{(1-r_{j\ell}^2)(1-r_{jk}^2)}}.
 \end{equation}
-The common boundary-density identity behind the three-stage sums is
+The three-stage boundary-density identity follows Tallis \cite{tallis1961}:
 \begin{equation}\label{eq:mmeans}
 \mu_{I,j}=\frac{\sqrt{V_{I,j}}}{P_{g,m}}\sum_{\ell=1}^{m}r_{j\ell}B_\ell,\qquad r_{jj}=1.
 \end{equation}
 
 \begin{codenote}
-The three-stage source sets one conditional correlation, $r_{13\mid2}$ (stages 1 and 3 with stage 2 held at its threshold), to zero instead of evaluating Eq.~\eqref{eq:partialcorr}; $r_{12\mid3}$ and $r_{23\mid1}$ are evaluated properly. Some $B_j$ terms are recomputed with the arguments of \src{sdutt2} in reversed order; \src{sdutt2} is symmetric in its two thresholds, so this is redundant but changes nothing. Apart from $r_{13\mid2}$, the source therefore implements Eq.~\eqref{eq:mmeans}.
+The three-stage source sets one conditional correlation, $r_{13\mid2}$ (stages 1 and 3 with stage 2 held at its threshold), to zero instead of evaluating Eq.~\eqref{eq:partialcorr} (the two agree when no stage correlation is capped); $r_{12\mid3}$ and $r_{23\mid1}$ are evaluated properly. Some $B_j$ terms are recomputed with the arguments of \src{sdutt2} in reversed order; \src{sdutt2} is symmetric in its two thresholds, so this is redundant but changes nothing. Apart from $r_{13\mid2}$, the source therefore implements Eq.~\eqref{eq:mmeans}.
 \end{codenote}
 
 For trait $a$, let $\ve c_a=(\Cov(A_a,I_1),\ldots,\Cov(A_a,I_m))^{\mathsf T}$ with $\Cov(A_a,I_j)=\ve b_j^{\mathsf T}\ma G_{j,:,a}$. The source uses the nested-index covariance $V_{j\ell}=V_{I,\min(j,\ell)}$ and calculates
@@ -389,20 +389,20 @@ With $\ve h=(1/2,1/2)^{\mathsf T}$, solve $(\ma I-\Pi^{\mathsf T})\ve z=\Lambda^
 \Delta F_0=\frac12\left\{\frac1{4M_s}+M_s\beta_s^2W'_s+
 \frac1{4M_d}+M_d\beta_d^2W'_d\right\}.
 \end{equation}
-\src{Poissoncorr} and \src{hyper\_correct} add a finite-family correction. \src{Poissoncorr} replaces each full- or half-sib correlation $\rho$ by $\rho-\rho(1-\rho^2)(a/M_s+b/M_d)$, with $(a,b)=(0.8634,0.954)$ for full sibs and $(1.4075,1.4581)$ for half sibs. With fewer than 20 sires it also adjusts the selected fraction of the same-sex pairs to $(1-\rho)p+\rho\max(p,1/M_s)$ and recomputes $i$, $t$ and $k$ with \src{trunc}. Each adjusted pair gives a conditional-to-unconditional selection ratio
+\src{Poissoncorr} and \src{hyper\_correct} add a finite-family correction. \src{Poissoncorr} replaces each full- or half-sib correlation $\rho$ by $\rho-\rho(1-\rho^2)(a/M_s+b/M_d)$, with $(a,b)=(0.8634,0.954)$ for full sibs and $(1.4075,1.4581)$ for half sibs. With fewer than 20 sires it also adjusts the selected fraction of the same-sex pairs of both sexes to $(1-\rho)p+\rho\max(p,1/M_s)$ (Bijma and Woolliams \cite{bijmawoolliams2000}, Eq.~13) and recomputes $i$, $t$ and $k$ with \src{trunc}. Each adjusted pair gives a conditional-to-unconditional selection ratio
 \begin{equation}\label{eq:poissonratio}
 \kappa_{uv}=\frac{\Phi\{(i_u\rho_{uv}-t_v)/\sqrt{1-k_u\rho_{uv}^2}\}}{p_v},
 \end{equation}
 using $i,k$ of the first sex and $t,p$ of the second. Six such ratios generate the full- and half-sib count covariance matrices in \src{hyper\_correct}, whose correction $\tfrac18(M_s\delta_s+M_d\delta_d)$ is added to Eq.~\eqref{eq:inbreed} (Appendix~\ref{app:inbreeding}). Equation~\eqref{eq:inbreed} alone is therefore not the displayed final rate.
 
 \begin{codenote}
-In the $M_s<20$ adjustment, $1/M_s$ is used for the female fraction as well as the male one; this looks like a source quirk. The mixed (sire--dam) pairs reuse the male $i,k$ and the female $t,p$ obtained from the same-sex adjustments; the sire--dam correlation itself is not used to adjust a fraction. Negative variances in \src{hyper\_correct} only print a warning.
+In the $M_s<20$ adjustment, $1/M_s$ is used for the female fraction as well as the male one, as in Eq.~13 of Bijma and Woolliams \cite{bijmawoolliams2000}, where the floor represents the move towards selection between sire families when $\rho$ is large. That paper applied the adjustment for 5 and 10 sires and, in one extreme 20-sire scheme, showed that it reduced a 37\% overprediction to $-13$\%; it does not state a cutoff at 20 sires. The mixed (sire--dam) pairs reuse the male $i,k$ and the female $t,p$ obtained from the same-sex adjustments; the sire--dam correlation itself is not used to adjust a fraction. Negative variances in \src{hyper\_correct} only print a warning.
 \end{codenote}
 
 %======================================================================
 \section{Overlapping generations}\label{sec:overlap}
 \begin{inwords}
-With overlapping generations, candidates of each sex come in $K$ age classes. Young animals are on average genetically better, because they were produced by more recent, already improved parents. Older animals may have more information. Each age class gets its own index; then one threshold per sex is chosen so that exactly the required number of parents is selected across all classes. The share of parents coming from each age class determines the generation interval, and the response per year is the response per generation divided by that interval.
+With overlapping generations, candidates of each sex come in $K$ age classes. Young animals are on average genetically better, because they were produced by more recent, already improved parents. Older animals may have more information. Each age class gets its own index; then one threshold per sex is chosen so that exactly the required number of parents is selected across all classes, following truncation across cohorts \cite{ducrocqquaas1988}. The share of parents coming from each age class determines the generation interval, and the response per year is the response per generation divided by that interval.
 \end{inwords}
 
 \subsection{Classes and selection probabilities}
@@ -421,7 +421,7 @@ Here $m_{g,c}$ is the mean index of class $c$ relative to the youngest class: ea
 \src{trunc\_delta} evaluates each class with the exact normal upper tail ($\bar\Phi$, computed by \src{sdutt1} via the Fortran \src{erfc} intrinsic), and \src{riddr\_root} (Ridders' method) solves the count equation. Threshold mode starts from a uniform fraction $p=M_s/\sum_cN_{s,c}$ (and likewise for dams). Classes without information sources get $p=0$; in threshold mode a class without new information inherits the sources of the previous class.
 
 \begin{codenote}
-The search interval for $x_g$ is the union of $m_{g,c}\pm8\sqrt{V_{I,g,c}}$ over classes, extended to include 0. At 8 index standard deviations essentially no animals are selected, so any feasible target is bracketed. \src{trunc\_delta} also stores the class fractions as a side effect, so it is re-evaluated at the root after \src{riddr\_root} returns. Earlier versions approximated $\bar\Phi$ by Gauss--Hermite quadrature (inaccurate beyond about 4 standard deviations), clipped standardised thresholds to $[-3,3]$, and searched only $\pm1.5$ standard deviations; together these forced at least 6.7\% of the youngest class and 0.135\% of every class to be selected (see \src{NEWS.md}).
+The search interval for $x_g$ is the union of $m_{g,c}\pm8\sqrt{V_{I,g,c}}$ over classes, extended to include 0. At 8 index standard deviations essentially no animals are selected, so any feasible target is bracketed. \src{trunc\_delta} also stores the class fractions as a side effect, so it is re-evaluated at the root after \src{riddr\_root} returns. The original code approximated $\bar\Phi$ by Gauss--Hermite quadrature (inaccurate beyond about 4 standard deviations), clipped standardised thresholds to $[-3,3]$, and searched only $\pm1.5$ standard deviations; together these forced at least 6.7\% of the youngest class and 0.135\% of every class to be selected (see \src{NEWS.md}).
 \end{codenote}
 
 \begin{figure}[ht]
@@ -449,7 +449,7 @@ The ``sires'' and ``dams'' columns of the output show $\tfrac12\Delta A_{g,a}^{\
 \begin{codenote}
 \emph{Intensity.} \src{selection\_index} still evaluates \src{rawl3} for every class, but \src{ovlp} discards that result and recomputes the responses with the ordinary intensity $i_{g,c}$ from \src{trunc}: overlapping-generation responses are not corrected for family structure.
 
-\emph{Generation interval.} Until October 2026 the loops that accumulate Eq.~\eqref{eq:interval} assigned instead of adding, so only the highest-numbered active class was counted; every annual response was divided by a wrong interval (about 3\% too low in the \src{ovlpgrp} regression example, and in specified-count mode an interval of 0.65 instead of 1.325, which also inflated the variances through the lag term of Eq.~\eqref{eq:agemixture}). The code now computes Eq.~\eqref{eq:interval}; before and after values are in \src{NEWS.md}. The printed interval is rounded to two decimals.
+\emph{Generation interval.} When the code was adapted to current compilers (\src{fortran\_linux/}), a renamed variable turned the accumulation in Eq.~\eqref{eq:interval} into an assignment, so the sum was replaced by the last active class's term, added to a stale value of the interval left by \src{trunc\_delta} in threshold mode. The original source (\src{fortran\_orig/selovlp.f90}) accumulates correctly. The error is fixed in \src{fortran\_mac/} but is still present in \src{fortran\_linux/}; before and after values are in \src{NEWS.md}. The printed interval is rounded to two decimals.
 
 \emph{No phenotypic information.} If, in some age class, a trait in the index or goal has no phenotypic source and no genetic correlation with a trait that has one (for example BLUP as the only source), its genetic variance goes to zero. \src{ovlp} then prints a warning naming the trait and classes, and continues; the discrete drivers instead stop and ask for other sources or correlations.
 \end{codenote}
@@ -493,35 +493,42 @@ These are places where the code is known or suspected to differ from the intende
 \end{inwords}
 \begin{enumerate}
 \item \textbf{One-round lag of $\ma P$ behind $\ma A$} under overlapping generations. Negligible at convergence.
-\item \textbf{$r_{13\mid2}=0$} in three-stage selection instead of Eq.~\eqref{eq:partialcorr}, and the empirical 0.93 cap on stage correlations (Eq.~\ref{eq:stagecorr}). Both are approximations whose justification is not documented in the source.
+\item \textbf{$r_{13\mid2}=0$} in three-stage selection instead of Eq.~\eqref{eq:partialcorr}, and the empirical 0.93 cap on stage correlations (Eq.~\eqref{eq:stagecorr}). With nested optimal indices, the zero partial correlation follows from the uncapped accuracy ratios; the cap can invalidate it.
+\item \textbf{Overlapping-generation family correction.} The original program description (\src{manual/}, Program Description) says that intensity is adjusted for family structure in each sex-age class, but \src{ovlp} uses ordinary truncation intensity in the response.
 \item \textbf{Earlier-stage source lists with $M_s=M_d$.} Half-sib sources are removed only from the final-stage source list (Section~\ref{sec:sources}); earlier-stage indices of two- and three-stage selection keep them if they were entered.
-\item \textbf{Symmetric-block assumption.} When filling $\ma P_x$ the source mirrors blocks without transposing trait indices (Appendix~\ref{app:sourceblocks}), which is exact only for symmetric blocks; $\ma S$ and $\ma D$ are not exactly symmetric after the Bulmer update.
-\item \textbf{$1/M_s$ used for the female fraction} in the small-population adjustment of \src{Poissoncorr}.
+\item \textbf{Symmetric-block assumption.} When filling $\ma P_x$ the source mirrors blocks without transposing trait indices (Appendix~\ref{app:sourceblocks}), which is exact only for symmetric blocks. $\ma S$ and $\ma D$ start non-symmetric when heritabilities differ, but the asymmetry decays to rounding level well before round 25 and has no effect on printed output.
+\item \textbf{Hard switch at 20 sires.} At $M_s=20$ the selected-fraction adjustment in \src{Poissoncorr} is switched off and the $\beta$ terms of Eq.~\eqref{eq:hyperextra} are switched on, so predicted $\Delta F$ jumps (4.590\% to 4.682\% from 19 to 20 sires in one example). The $1/M_s$ floor itself follows Bijma and Woolliams \cite{bijmawoolliams2000}, Eq.~13.
+\item \textbf{Per-sex lag between age classes.} The class means in the threshold search (Eq.~\eqref{eq:agecount}) and the lags in the covariance mixture (Eq.~\eqref{eq:agemixture}) use each sex's own path response per year rather than the population gain. The effect was below 1\% of response in our examples.
 \item \textbf{Unused duplicate of the inbreeding code.} \src{sel1s} calls the \src{dFmtblup} in \src{selroutines.f90}. A second copy in \src{selinbreeding.f90} is compiled but never called. It contains two defects: its first two \src{trunc} calls use positional arguments, so the intensity receives the normal ordinate $z$, $k$ receives the intensity, and $k$ itself is never computed; and a 0 entry in a source list stops the program. It should not be switched in without fixing these.
 \end{enumerate}
 
 \subsection{Questions for the original authors}\label{sec:questions}
 These points need the intent of the original model before the code is changed. They are also listed, with source locations, in \src{NEWS.md}.
 \begin{enumerate}
-\item \textbf{Generation interval.} The code now uses Eq.~\eqref{eq:interval}: age classes numbered from 1, weighted by the numbers selected, and the average of the two sexes dividing both paths' responses. Is that the intended definition?
-\item \textbf{Finite-family correction.} In \src{Poissoncorr}, with $M_s<20$ the female same-sex fraction is adjusted with $1/M_s$ rather than $1/M_d$, and the sire--dam pairs reuse the male $i,k$ and female $t,p$ from the same-sex adjustments. Intended, or should the female adjustment use $1/M_d$?
-\item \textbf{Three-stage selection.} $r_{13\mid2}$ is set to 0 instead of Eq.~\eqref{eq:partialcorr}, and stage correlations are ratios of accuracies capped at 0.93 (Eq.~\eqref{eq:stagecorr}). What is the basis for these, and should $r_{13\mid2}$ be computed?
+\item \textbf{Generation interval.} The original source, and the corrected fork, use Eq.~\eqref{eq:interval}: age classes numbered from 1, weighted by the numbers selected, and the average of the two sexes dividing both paths' responses. Does the numbering represent actual parental ages, with the youngest class at age 1 and each class one cohort interval older? If age at first offspring differs from one cohort interval, should users account for it outside SelAction?
+\item \textbf{Finite-family correction.} The adjustment of the selected fraction uses $1/M_s$ for both sexes, as in Eq.~13 of Bijma and Woolliams \cite{bijmawoolliams2000}. What motivated switching it off at $M_s=20$, the same point at which the $\beta$ terms of Eq.~\eqref{eq:hyperextra} are switched on? In one example $\Delta F$ rises from 4.590\% at 19 sires to 4.682\% at 20. Is reusing the male $i,k$ and female $t,p$ for the sire--dam pairs intended?
+\item \textbf{Three-stage selection.} With nested optimal indices the ratio of accuracies is the exact stage correlation, and $r_{13\mid2}=0$ follows from it; when the 0.93 cap (Eq.~\eqref{eq:stagecorr}) binds this no longer holds. Was the cap introduced for the numerical integration, and should $r_{13\mid2}$ be computed from Eq.~\eqref{eq:partialcorr} so that it stays correct when the cap binds?
 \item \textbf{Mating ratio 1.} Should half-sib sources also be removed from earlier-stage indices when $M_s=M_d$?
-\item \textbf{Symmetry of $\ma S$ and $\ma D$.} Should the EBV covariance matrices be symmetrised (and the mirrored blocks transposed), or is the asymmetry negligible? Doing so would change results slightly.
+\item \textbf{Family structure under overlapping generations.} The original program description says intensities are adjusted for family structure in each sex-age class, but \src{ovlp} discards the \src{rawl3} result. Was the correction intended to enter the overlapping-generation response, and how should it be applied with a common truncation point?
+\item \textbf{Genetic lag between age classes.} Eq.~\eqref{eq:agecount} and the lags in Eq.~\eqref{eq:agemixture} use each sex's own path response per year. Should both sexes use the population gain (per trait, $\tfrac12(\Delta A_{s,a}^{\mathrm{year}}+\Delta A_{d,a}^{\mathrm{year}})$), since candidates born in the same year share the same parents?
 \item \textbf{Overlapping-generation search.} The former $\pm1.5$ standard-deviation search bracket and $\pm3$ standard-deviation clamp were removed (Section~\ref{sec:overlap}); with them gone, breeding-goal variance and accuracy fall steadily with selection intensity as the Bulmer effect predicts. Were they deliberate, and does the new behaviour match expectations?
 \end{enumerate}
 
 %======================================================================
-\begin{thebibliography}{9}
-\bibitem{bijmawoolliams2000} Bijma, P. and J.A. Woolliams. 2000. Prediction of rates of inbreeding in populations selected on best linear unbiased prediction of breeding value. \emph{Genetics} 156:361--373. \href{https://doi.org/10.1093/genetics/156.1.361}{doi:10.1093/genetics/156.1.361}
-\bibitem{bulmer1971} Bulmer, M.G. 1971. The effect of selection on genetic variability. \emph{American Naturalist} 105:201--211. \href{https://doi.org/10.1086/282718}{doi:10.1086/282718}
-\bibitem{hazel1943} Hazel, L.N. 1943. The genetic basis for constructing selection indexes. \emph{Genetics} 28:476--490. \href{https://doi.org/10.1093/genetics/28.6.476}{doi:10.1093/genetics/28.6.476}
-\bibitem{meuwissen1991} Meuwissen, T.H.E. 1991. Reduction of selection differentials in finite populations with a nested full--half sib family structure. \emph{Biometrics} 47:195. \href{https://doi.org/10.2307/2532506}{doi:10.2307/2532506}
-\bibitem{rawlings1976} Rawlings, J.O. 1976. Order statistics for a special class of unequally correlated multinormal variates. \emph{Biometrics} 32:875. \href{https://doi.org/10.2307/2529271}{doi:10.2307/2529271}
-\bibitem{rutten2002} Rutten, M.J.M., et al. 2002. SelAction: software to predict selection response and rate of inbreeding in livestock breeding programs. \emph{Journal of Heredity} 93:456--458. \href{https://doi.org/10.1093/jhered/93.6.456}{doi:10.1093/jhered/93.6.456}
-\bibitem{villanueva1993} Villanueva, B., N.R. Wray and R. Thompson. 1993. Prediction of asymptotic rates of response from selection on multiple traits using univariate and multivariate best linear unbiased predictors. \emph{Animal Production} 57:1--13. \href{https://doi.org/10.1017/S0003356100006541}{doi:10.1017/S0003356100006541}
-\bibitem{wrayhill1989} Wray, N.R. and W.G. Hill. 1989. Asymptotic rates of response from index selection. \emph{Animal Production} 49:217--227. \href{https://doi.org/10.1017/S0003356100032347}{doi:10.1017/S0003356100032347}
-\bibitem{wraythompson1990} Wray, N.R. and R. Thompson. 1990. Prediction of rates of inbreeding in selected populations. \emph{Genetical Research} 55:41--54. \href{https://doi.org/10.1017/S0016672300025180}{doi:10.1017/S0016672300025180}
+\begin{thebibliography}{99}
+\bibitem{bijmawoolliams2000} Bijma, P. and J.A. Woolliams. 2000. Prediction of rates of inbreeding in populations selected on best linear unbiased prediction of breeding value. \emph{Genetics} 156(1):361--373. \href{https://doi.org/10.1093/genetics/156.1.361}{doi:10.1093/genetics/156.1.361}
+\bibitem{bulmer1971} Bulmer, M.G. 1971. The effect of selection on genetic variability. \emph{The American Naturalist} 105(943):201--211. \href{https://doi.org/10.1086/282718}{doi:10.1086/282718}
+\bibitem{ducrocqcolleau1986} Ducrocq, V. and J.J. Colleau. 1986. Interest in quantitative genetics of Dutt's and Deak's methods for numerical computation of multivariate normal probability integrals. \emph{G\'en\'etique S\'election \'Evolution} 18(4):447--474. \href{https://doi.org/10.1186/1297-9686-18-4-447}{doi:10.1186/1297-9686-18-4-447}
+\bibitem{ducrocqquaas1988} Ducrocq, V. and R.L. Quaas. 1988. Prediction of genetic response to truncation selection across generations. \emph{Journal of Dairy Science} 71(9):2543--2553. \href{https://doi.org/10.3168/jds.S0022-0302(88)79843-4}{doi:10.3168/jds.S0022-0302(88)79843-4}
+\bibitem{dutt1973} Dutt, J.E. 1973. A representation of multivariate normal probability integrals by integral transforms. \emph{Biometrika} 60(3):637--645. \href{https://doi.org/10.1093/biomet/60.3.637}{doi:10.1093/biomet/60.3.637}
+\bibitem{hazel1943} Hazel, L.N. 1943. The genetic basis for constructing selection indexes. \emph{Genetics} 28(6):476--490. \href{https://doi.org/10.1093/genetics/28.6.476}{doi:10.1093/genetics/28.6.476}
+\bibitem{meuwissen1991} Meuwissen, T.H.E. 1991. Reduction of selection differentials in finite populations with a nested full--half sib family structure. \emph{Biometrics} 47(1):195--203. \href{https://doi.org/10.2307/2532506}{doi:10.2307/2532506}
+\bibitem{rawlings1976} Rawlings, J.O. 1976. Order statistics for a special class of unequally correlated multinormal variates. \emph{Biometrics} 32(4):875--887. \href{https://doi.org/10.2307/2529271}{doi:10.2307/2529271}
+\bibitem{rutten2002} Rutten, M.J.M., P. Bijma, J.A. Woolliams and J.A.M. van Arendonk. 2002. SelAction: software to predict selection response and rate of inbreeding in livestock breeding programs. \emph{Journal of Heredity} 93(6):456--458. \href{https://doi.org/10.1093/jhered/93.6.456}{doi:10.1093/jhered/93.6.456}
+\bibitem{tallis1961} Tallis, G.M. 1961. The moment generating function of the truncated multi-normal distribution. \emph{Journal of the Royal Statistical Society, Series B (Methodological)} 23(1):223--229. \href{https://doi.org/10.1111/j.2517-6161.1961.tb00408.x}{doi:10.1111/j.2517-6161.1961.tb00408.x}
+\bibitem{villanueva1993} Villanueva, B., N.R. Wray and R. Thompson. 1993. Prediction of asymptotic rates of response from selection on multiple traits using univariate and multivariate best linear unbiased predictors. \emph{Animal Production} 57(1):1--13. \href{https://doi.org/10.1017/S0003356100006541}{doi:10.1017/S0003356100006541}
+\bibitem{wrayhill1989} Wray, N.R. and W.G. Hill. 1989. Asymptotic rates of response from index selection. \emph{Animal Production} 49(2):217--227. \href{https://doi.org/10.1017/S0003356100032347}{doi:10.1017/S0003356100032347}
+\bibitem{wraythompson1990} Wray, N.R. and R. Thompson. 1990. Prediction of rates of inbreeding in selected populations. \emph{Genetical Research} 55(1):41--54. \href{https://doi.org/10.1017/S0016672300025180}{doi:10.1017/S0016672300025180}
 \end{thebibliography}
 
 %======================================================================
@@ -615,7 +622,8 @@ d(1+4\lambda_{ss}\lambda_{ds}W'_s)&d^2(1+4\lambda_{ds}^2W'_s)
 (1+4\lambda_{sd}\lambda_{dd}W'_d)/d&1+4\lambda_{dd}^2W'_d
 \end{pmatrix}.\nonumber
 \end{align}
-After the subtraction, keep the names $V_s,V_d$ and let $\ve\alpha=(1/(2M_s),1/(2M_d))^{\mathsf T}$. Set $\delta_q=\ve\alpha^{\mathsf T}V_q\ve\alpha$. For $M_s>19$, also calculate
+After the subtraction, keep the names $V_s,V_d$ and let $\ve\alpha=(1/(2M_s),1/(2M_d))^{\mathsf T}$. Set $\delta_q=\ve\alpha^{\mathsf T}V_q\ve\alpha$. For $M_s>19$ (the same boundary at which the selected-fraction adjustment of \src{Poissoncorr} is switched off; Section~\ref{sec:issues}), also calculate
+
 \begin{equation}\label{eq:hyperextra}
 \delta_s\leftarrow\delta_s+W'_s\,\ve t_s^{\mathsf T}V_s\ve t_s,\quad
 \delta_d\leftarrow\delta_d+W'_d\,\ve t_d^{\mathsf T}V_d\ve t_d,\quad

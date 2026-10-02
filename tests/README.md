@@ -385,6 +385,9 @@ response was wrong (`ovlp2` 1.14 instead of 1.04, `ovlpgrp` 1.05 instead of
 (economic units): `ovlp2` 16.637 -> 18.173, `ovlpgrp` 28.748 -> 29.626.
 The new intervals were checked by hand against the printed class counts.
 All discrete-generation fixtures byte-identical. Details in `NEWS.md`.
+This error came in with the `fortran_linux` fork (a rename to `genints_local`
+when making the code compile); `fortran_orig/selovlp.f90` accumulates
+correctly. `fortran_linux/` still has it.
 
 ## Previously reported: BLUP breeding values + groups under overlapping generations
 
