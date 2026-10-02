@@ -1585,7 +1585,7 @@
           do p=1,ntraits
             i=0
             do q=1,sits2(p)
-              if (stempsource2(p,q).ge.24 .and. stempsource2(p,q).le.43) then
+              if (stempsource2(p,q).ge.24 .and. stempsource2(p,q).le.63) then
                 initnotematrat="y"
               else
                 i=i+1
@@ -1614,7 +1614,7 @@
             do p=1,ntraits
               i=0
               do q=1,dits2(p)
-                if (dtempsource2(p,q).ge.24 .and. dtempsource2(p,q).le.43) then
+                if (dtempsource2(p,q).ge.24 .and. dtempsource2(p,q).le.63) then
                   initnotematrat="y"
                 else
                   i=i+1

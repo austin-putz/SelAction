@@ -122,6 +122,15 @@ response rises steadily.
 
 ## Bug fixes
 
+* `sel2s` with `nsires == ndams` now removes half-sib sources 24-63 from
+  the stage-2 lists, as `sel1s`/`sel3s` do; it removed only 24-43, leaving
+  the "mean ebv of the dams of hs-group" sources that BLUP adds. Those got
+  weight 0 (they are uncorrelated with everything left), so no response
+  changed - the stage-2 index just listed spurious zero-weight sources.
+  Checked with a two-stage input with BLUP + one half-sib group at
+  `nsires = ndams = 50`: it now matches the same input without the
+  half-sib group except for the echoed group description, exactly as
+  one-stage does. All fixtures byte-identical (normal and strict builds).
 * **Multistage joint normal tails were silently wrong for small fractions
   and high stage correlations** (`seltools.f90`, `racine`). `sdutt`'s
   adaptive Gauss-Hermite loop runs `nrac=10..30`, but the node/weight tables
@@ -189,8 +198,10 @@ response rises steadily.
   where `trunc_delta` never runs, an example gave L = 0.65 instead of 1.325
   (annual response ~2x too high). Fixing it changes overlapping-generation
   output, so it is held for review.
-* `sel2s` with `nsires == ndams` removes half-sib sources 24-43 but not the
-  dam-EBV sources 44-63 that BLUP adds; `sel1s`/`sel3s` remove 24-63.
+* With `nsires == ndams` (mating ratio 1, no paternal half sibs), the
+  earlier-stage source lists of `sel2s`/`sel3s` are not filtered for
+  half-sib sources; only the final-stage list is. Unchanged from the
+  original; not yet looked into.
 * Uninitialised reads in `seldiscrete.f90`: `ccprog` is read only when
   progeny groups and common environment are both requested but used
   unconditionally (the `selovlp.f90` copy was fixed earlier), and `dsigmai`
