@@ -122,6 +122,29 @@ response rises steadily.
 
 ## Bug fixes
 
+* **Multistage joint normal tails were silently wrong for small fractions
+  and high stage correlations** (`seltools.f90`, `racine`). `sdutt`'s
+  adaptive Gauss-Hermite loop runs `nrac=10..30`, but the node/weight tables
+  were only filled for 2-20 points. Past 20 points the empty tables gave
+  exactly 0.25 (2-D) / 0.125 (3-D), two equal values counted as converged,
+  and that was returned without warning. Added the 22-30 point tables,
+  generated with the rule the existing tables follow exactly
+  (`h(i,n)=sqrt(2)*x_i`, `w(i,n)=W_i/x_i` over the positive roots of the
+  2n-point Gauss-Hermite rule; reproduces the 2-20 tables to 2e-13). Written
+  as double-precision literals because the smallest weights (~1e-46)
+  underflow a default real. The 2-20 point lines are unchanged.
+  - On a 686-case grid (thresholds -1..3.5, correlations up to 0.93, 2-D and
+    3-D) checked against scipy: 108 cases previously came back as 0.25/0.125
+    (e.g. P(Z1>-1, Z2>2.5; r=0.93) = 0.0062 returned as 0.25); now every case
+    is within 8.5e-6 of exact.
+  - End to end, `test2s` with the sire fractions changed to 0.005 / 0.4
+    (total 0.002): total sire response after stage 2 was 0.615 economic
+    units, *below* the 18.254 after stage 1 alone; it is now 19.906.
+    Same for 0.003 / 0.5: 0.470 -> 20.140. At total fraction 0.005 nothing
+    changes (18.348 and 18.601, identical before and after).
+  - All 7 fixtures byte-identical (normal and strict debug builds); none
+    reaches more than 20 quadrature points.
+
 * `msselo` prints a WARNING (output file and screen) if the requested number
   of sires or dams cannot be selected, instead of failing silently. With the
   ±8 SD bracket this should only happen for impossible targets; the input
@@ -166,14 +189,6 @@ response rises steadily.
   where `trunc_delta` never runs, an example gave L = 0.65 instead of 1.325
   (annual response ~2x too high). Fixing it changes overlapping-generation
   output, so it is held for review.
-* **Gauss-Hermite tables stop at 20 points, adaptive loop runs to 30**
-  (found while reviewing the technical report; not yet fixed). `racine`
-  (`seltools.f90`) fills nodes/weights for 2-20 points, but `sdutt`'s
-  adaptive loop goes `nrac=10..30`. If it hasn't converged by 20, the zero
-  tables return exactly 0.25 (2-D) / 0.125 (3-D), two equal values count as
-  convergence, and that is returned silently: P(Z1>2.5, Z2>2.8; r=0.93) comes
-  back as 0.25 instead of 0.0021. Multistage `sseuil2`/`sseuil3` can hit this
-  (stage correlations are capped at 0.93) with small fractions.
 * `sel2s` with `nsires == ndams` removes half-sib sources 24-43 but not the
   dam-EBV sources 44-63 that BLUP adds; `sel1s`/`sel3s` remove 24-63.
 * Uninitialised reads in `seldiscrete.f90`: `ccprog` is read only when
