@@ -150,6 +150,17 @@ fixtures byte-identical.
 
 ## Bug fixes
 
+* The multistage threshold search (`sseuil1/2/3`, `seltools.f90`) now
+  prints a WARNING (screen, and the output file when open) if Newton's
+  method has not reached its tolerance after its 20 steps. The original
+  failure test checked for 50 iterations and so never fired; non-convergence
+  was silent. The routines still return the last threshold, so no numbers
+  change. Checked with a driver against the previous code on 72 one-, two-
+  and three-stage cases: identical thresholds, and no warning for any
+  feasible target; an infeasible three-stage target (joint pass rate of the
+  first two stages below the requested fraction) is now reported instead of
+  passing silently. A copy limited to one Newton step prints the warning as
+  intended. All fixtures byte-identical, no warning printed.
 * `sel1s`/`sel2s`/`sel3s` zero `ccprog` before use and reset `dsigmai`
   before accumulating it. `ccprog` (progeny-test c-square) is only read when
   both progeny groups and common environment are requested, but feeds the

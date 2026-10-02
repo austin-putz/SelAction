@@ -1228,6 +1228,7 @@ real function rawl3(p,nw,nfs,nhs,tfs,ths)
 !***********************************************************************
       implicit none
       integer i,iter
+      logical out20
       integer un
       parameter(un=1)
       real*8 pi,rac2pi,s,a,f,fprim,v(10)
@@ -1250,11 +1251,18 @@ real function rawl3(p,nw,nfs,nhs,tfs,ths)
            iter = i
         endif
   10  continue
-      if (iter.eq.50) then
-        print *," -error-50- : proportion of univariate normal distribution"
-        stop
-      else
-        seuil1 = s
+      seuil1 = s
+      ! newton stops after 20 steps; the original failure test (iter.eq.50)
+      ! could never trigger, so non-convergence was silent. warn (screen and
+      ! output file if open) and keep the last threshold
+      if (abs(f).gt.1.e-5) then
+        print '(a,a,es11.4,a,es11.4)', &
+          & "  WARNING (-warning-50-): univariate threshold search did not converge;", &
+          & " target proportion ", a, ", residual ", f
+        inquire(unit=20, opened=out20)
+        if (out20) write(unit=20, fmt='(a,a,es11.4,a,es11.4)') &
+          & "  WARNING (-warning-50-): univariate threshold search did not converge;", &
+          & " target proportion ", a, ", residual ", f
       endif
 
       return
@@ -1268,6 +1276,7 @@ real function rawl3(p,nw,nfs,nhs,tfs,ths)
 !***********************************************************************
       implicit none
       integer i,iter
+      logical out20
       integer un,deux
       parameter(un=1,deux=2)
       real*8 pi,rac2pi,s1,s2,a,f,fprim,t,x,r
@@ -1307,11 +1316,18 @@ real function rawl3(p,nw,nfs,nhs,tfs,ths)
            iter = i
         endif
   10  continue
-      if (iter.eq.50) then
-        print *," -error-60- : proportion of bivariate normal distribution"
-        stop
-      else
-        seuil2 = s2
+      seuil2 = s2
+      ! newton stops after 20 steps; the original failure test (iter.eq.50)
+      ! could never trigger, so non-convergence was silent. warn (screen and
+      ! output file if open) and keep the last threshold
+      if (abs(f).gt.1.e-5) then
+        print '(a,a,es11.4,a,es11.4)', &
+          & "  WARNING (-warning-60-): bivariate threshold search did not converge;", &
+          & " target proportion ", a, ", residual ", f
+        inquire(unit=20, opened=out20)
+        if (out20) write(unit=20, fmt='(a,a,es11.4,a,es11.4)') &
+          & "  WARNING (-warning-60-): bivariate threshold search did not converge;", &
+          & " target proportion ", a, ", residual ", f
       endif
 
       return
@@ -1327,6 +1343,7 @@ real function rawl3(p,nw,nfs,nhs,tfs,ths)
 !c***********************************************************************
       implicit none
       integer i,iter
+      logical out20
       integer un,deux,trois
       parameter(un=1,deux=2,trois=3)
       real*8 v(10),v2(10),x
@@ -1371,11 +1388,18 @@ real function rawl3(p,nw,nfs,nhs,tfs,ths)
            iter = i
         endif
   10  continue
-      if (iter.eq.50) then
-        print *," -error-70- : proportion of trivariate normal distribution"
-        stop
-      else
-        seuil3 = s3
+      seuil3 = s3
+      ! newton stops after 20 steps; the original failure test (iter.eq.50)
+      ! could never trigger, so non-convergence was silent. warn (screen and
+      ! output file if open) and keep the last threshold
+      if (abs(f).gt.1.e-5) then
+        print '(a,a,es11.4,a,es11.4)', &
+          & "  WARNING (-warning-70-): trivariate threshold search did not converge;", &
+          & " target proportion ", a, ", residual ", f
+        inquire(unit=20, opened=out20)
+        if (out20) write(unit=20, fmt='(a,a,es11.4,a,es11.4)') &
+          & "  WARNING (-warning-70-): trivariate threshold search did not converge;", &
+          & " target proportion ", a, ", residual ", f
       endif
 
       return
