@@ -268,6 +268,32 @@ fixtures byte-identical.
    expectations for overlapping generations?
 4. Do you recall an input where BLUP + groups under overlapping generations
    gave an all-zero response?
+5. Generation interval (overlapping generations, change 3): we now compute
+   L_g = sum_c c * n_g,c / sum_c n_g,c, with the youngest class at age 1 and
+   classes weighted by the numbers selected, and L = (L_s + L_d)/2, which
+   divides both paths' responses. The original code only added the oldest
+   active class. Please confirm this is the intended definition (e.g. not
+   weighting by long-term genetic contributions, and youngest class = 1
+   rather than 0 or a separate age at first offspring).
+6. `Poissoncorr` (`selroutines.f90`, finite-family inbreeding correction):
+   when M_s < 20 the selected fraction of the female pairs is adjusted to
+   (1-rho)p + rho*max(p, 1/M_s), i.e. with 1/M_s, not 1/M_d. Typo for 1/M_d,
+   or intended? Mixed sire-dam pairs reuse the male i,k and female t,p of
+   the same-sex adjustments - also intended?
+7. Three-stage selection (`sel3s`): the conditional correlation r_13|2 is
+   set to 0 instead of (r13 - r12 r23)/sqrt((1-r12^2)(1-r23^2)), and stage
+   index correlations are approximated by ratios of accuracies capped at
+   0.93. What is the basis for both, and should r_13|2 be computed?
+8. With M_s = M_d (no paternal half sibs) half-sib sources are removed
+   only from the final-stage source list; earlier-stage indices of two- and
+   three-stage selection keep them if entered. Should they be removed there
+   too?
+9. `selection_index` fills the lower triangle of the source covariance
+   table by copying blocks without transposing trait indices, and the EBV
+   covariance matrices S, D are not exactly symmetric after the Bulmer
+   update (the code evaluates G'P^-1G v separately from G'b). Should S and D
+   be symmetrised (and the blocks transposed), or is the asymmetry
+   negligible in your experience? Doing it would change results slightly.
 
 # Earlier history (before NEWS.md, summarised from git log)
 

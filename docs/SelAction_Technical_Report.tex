@@ -316,7 +316,7 @@ of which only the first $m$ apply. Figure~\ref{fig:stages} shows the idea: the f
 \end{figure}
 
 \begin{codenote}
-The thresholds are found by Newton iteration in \src{sseuil1/2/3} (at most 20 steps, absolute tolerance $10^{-5}$ on the probability), using the general multivariate-normal routine \src{sdutt}. \src{sdutt} uses 10-point Gauss--Hermite quadrature, or an adaptive loop over 10 to 30 points when a threshold exceeds 2 in absolute value or a correlation exceeds 0.5; tails beyond 4--5 standard deviations are set to 0 or 1. The failure test in \src{sseuil} checks for 50 iterations and therefore never triggers: non-convergence is silent. (Until October 2026 the tables stopped at 20 points, so the adaptive loop could silently return 0.25 or 0.125 for small fractions and high stage correlations; see \src{NEWS.md}.) In the boundary terms below, one-dimensional tails come from \src{sdutt1} (exact, via \src{erfc}) and two-dimensional tails from \src{sdutt2} with 20 points.
+The thresholds are found by Newton iteration in \src{sseuil1/2/3} (at most 20 steps, absolute tolerance $10^{-5}$ on the probability), using the general multivariate-normal routine \src{sdutt}. \src{sdutt} uses 10-point Gauss--Hermite quadrature, or an adaptive loop over 10 to 30 points when a threshold exceeds 2 in absolute value or a correlation exceeds 0.5; tails beyond 4--5 standard deviations are set to 0 or 1. If the tolerance has not been reached after 20 steps a warning is printed (screen and output file) and the last threshold is kept; the original failure test checked for 50 iterations and never fired. (Until October 2026 the tables stopped at 20 points, so the adaptive loop could silently return 0.25 or 0.125 for small fractions and high stage correlations; see \src{NEWS.md}.) In the boundary terms below, one-dimensional tails come from \src{sdutt1} (exact, via \src{erfc}) and two-dimensional tails from \src{sdutt2} with 20 points.
 \end{codenote}
 
 The quantity of interest is the vector of mean stage indices among the finally selected, $\ve\mu_I=\E[\ve I\mid Z_j>t_j\text{ for all }j]$. For two stages, with correlation $r$ and cumulative fraction $P=P_{g,2}$, define
@@ -430,11 +430,10 @@ The search interval for $x_g$ is the union of $m_{g,c}\pm8\sqrt{V_{I,g,c}}$ over
 \end{figure}
 
 \subsection{Generation interval and annual response}
-Set $N_g^*=\sum_c n_{g,c}$ and $w_{g,c}=n_{g,c}/N_g^*$ (Figure~\ref{fig:ages}). The generation interval, in the program's age-class units (``cohort intervals''), is intended to be
+Set $N_g^*=\sum_c n_{g,c}$ and $w_{g,c}=n_{g,c}/N_g^*$ (Figure~\ref{fig:ages}). The generation interval, in the program's age-class units (``cohort intervals''), with the youngest class at age 1, is
 \begin{equation}\label{eq:interval}
 L_s=\sum_c c\,w_{s,c},\qquad L_d=\sum_c c\,w_{d,c},\qquad L=(L_s+L_d)/2.
 \end{equation}
-The program does not compute exactly this; see the implementation note at the end of this subsection.
 
 For every active class, $\ma P_x,\ma G,\ve b,V_I$ are built with Eq.~\eqref{eq:index}. Let $\mu_{g,c,a}=i_{g,c}\,q_{g,c,a}/\sqrt{V_{I,g,c}}$ be the mean breeding value for trait $a$ of the animals selected from class $c$, where $q_{g,c,a}$ is component $a$ of $\ma G_{g,c}^{\mathsf T}\ve b_{g,c}$ and $i_{g,c}$ is the ordinary truncation intensity of that class. The response per year along the path of sex $g$, and the overall response per year, are
 \begin{equation}\label{eq:annualpath}
@@ -450,7 +449,9 @@ The ``sires'' and ``dams'' columns of the output show $\tfrac12\Delta A_{g,a}^{\
 \begin{codenote}
 \emph{Intensity.} \src{selection\_index} still evaluates \src{rawl3} for every class, but \src{ovlp} discards that result and recomputes the responses with the ordinary intensity $i_{g,c}$ from \src{trunc}: overlapping-generation responses are not corrected for family structure.
 
-\emph{Generation interval (known defect).} The loops that should accumulate Eq.~\eqref{eq:interval} assign instead of add (\src{genints\_local=genints+tempresponse}), so only the last active class contributes, on top of the value \src{genints} left by \src{trunc\_delta}. In threshold mode the interval used (from the second round on) is $\tfrac12(L_s+c^*w_{s,c^*}+L_d+c^*w_{d,c^*})$, where $c^*$ is the highest-numbered class of that sex with a nonzero fraction, which double-counts that class. In specified-count mode \src{trunc\_delta} never runs, \src{genints} is never assigned (it is zero only by the compiler's default for static storage), and only the last-class terms remain; the same holds for the first round in threshold mode. For the \src{ovlpgrp} regression example the program uses $L=1.046$ (printed 1.05) instead of 1.015, making the annual response about 3\% too low; for a specified-count example with correct $L=1.325$ it uses 0.65, roughly doubling the annual response. The value divides every annual response and is printed. This is listed in Section~\ref{sec:issues} and awaits a fix.
+\emph{Generation interval.} Until October 2026 the loops that accumulate Eq.~\eqref{eq:interval} assigned instead of adding, so only the highest-numbered active class was counted; every annual response was divided by a wrong interval (about 3\% too low in the \src{ovlpgrp} regression example, and in specified-count mode an interval of 0.65 instead of 1.325, which also inflated the variances through the lag term of Eq.~\eqref{eq:agemixture}). The code now computes Eq.~\eqref{eq:interval}; before and after values are in \src{NEWS.md}. The printed interval is rounded to two decimals.
+
+\emph{No phenotypic information.} If, in some age class, a trait in the index or goal has no phenotypic source and no genetic correlation with a trait that has one (for example BLUP as the only source), its genetic variance goes to zero. \src{ovlp} then prints a warning naming the trait and classes, and continues; the discrete drivers instead stop and ask for other sources or correlations.
 \end{codenote}
 
 \subsection{Age-specific covariance update}
@@ -488,18 +489,26 @@ For a reproducible port, preserve: the order of sources (sorted) and goal traits
 %======================================================================
 \section{Known issues and open questions}\label{sec:issues}
 \begin{inwords}
-These are places where the code is known or suspected to differ from the intended model. The first changes results; the others are minor or only matter for exact reproduction. Fixes and their effects are recorded in \src{NEWS.md}.
+These are places where the code is known or suspected to differ from the intended model. Their effect on results is small or not yet quantified; several are questions for the original authors (Section~\ref{sec:questions}). Fixes made so far and their effects are recorded in \src{NEWS.md}.
 \end{inwords}
 \begin{enumerate}
-\item \textbf{Generation interval under overlapping generations} (Section~\ref{sec:overlap}). Accumulators are overwritten instead of summed, so the interval, and therefore every annual response, is wrong: about 3\% too low in \src{ovlpgrp}, and by a factor of about two in specified-count mode. A fix is a one-line change per sex; it will change the overlapping-generation outputs.
 \item \textbf{One-round lag of $\ma P$ behind $\ma A$} under overlapping generations. Negligible at convergence.
 \item \textbf{$r_{13\mid2}=0$} in three-stage selection instead of Eq.~\eqref{eq:partialcorr}, and the empirical 0.93 cap on stage correlations (Eq.~\ref{eq:stagecorr}). Both are approximations whose justification is not documented in the source.
-\item \textbf{Silent non-convergence} of the multistage threshold search (\src{sseuil}): the failure test can never trigger.
 \item \textbf{Earlier-stage source lists with $M_s=M_d$.} Half-sib sources are removed only from the final-stage source list (Section~\ref{sec:sources}); earlier-stage indices of two- and three-stage selection keep them if they were entered.
 \item \textbf{Symmetric-block assumption.} When filling $\ma P_x$ the source mirrors blocks without transposing trait indices (Appendix~\ref{app:sourceblocks}), which is exact only for symmetric blocks; $\ma S$ and $\ma D$ are not exactly symmetric after the Bulmer update.
 \item \textbf{$1/M_s$ used for the female fraction} in the small-population adjustment of \src{Poissoncorr}.
-\item \textbf{Overlapping generations have no check for indices without phenotypic information.} Discrete generations make the user change the information sources or correlations when a trait has no phenotypic source and no genetic correlation with one (always the case for an index with BLUP as the only source); overlapping generations run to an all-zero response.
 \item \textbf{Unused duplicate of the inbreeding code.} \src{sel1s} calls the \src{dFmtblup} in \src{selroutines.f90}. A second copy in \src{selinbreeding.f90} is compiled but never called. It contains two defects: its first two \src{trunc} calls use positional arguments, so the intensity receives the normal ordinate $z$, $k$ receives the intensity, and $k$ itself is never computed; and a 0 entry in a source list stops the program. It should not be switched in without fixing these.
+\end{enumerate}
+
+\subsection{Questions for the original authors}\label{sec:questions}
+These points need the intent of the original model before the code is changed. They are also listed, with source locations, in \src{NEWS.md}.
+\begin{enumerate}
+\item \textbf{Generation interval.} The code now uses Eq.~\eqref{eq:interval}: age classes numbered from 1, weighted by the numbers selected, and the average of the two sexes dividing both paths' responses. Is that the intended definition?
+\item \textbf{Finite-family correction.} In \src{Poissoncorr}, with $M_s<20$ the female same-sex fraction is adjusted with $1/M_s$ rather than $1/M_d$, and the sire--dam pairs reuse the male $i,k$ and female $t,p$ from the same-sex adjustments. Intended, or should the female adjustment use $1/M_d$?
+\item \textbf{Three-stage selection.} $r_{13\mid2}$ is set to 0 instead of Eq.~\eqref{eq:partialcorr}, and stage correlations are ratios of accuracies capped at 0.93 (Eq.~\eqref{eq:stagecorr}). What is the basis for these, and should $r_{13\mid2}$ be computed?
+\item \textbf{Mating ratio 1.} Should half-sib sources also be removed from earlier-stage indices when $M_s=M_d$?
+\item \textbf{Symmetry of $\ma S$ and $\ma D$.} Should the EBV covariance matrices be symmetrised (and the mirrored blocks transposed), or is the asymmetry negligible? Doing so would change results slightly.
+\item \textbf{Overlapping-generation search.} The former $\pm1.5$ standard-deviation search bracket and $\pm3$ standard-deviation clamp were removed (Section~\ref{sec:overlap}); with them gone, breeding-goal variance and accuracy fall steadily with selection intensity as the Bulmer effect predicts. Were they deliberate, and does the new behaviour match expectations?
 \end{enumerate}
 
 %======================================================================
