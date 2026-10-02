@@ -13,7 +13,7 @@
 #
 # Binaries listed in manifest.txt that don't exist in platform_dir are
 # skipped (with a warning), not failed - this lets the harness run against
-# platform that builds only some of the listed binaries without the whole
+# a platform that builds only some of the listed binaries without the whole
 # suite refusing to run. fortran_mac builds the single `selaction` binary,
 # so the old mssel/msseld/msselo entries are skipped there, while
 # fortran_linux builds the old three and skips `selaction`.
