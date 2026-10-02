@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 402" role="img" aria-label="Information sources available for a selection candidate">
+  <defs><style>
+text{font-family:Arial,Helvetica,sans-serif;fill:#14243b;font-size:14px}
+.head{font-size:17px;font-weight:700}
+.small{font-size:13px;fill:#476276}
+.tiny{font-size:12px;fill:#476276}
+.s{fill:#e5f0ed;stroke:#2d756b;stroke-width:1.5}
+.d{fill:#e9eef5;stroke:#4f719b;stroke-width:1.5}
+.cand{fill:#fff4dc;stroke:#b07a12;stroke-width:2}
+.out{fill:#f7f8fa;stroke:#8294a5;stroke-width:1.4}
+.line{stroke:#8294a5;stroke-width:1.6;fill:none}
+.arrow{stroke:#647e90;stroke-width:2;fill:none;marker-end:url(#a)}
+.axis{stroke:#647e90;stroke-width:1.3;fill:none}
+.grid{stroke:#e3e8ee;stroke-width:1}
+</style><marker id="a" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L8 4L0 8Z" fill="#647e90"/></marker></defs>
+  <rect width="900" height="402" fill="white"/>
+  <text class="head" x="25" y="31">Information sources for one selection candidate</text>
+  <rect class="d" x="60" y="55" width="210" height="62" rx="8"/>
+  <text x="72" y="77">Dam</text>
+  <text class="small" x="72" y="95">EBV of the dam: source 2</text>
+  <rect class="s" x="330" y="55" width="210" height="62" rx="8"/>
+  <text x="342" y="77">Sire</text>
+  <text class="small" x="342" y="95">EBV of the sire: source 3</text>
+  <rect class="d" x="600" y="55" width="270" height="62" rx="8"/>
+  <text x="612" y="77">Other dams mated to the sire</text>
+  <text class="small" x="612" y="95">mean EBV of these dams: 44–63</text>
+  <rect class="out" x="60" y="175" width="210" height="62" rx="8"/>
+  <text x="72" y="197">Full sibs</text>
+  <text class="small" x="72" y="215">group mean: sources 4–23</text>
+  <rect class="cand" x="330" y="175" width="210" height="62" rx="8"/>
+  <text x="342" y="197">Candidate</text>
+  <text class="small" x="342" y="215">own performance: source 1</text>
+  <rect class="out" x="600" y="175" width="270" height="62" rx="8"/>
+  <text x="612" y="197">Paternal half sibs</text>
+  <text class="small" x="612" y="215">group mean: sources 24–43</text>
+  <rect class="out" x="330" y="290" width="210" height="62" rx="8"/>
+  <text x="342" y="312">Progeny of the candidate</text>
+  <text class="small" x="342" y="330">group mean: sources 64–83</text>
+  <path class="line" d="M270 86H330M300 86V150M165 150H435M165 150V175M435 150V175"/>
+  <path class="line" d="M540 86H600M570 86V150M570 150H735M735 150V175"/>
+  <path class="line" d="M435 237V290"/>
+  <text class="tiny" x="577" y="144">mated</text><text class="tiny" x="307" y="144">mated</text>
+  <text class="tiny" x="25" y="372">Full sibs share both parents; paternal half sibs share only the sire; up to 20 groups of each type. Choosing BLUP (input code 2)</text>
+  <text class="tiny" x="25" y="388">adds the dam EBV (2), the sire EBV (3) and, for each half-sib group, the mean EBV of its dams (44–63): this is how SelAction approximates BLUP.</text>
+</svg>

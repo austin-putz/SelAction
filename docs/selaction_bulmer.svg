@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 345" role="img" aria-label="Bulmer effect iteration and convergence in example test1">
+  <defs><style>
+text{font-family:Arial,Helvetica,sans-serif;fill:#14243b;font-size:14px}
+.head{font-size:17px;font-weight:700}
+.small{font-size:13px;fill:#476276}
+.tiny{font-size:12px;fill:#476276}
+.s{fill:#e5f0ed;stroke:#2d756b;stroke-width:1.5}
+.d{fill:#e9eef5;stroke:#4f719b;stroke-width:1.5}
+.cand{fill:#fff4dc;stroke:#b07a12;stroke-width:2}
+.out{fill:#f7f8fa;stroke:#8294a5;stroke-width:1.4}
+.line{stroke:#8294a5;stroke-width:1.6;fill:none}
+.arrow{stroke:#647e90;stroke-width:2;fill:none;marker-end:url(#a)}
+.axis{stroke:#647e90;stroke-width:1.3;fill:none}
+.grid{stroke:#e3e8ee;stroke-width:1}
+</style><marker id="a" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L8 4L0 8Z" fill="#647e90"/></marker></defs>
+  <rect width="900" height="345" fill="white"/>
+  <text class="head" x="25" y="31">Selection reduces variance, so SelAction iterates to equilibrium (Bulmer effect)</text>
+  <rect class="out" x="30" y="60" width="250" height="52" rx="8"/>
+  <text x="42" y="82">Index, accuracy, response</text>
+  <text class="tiny" x="42" y="100">selection_index</text>
+  <rect class="out" x="30" y="145" width="250" height="52" rx="8"/>
+  <text x="42" y="167">Truncation: intensity i, k</text>
+  <text class="tiny" x="42" y="185">i from rawl3 (family-adjusted), k from trunc</text>
+  <rect class="out" x="30" y="230" width="250" height="68" rx="8"/>
+  <text x="42" y="252">Covariance update</text>
+  <text class="tiny" x="42" y="270">family variance × (1 − k r²), one trait</text>
+  <text class="tiny" x="42" y="288">covariance_update</text>
+  <path class="arrow" d="M155 112V143"/><path class="arrow" d="M155 197V228"/>
+  <path class="arrow" d="M30 264H12V86H28"/>
+  <text class="tiny" x="40" y="322">repeated for exactly 25 rounds</text>
+  <path class="grid" d="M370 290.0H860"/><text class="tiny" x="340" y="294.0">60%</text>
+  <path class="grid" d="M370 235.0H860"/><text class="tiny" x="340" y="239.0">70%</text>
+  <path class="grid" d="M370 180.0H860"/><text class="tiny" x="340" y="184.0">80%</text>
+  <path class="grid" d="M370 125.0H860"/><text class="tiny" x="340" y="129.0">90%</text>
+  <path class="grid" d="M370 70.0H860"/><text class="tiny" x="340" y="74.0">100%</text>
+  <path class="axis" d="M370 290H860"/>
+  <text class="tiny" x="365.0" y="308">1</text>
+  <text class="tiny" x="446.7" y="308">5</text>
+  <text class="tiny" x="548.8" y="308">10</text>
+  <text class="tiny" x="650.8" y="308">15</text>
+  <text class="tiny" x="752.9" y="308">20</text>
+  <text class="tiny" x="855.0" y="308">25</text>
+  <text class="small" x="540" y="328">round</text>
+  <text class="small" x="370" y="58">relative to round 1 (example test1: sire index; total response)</text>
+  <path d="M370.0 70.0 L390.4 201.3 L410.8 249.6 L431.2 257.9 L451.7 259.1 L472.1 259.3 L492.5 259.3 L512.9 259.3 L533.3 259.3 L553.8 259.3 L574.2 259.3 L594.6 259.3 L615.0 259.3 L635.4 259.3 L655.8 259.3 L676.2 259.3 L696.7 259.3 L717.1 259.3 L737.5 259.3 L757.9 259.3 L778.3 259.3 L798.8 259.3 L819.2 259.3 L839.6 259.3 L860.0 259.3" stroke="#2d756b" stroke-width="2.2" fill="none"/>
+  <text class="tiny" x="655.0" y="252.3" style="fill:#2d756b">index variance: 310 → 203 (66%)</text>
+  <path d="M370.0 70.0 L390.4 129.8 L410.8 157.6 L431.2 162.7 L451.7 163.5 L472.1 163.6 L492.5 163.6 L512.9 163.6 L533.3 163.6 L553.8 163.6 L574.2 163.6 L594.6 163.6 L615.0 163.6 L635.4 163.6 L655.8 163.6 L676.2 163.6 L696.7 163.6 L717.1 163.6 L737.5 163.6 L757.9 163.6 L778.3 163.6 L798.8 163.6 L819.2 163.6 L839.6 163.6 L860.0 163.6" stroke="#4f719b" stroke-width="2.2" fill="none"/>
+  <text class="tiny" x="655.0" y="156.6" style="fill:#4f719b">total response: 33.6 → 27.8 (83%)</text>
+  <path d="M370.0 70.0 L390.4 94.6 L410.8 112.4 L431.2 115.9 L451.7 116.4 L472.1 116.5 L492.5 116.5 L512.9 116.5 L533.3 116.5 L553.8 116.5 L574.2 116.5 L594.6 116.5 L615.0 116.5 L635.4 116.5 L655.8 116.5 L676.2 116.5 L696.7 116.5 L717.1 116.5 L737.5 116.5 L757.9 116.5 L778.3 116.5 L798.8 116.5 L819.2 116.5 L839.6 116.5 L860.0 116.5" stroke="#b07a12" stroke-width="2.2" fill="none"/>
+  <text class="tiny" x="655.0" y="109.5" style="fill:#b07a12">accuracy: 0.629 → 0.576 (92%)</text>
+</svg>

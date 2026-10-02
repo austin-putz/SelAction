@@ -2,41 +2,162 @@
 \pdfminorversion=7
 \usepackage[T1]{fontenc}
 \usepackage{lmodern}
-\usepackage{amsmath,amssymb,booktabs,longtable,graphicx,geometry,hyperref,xcolor}
+\usepackage{amsmath,amssymb,booktabs,longtable,graphicx,geometry,hyperref,xcolor,array,enumitem}
+\usepackage[most]{tcolorbox}
 \geometry{margin=25mm}
-\hypersetup{colorlinks=true,linkcolor=blue!55!black,urlcolor=blue!55!black}
+\hypersetup{colorlinks=true,linkcolor=blue!55!black,urlcolor=blue!55!black,citecolor=blue!55!black}
 \newcommand{\src}[1]{\texttt{#1}}
 \newcommand{\Cov}{\operatorname{Cov}}
 \newcommand{\Var}{\operatorname{Var}}
 \newcommand{\E}{\operatorname{E}}
 \newcommand{\ve}[1]{\boldsymbol{#1}}
 \newcommand{\ma}[1]{\mathbf{#1}}
-\title{SelAction: mathematical specification of discrete and overlapping selection}
+% plain-language summary at the start of each section
+\newtcolorbox{inwords}{colback=blue!3!white,colframe=blue!35!black,boxrule=0.5pt,arc=2pt,
+  left=6pt,right=6pt,top=4pt,bottom=4pt,fonttitle=\bfseries,title=In words}
+% notes on where the code differs from the clean mathematics
+\newtcolorbox{codenote}{colback=orange!4!white,colframe=orange!60!black,boxrule=0.5pt,arc=2pt,
+  left=6pt,right=6pt,top=4pt,bottom=4pt,fonttitle=\bfseries,title=Implementation note}
+\setlist{itemsep=2pt,topsep=4pt}
+\title{SelAction: how selection response and inbreeding are predicted\\[4pt]
+\large A guide and mathematical specification of the \src{fortran\_mac/} source}
 \author{Source-based report for \src{fortran\_mac/}}
 \date{1 October 2026}
 \begin{document}
 \maketitle
 \begin{abstract}
-This report translates the selection-response equations in \src{fortran\_mac/} into portable mathematics. It covers the covariance model, information sources, indices, family-adjusted intensity, Bulmer iteration, one- to three-stage discrete selection, discrete inbreeding, and selection across age classes. Numerical approximations and possible source-level discrepancies are identified explicitly. Internal polynomial approximations for normal probabilities and input/output formatting are outside scope.
+SelAction predicts what a livestock breeding program will achieve: how fast the breeding goal improves (the response to selection) and how fast inbreeding accumulates. This report explains, first in plain language and then precisely, how the program computes those predictions. It covers the genetic covariance model, the information sources available on each candidate (own records, relatives, progeny and BLUP breeding values), the selection index, selection intensity with family structure, the iteration to equilibrium that accounts for the loss of variance under selection (the Bulmer effect), one- to three-stage selection with discrete generations, prediction of the rate of inbreeding, and selection across age classes with overlapping generations. Every equation is tied to the routine that implements it. Where the code departs from the clean mathematics, or contains a known defect, this is stated explicitly. The report is written for two audiences: graduate students and users who want to understand what SelAction does, and developers who need to reproduce or port it.
 \end{abstract}
 \tableofcontents
 
-\section{Notation and computational structure}
-The source of record is \src{seldiscrete.f90}, \src{selovlp.f90}, \src{selroutines.f90}, \src{selinbreeding.f90}, and \src{seltools.f90} in \src{fortran\_mac/}. Trait indices $a,b$ range from $1$ to $T$, sex $g$ is sire $s$ or dam $d$, stage $j$ ranges from $1$ to $3$, and age $c$ begins at $1$. All variables are centred within the relevant candidate group. Superscript $\mathsf T$ is transpose. A cross-covariance matrix need not be symmetric.
+%======================================================================
+\section{Introduction}\label{sec:intro}
+SelAction was developed at Wageningen University by Marc Rutten and Piter Bijma \cite{rutten2002}. Given a description of a breeding program (traits, genetic parameters, numbers of parents and offspring, available information) it predicts, deterministically and in seconds, the long-term response to selection and the rate of inbreeding. No simulation is involved: everything follows from selection-index theory and the theory of long-term genetic contributions.
 
-Let $\ve A$ be the vector of true additive genetic values and $\ve v$ the economic weights, with zeros outside the breeding goal. The aggregate genotype is
+\paragraph{How to read this report.}
+\begin{itemize}
+\item \emph{If you are new to the topic}, read Section~\ref{sec:background} first. It explains the six ideas the program is built on, with figures and references to the original papers. The ``In words'' box at the start of each later section summarises that section without equations.
+\item \emph{If you want the equations}, Section~\ref{sec:notation} lists every symbol, and Sections~\ref{sec:covariance}--\ref{sec:overlap} give the model in the order the program computes it.
+\item \emph{If you are porting or checking the code}, the orange ``Implementation note'' boxes, the source map in Section~\ref{sec:sourcemap}, the list of known issues in Section~\ref{sec:issues} and the appendices give the details needed for exact numerical agreement.
+\end{itemize}
+
+\paragraph{Scope.} {\sloppy The source of record is \src{seldiscrete.f90}, \src{selovlp.f90}, \src{selroutines.f90}, \src{selinbreeding.f90} and \src{seltools.f90} in \src{fortran\_mac/}, as of the date above. Changes to the code are recorded in \src{NEWS.md} at the top of the repository. Input/output formatting is outside scope.\par}
+
+%======================================================================
+\section{Key ideas for new readers}\label{sec:background}
+
+\subsection{The breeding goal and the selection index}
+A breeding program aims to improve several traits at once, each with an economic value. The \emph{breeding goal} (or aggregate genotype) is the economically weighted sum of the true breeding values of an animal, $H=\sum_a v_aA_a$. True breeding values cannot be observed. What can be observed are phenotypes of the animal and of its relatives. A \emph{selection index} $I$ is the linear combination of these observations that predicts $H$ as well as possible: its weights are chosen to maximise the correlation between $I$ and $H$ \cite{hazel1943}. That correlation is the \emph{accuracy} $r_{IH}$. SelAction builds one such index for each sex (and for each stage or age class).
+
+\subsection{Information sources and BLUP}
+Figure~\ref{fig:sources} shows the information SelAction can use for one candidate: its own performance, the means of groups of full sibs, paternal half sibs and progeny, and estimated breeding values (EBVs) of its parents. In practice, animals are selected on BLUP breeding values computed with an animal model and the whole pedigree. SelAction does not run BLUP. Instead it adds the EBVs of the sire, the dam, and the mates of the sire to the index; this reproduces the response to BLUP selection closely \cite{wrayhill1989,villanueva1993}. Each source has a numeric code that appears in the input file and in the program output.
+\begin{figure}[ht]
+\centering\includegraphics[width=\linewidth]{selaction_sources.pdf}
+\caption{Information sources for one selection candidate and their source numbers (Section~\ref{sec:sources}). Editable SVG source: \src{selaction\_sources.svg}.}\label{fig:sources}
+\end{figure}
+
+\subsection{Truncation selection and selection intensity}
+Candidates are ranked on their index and the best fraction $p$ is kept. If the index is normally distributed this is \emph{truncation selection}: everyone above a threshold $t$ is selected (Figure~\ref{fig:trunc}). The mean of the selected animals, in standard deviations of the index, is the \emph{selection intensity} $i$. The response in the breeding goal per generation is then intensity $\times$ accuracy $\times$ the standard deviation of $H$, which equals $i\sqrt{V_I}$ when written with the index variance $V_I$. Selection also makes the selected group less variable than the candidates: their variance shrinks by a fraction $k$ (Figure~\ref{fig:trunc}).
+\begin{figure}[ht]
+\centering\includegraphics[width=.95\linewidth]{selaction_truncation.pdf}
+\caption{Truncation selection on a standardised index, worked through for $p=20\%$. The intensity $i$ is the mean of the selected; $k$ is the proportional loss of variance among them (Eq.~\ref{eq:trunc}). Editable SVG source: \src{selaction\_truncation.svg}.}\label{fig:trunc}
+\end{figure}
+
+\subsection{Family structure lowers the intensity}
+The formula $i=\phi(t)/p$ assumes the candidates are independent. They are not: full and half sibs share information (and indices that use family means give sibs very similar scores), so selected animals cluster in the best families. This reduces the effective number of independent candidates and therefore the realised intensity, especially in small populations \cite{rawlings1976,meuwissen1991}. SelAction uses an approximation based on these papers (routine \src{rawl3}, Appendix~\ref{app:rawlings}) that lowers $i$ according to family sizes and the correlation of index values within full- and half-sib families.
+
+\subsection{The Bulmer effect and equilibrium}
+Selecting parents with high index values creates negative correlations (linkage disequilibrium) between the genes they carry, which reduces the genetic variance between families in the next generation \cite{bulmer1971}. After a few generations of the same selection the variance settles at a lower equilibrium, and so do the accuracy and the response. Predictions based on the unselected (base) population overstate long-term response; asymptotic responses can be up to a quarter lower \cite{wrayhill1989}. SelAction therefore repeats the cycle of ``build the index, select, update the variances'' 25 times and reports the result (Figure~\ref{fig:bulmer}).
+\begin{figure}[ht]
+\centering\includegraphics[width=\linewidth]{selaction_bulmer.pdf}
+\caption{The 25-round iteration (left) and how the example \src{test1} in the regression tests converges (right): the variance of the sire index falls from 310 to 203, its accuracy from 0.629 to 0.576, and the total response from 33.6 to 27.8 economic units, with the values settled after about six rounds. Values recorded from the program while it ran. Editable SVG source: \src{selaction\_bulmer.svg}.}\label{fig:bulmer}
+\end{figure}
+
+\subsection{Discrete versus overlapping generations, and multiple stages}
+With \emph{discrete generations}, all parents are replaced every generation, and selection can be done in up to three stages (for example on own performance first, then on BLUP after more records are available). With \emph{overlapping generations}, animals of several ages are available and compete for the same places; younger animals are genetically better on average (they are later products of selection) while older animals may have more information. SelAction then applies one threshold to all age classes of a sex (Section~\ref{sec:overlap}), which also determines the generation interval and the response per year.
+
+\subsection{Rate of inbreeding}
+Inbreeding accumulates because selected parents leave unequal numbers of descendants. The rate of inbreeding $\Delta F$ can be predicted from the expected long-term genetic contributions of individuals, which depend on their selective advantage \cite{wraythompson1990}. SelAction uses a multitrait version of the predictions for BLUP selection of Bijma and Woolliams \cite{bijmawoolliams2000}, with a correction for finite family sizes. It is computed for one-stage selection with discrete generations only.
+
+%======================================================================
+\section{Notation and computational structure}\label{sec:notation}
+\begin{inwords}
+This section lists every symbol used in the rest of the report. Bold lower-case letters are vectors (one entry per trait or per information source), bold capitals are matrices. The program keeps separate copies of most quantities for sires and dams.
+\end{inwords}
+
+Indices: traits $a,b=1,\dots,T$; sex $g\in\{s,d\}$ (sire or dam); selection stage $j=1,2,3$; age class $c=1,\dots,K$. All variables are centred within the relevant candidate group; superscript $\mathsf T$ denotes transpose. A cross-covariance matrix need not be symmetric.
+
+\begin{longtable}{>{\raggedright}p{.19\linewidth}>{\raggedright}p{.52\linewidth}>{\raggedright\arraybackslash}p{.19\linewidth}}
+\caption{Symbols used in this report and the corresponding names in the Fortran source.}\label{tab:notation}\\
+\toprule Symbol & Meaning & Source name\\\midrule\endfirsthead
+\toprule Symbol & Meaning & Source name\\\midrule\endhead
+\bottomrule\endfoot
+\multicolumn{3}{l}{\emph{Breeding goal}}\\
+$\ve A$ & vector of true additive genetic (breeding) values, one per trait & --\\
+$\ve v$ & economic values; zero for traits not in the goal & \src{tempev}\\
+$H$, $\sigma_H^2$ & breeding goal $H=\ve v^{\mathsf T}\ve A$ and its variance & \src{sigmah}\\
+\multicolumn{3}{l}{\emph{Variance components (per trait $a$) and covariance matrices}}\\
+$V_{P,a}$, $h_a^2$, $c_a^2$ & phenotypic variance, heritability, common-environment fraction & \src{sigmap}, \src{hh}, \src{cc}\\
+$\ma A$ & additive genetic covariance matrix of candidates & \src{covapaq}\\
+$\ma A_s$, $\ma A_d$, $\ma A_w$ & parts of $\ma A$ due to the sire, the dam, and within-family (Mendelian) variation; $\ma A=\ma A_s+\ma A_d+\ma A_w$ & \src{covas}, \src{covad}, \src{covaw}\\
+$\ma P$, $\ma C$, $\ma E$ & phenotypic, common-environment (full sibs) and residual covariance matrices & \src{covp}, \src{covc}, \src{cove}\\
+$\ma C_{\mathrm{prog}}$ & common environment within a progeny group & \src{covcprog}\\
+$\ma F$, $\ma J$ & phenotypic covariance between full sibs and between paternal half sibs & \src{fs}, \src{hs}\\
+$\ma S$, $\ma D$ & covariance matrices of sire EBVs and dam EBVs & \src{s}, \src{d}\\
+$\ma R_A,\ma R_P,\ma R_C$ & genetic, phenotypic, common-environment correlation matrices & \src{gcorr}, \src{phcorr}, \src{ccorr}\\
+\multicolumn{3}{l}{\emph{Selection index}}\\
+$\ve x$ & vector of the information sources in the index & --\\
+$\ma P_x$, $\ma G$ & $\Var(\ve x)$ and $\Cov(\ve x,\ve A)$ & \src{invp} (inverse), \src{realg}\\
+$\ve b$, $I$ & index weights and index $I=\ve b^{\mathsf T}\ve x$ & \src{b}\\
+$V_I$, $r_{IH}$ & index variance and accuracy & \src{sigmai}, \src{rih}\\
+$\ve q$ & $\Cov(\ve A,I)=\ma G^{\mathsf T}\ve b$ & \src{covapi}\\
+\multicolumn{3}{l}{\emph{Truncation selection}}\\
+$p$, $t$ & fraction selected and standardised threshold & \src{pval}\\
+$i$, $k$ & selection intensity and variance-reduction factor & \src{i}/\src{is}, \src{k}/\src{ks}\\
+$i_{\mathrm{eff}}$ & intensity corrected for family structure (\src{rawl3}) & \src{ii}\\
+$\rho_{fs},\rho_{hs}$ & correlation of index values of full sibs and of half sibs & \src{corrfs}, \src{corrhs}\\
+$\phi$, $\Phi$, $\bar\Phi$ & standard normal density, distribution function, and upper tail $1-\Phi$ & --\\
+\multicolumn{3}{l}{\emph{Population structure}}\\
+$M_s$, $M_d$ & numbers of selected sires and dams & \src{nsires}, \src{ndams}\\
+$d$ & mating ratio $M_d/M_s$ (dams per sire) & \src{neffdams}\\
+$n_m$, $n_f$ & male and female candidates per dam & \src{noffs}, \src{noffd}\\
+$n_{F,u}$, $n_{H,u}$, $m_{H,u}$ & full-sib group size; half-sib group size and its number of dams & \src{fsgroupsoff}, \src{hsgroupsoff}, \src{hsgroupsdams}\\
+$n_{Q,u}$, $m_{Q,u}$ & progeny group size and number of dams & \src{proggroupsoff*}, \src{proggroupsdams}\\
+\multicolumn{3}{l}{\emph{Multistage selection}}\\
+$p_{g,j}$, $P_{g,j}$ & fraction passing stage $j$, and cumulative fraction $\prod_{\ell\le j}p_{g,\ell}$ & \src{pvals}, \src{pvals2}\\
+$r_{g,j\ell}$ & correlation between the stage-$j$ and stage-$\ell$ indices & \src{dumcorrsrih*}\\
+\multicolumn{3}{l}{\emph{Overlapping generations}}\\
+$N_{g,c}$, $n_{g,c}$ & candidates and selected animals in age class $c$ & \src{nanim}, \src{nselec}\\
+$w_{g,c}$ & share of the selected parents of sex $g$ coming from class $c$ & --\\
+$x_g$ & common threshold for sex $g$ across age classes & \src{zriddr}\\
+$L_g$, $L$ & generation interval of a sex, and their average & \src{genints}, \src{genintd}\\
+\multicolumn{3}{l}{\emph{Inbreeding}}\\
+$\Delta F$ & rate of inbreeding per generation & \src{delf}\\
+$\ma\Gamma_{gq}$ & covariance between information and selective advantage (Eq.~\ref{eq:vsa}) & \src{Cmm}, \src{Cmf}, \dots\\
+$\Lambda$, $\Pi$ & $2\times2$ matrices of the contribution model & \src{glambda}, \src{gpi}\\
+$\kappa_{uv}$ & conditional-to-unconditional selection ratios (Eq.~\ref{eq:poissonratio}) & --\\
+\end{longtable}
+
+Two letters have a second, unrelated use: $F$ in $\Delta F$ (inbreeding) is not the matrix $\ma F$, and the subscripts $s,d$ denote sex, not the matrices $\ma S,\ma D$.
+
+Each trait may enter the index, the goal, both, or neither (input flags \src{i}, \src{h}, \src{b}, \src{n}). The aggregate genotype is
 \begin{equation}\label{eq:goal}
 H=\ve v^{\mathsf T}\ve A,\qquad \sigma_H^2=\ve v^{\mathsf T}\ma A\ve v,\qquad \ma A=\Var(\ve A).
 \end{equation}
-A trait may enter the index, the goal, both, or neither (source flags \src{i}, \src{h}, \src{b}, \src{n}). Sire and dam indices can differ. Figure~\ref{fig:flow} shows the calculation order.
+Sire and dam indices can differ. Figure~\ref{fig:flow} shows the order of the calculations.
 \begin{figure}[ht]
 \centering\includegraphics[width=\linewidth]{selaction_flow.pdf}
-\caption{Shared covariance and index calculations feed the discrete and age-structured schemes. Editable XML/SVG source: \src{selaction\_flow.svg}.}\label{fig:flow}
+\caption{Shared covariance and index calculations feed the discrete and age-structured schemes. Editable SVG source: \src{selaction\_flow.svg}.}\label{fig:flow}
 \end{figure}
 
-\section{Covariance model and information vector}
+%======================================================================
+\section{Covariance model and information vector}\label{sec:covariance}
+\begin{inwords}
+Each trait's phenotype is split into a genetic part, a common-environment part shared by full sibs, and a residual. The genetic part is further split into what comes from the sire, from the dam, and from Mendelian sampling. From these pieces the program builds the covariance between every pair of information sources (for example ``own record'' and ``mean of the half sibs''), and between each source and the true breeding values.
+\end{inwords}
+
 \subsection{Starting components}
-For trait $a$, the inputs include phenotypic variance $V_{P,a}$, heritability $h_a^2$, and common-environment fraction $c_a^2$. The code initializes
+For trait $a$, the inputs are the phenotypic variance $V_{P,a}$, heritability $h_a^2$, and common-environment fraction $c_a^2$. The code initialises
 \begin{align}\label{eq:components}
 V_{A,a}&=h_a^2V_{P,a},&
 V_{C,a}&=c_a^2V_{P,a},&
@@ -44,7 +165,7 @@ V_{E,a}&=V_{P,a}-V_{A,a}-V_{C,a},\\
 V_{A_s,a}&=V_{A_d,a}=\tfrac14V_{A,a},&
 V_{A_w,a}&=\tfrac12V_{A,a}.\nonumber
 \end{align}
-Given genetic, phenotypic and common-environment correlation matrices $R_A,R_P,R_C$, the initial covariance matrices are
+Given genetic, phenotypic and common-environment correlation matrices $\ma R_A,\ma R_P,\ma R_C$, the initial covariance matrices are
 \begin{align}\label{eq:initcov}
 A_{ab}&=R_{A,ab}\sqrt{V_{A,a}V_{A,b}},&
 P_{ab}&=R_{P,ab}\sqrt{V_{P,a}V_{P,b}},\\
@@ -58,18 +179,22 @@ For a progeny-test common-environment fraction $c_{\mathrm{prog},a}^2$, the same
 C_{\mathrm{prog},ab}=R_{C,ab}
 \sqrt{c_{\mathrm{prog},a}^2V_{P,a}\,c_{\mathrm{prog},b}^2V_{P,b}}.
 \end{equation}
-The source computes an intermediate residual correlation and reconstructs $E$; this equals $P-A-C$ when its denominators are nonzero. At every discrete covariance update,
+The source computes an intermediate residual correlation and reconstructs $\ma E$ from it; this equals $\ma P-\ma A-\ma C$ whenever its denominators are nonzero. At every discrete covariance update the matrices are reassembled as
 \begin{equation}\label{eq:reassemble}
 \ma A=\ma A_s+\ma A_d+\ma A_w,\quad
 \ma P=\ma A+\ma C+\ma E,\quad
 \ma F=\ma A_s+\ma A_d+\ma C,\quad \ma J=\ma A_s.
 \end{equation}
-$F$ and $J$ are between-full-sib and between-paternal-half-sib phenotype covariances.
+$\ma F$ and $\ma J$ are the phenotypic covariances between full sibs and between paternal half sibs.
 
-\subsection{Information sources and the index covariance}
-Each indexed trait may have own phenotype (source 1), dam EBV (2), sire EBV (3), up to 20 full-sib means (4--23), 20 paternal-half-sib means (24--43), 20 means of dams' EBV in half-sib groups (44--63), and 20 progeny means (64--83). The actual observation vector $\ve x$ consists only of selected trait--source pairs. The routines \src{info\_sources*} create that ordered list; \src{selection\_index} selects its covariance submatrix from an $83$-source table for every trait pair.
+\subsection{Information sources and the index covariance}\label{sec:sources}
+Internally, each indexed trait may have: own phenotype (source 1), dam EBV (2), sire EBV (3), up to 20 full-sib group means (4--23), 20 paternal-half-sib group means (24--43), 20 means of the EBVs of the dams in each half-sib group (44--63), and 20 progeny group means (64--83). The observation vector $\ve x$ contains only the trait--source pairs actually selected. The routines \src{info\_sources*} create that ordered list (sorted by source number), and \src{selection\_index} picks the corresponding rows and columns out of a table covering all 83 sources for every trait pair.
 
-Write $\ma P_x=\Var(\ve x)$ and $\ma G=\Cov(\ve x,\ve A)$. For a source measuring trait $a$ and true value $A_b$, the entries of $G$ are:
+\begin{codenote}
+These are internal source numbers, not exactly what the user types. Entering code 2 (``BLUP breeding values'') adds both source 2 and source 3, and for every half-sib group $24\ldots43$ selected it adds the matching dam-EBV source (group number $+20$, i.e.\ 44--63). In discrete selection, if $M_s=M_d$ (each sire has one dam, so there are no paternal half sibs) the half-sib sources are removed from the final-stage source list: 24--63 in one- and three-stage selection, but only 24--43 in two-stage selection, where the mean dam-EBV sources 44--63 added by the BLUP expansion are left in (Section~\ref{sec:issues}).
+\end{codenote}
+
+Write $\ma P_x=\Var(\ve x)$ and $\ma G=\Cov(\ve x,\ve A)$. For a source measuring trait $a$, the entries of $\ma G$ in the column of the true value $A_b$ are:
 \begin{center}
 \begin{tabular}{ll}
 \toprule Source & $G_{(a,u),b}$\\\midrule
@@ -82,9 +207,9 @@ Mean dam EBV & $0$\\
 Progeny mean & $A_{ab}/2$\\\bottomrule
 \end{tabular}
 \end{center}
-$S$ and $D$ denote the current sire- and dam-EBV covariance matrices used by the implementation. The transpose of their trait indices above follows the \src{matg} assignments. Goal traits without index information still occupy columns of $G$.
+$\ma S$ and $\ma D$ are the current sire- and dam-EBV covariance matrices; the transposed trait indices follow the \src{matg} assignments in the code. Every trait has a column of $\ma G$, whether or not it is in the goal; only index traits have rows. In $\ma P_x$, by contrast, a block for a pair of sources has $(a,b)$ entry with $a$ the trait of the first-listed source and $b$ that of the second, so for example $\Cov(O_a,B_{d,b})=D_{ab}/2$. The distinction matters because $\ma S$ and $\ma D$ need not be exactly symmetric (Section~\ref{sec:bulmer}).
 
-Family sizes enter $\ma P_x$ explicitly. For full-sib group $u$ of $n_{F,u}$ offspring, half-sib group $u$ of $n_{H,u}$ offspring from $m_{H,u}$ dams, and a sire's progeny group $u$ of $n_{Q,u}$ offspring from $m_{Q,u}$ dams:
+Family sizes enter $\ma P_x$ explicitly. For full-sib group $u$ of $n_{F,u}$ offspring, half-sib group $u$ of $n_{H,u}$ offspring from $m_{H,u}$ dams, and a progeny group $u$ of $n_{Q,u}$ offspring from $m_{Q,u}$ dams:
 \begin{align}\label{eq:blocks}
 \Var(\bar{\ve x}_{F,u})&=\ma A_s+\ma A_d+\ma C+(\ma A_w+\ma E)/n_{F,u},\\
 \Var(\bar{\ve x}_{H,u})&=\ma A_s+(\ma A_d+\ma C)/m_{H,u}
@@ -95,11 +220,17 @@ Family sizes enter $\ma P_x$ explicitly. For full-sib group $u$ of $n_{F,u}$ off
 \Var(\bar{\ve x}_{Q,u}\mid\text{dam candidate})&=
 \tfrac12\ma A+\ma C_{\mathrm{prog}}+(\ma A_w+\ma E)/n_{Q,u}^{(d)}.\nonumber
 \end{align}
-Distinct full-sib groups have covariance $F$ and distinct half-sib groups have covariance $J$. Within the same half-sib group,
-$\Cov(\bar{\ve x}_{H,u},\overline{\mathrm{EBV}}_{d,u})=D/(2m_{H,u})$ and
-$\Var(\overline{\mathrm{EBV}}_{d,u})=D/m_{H,u}$. Other cross-blocks, including own phenotype and progeny, are assigned individually in \src{selection\_index}. A port should build that full block table before selecting rows; family means are correlated observations, not independent errors.
+Here $n_{Q,u}^{(d)}=n_{Q,u}/m_{Q,u}$ is the number of progeny per dam (\src{proggroupsoffd}): a dam candidate's progeny group is a single full-sib family.
+Different full-sib groups have covariance $\ma F$ and different half-sib groups have covariance $\ma J$. Within the same half-sib group,
+$\Cov(\bar{\ve x}_{H,u},\overline{\mathrm{EBV}}_{d,u})=\ma D/(2m_{H,u})$ and
+$\Var(\overline{\mathrm{EBV}}_{d,u})=\ma D/m_{H,u}$. All other pairs of sources are listed in Appendix~\ref{app:sourceblocks}. A port should build the full block table before selecting rows: group means are correlated observations, not independent errors.
 
+%======================================================================
 \section{Shared selection equations}\label{sec:shared}
+\begin{inwords}
+The routines in this section are used by every selection scheme. They compute the best index from the covariances, the expected response for a given intensity, the intensity itself (corrected for family structure), and how one round of selection changes the variances. Repeating the last step 25 times gives the equilibrium.
+\end{inwords}
+
 \subsection{Index, accuracy and response}
 The common \src{selection\_index} routine calculates
 \begin{equation}\label{eq:index}
@@ -107,30 +238,36 @@ The common \src{selection\_index} routine calculates
 I=\ve b^{\mathsf T}\ve x,\quad V_I=\ve b^{\mathsf T}\ma P_x\ve b,\quad
 r_{IH}=\sqrt{V_I/\sigma_H^2}.
 \end{equation}
-A new implementation should solve this system rather than form $P_x^{-1}$. The source explicitly inverts $P_x$. With $\ve q=\ma G^{\mathsf T}\ve b=\Cov(\ve A,I)$ and effective standardized selection differential $i_{\mathrm{eff}}$,
+The source builds $\ma P_x$ in single precision, inverts it explicitly by Gauss--Jordan elimination in double precision (\src{invrt}, stopping if a pivot falls below $10^{-12}$), and stores and uses the inverse in single precision; a new implementation should solve the linear system instead. With $\ve q=\ma G^{\mathsf T}\ve b=\Cov(\ve A,I)$ and effective standardised selection differential $i_{\mathrm{eff}}$,
 \begin{equation}\label{eq:response}
 \Delta\ve A=i_{\mathrm{eff}}\frac{\ve q}{\sqrt{V_I}},\qquad
 \Delta H=i_{\mathrm{eff}}\sqrt{V_I}.
 \end{equation}
-The second equality follows from the optimal weights. One-stage discrete generation response is the midpoint of the selected sire and dam paths:
+The second equality follows from the optimal weights. One-stage discrete-generation response is the average of the sire and dam paths:
 \begin{equation}\label{eq:paths}
 \Delta\ve A_{\mathrm{gen}}=\tfrac12(\Delta\ve A_s+\Delta\ve A_d),\qquad
 \Delta H_{\mathrm{gen}}=\tfrac12(\Delta H_s+\Delta H_d).
 \end{equation}
 
+\begin{codenote}
+If $V_I$ comes out negative (possible in the first round, before the iteration settles), $r_{IH}$ and the responses are set to zero for that round instead of taking a square root of a negative number. The correlations $\rho_{fs},\rho_{hs}$ of Eq.~\eqref{eq:familycorr} are still computed with the negative $V_I$. \src{selection\_index} always calls \src{rawl3} for $i_{\mathrm{eff}}$, whatever the calling scheme; the multistage and overlapping drivers override or discard that value (Sections~\ref{sec:discrete}--\ref{sec:overlap}).
+\end{codenote}
+
 \subsection{Truncation and related candidates}
-For upper-tail fraction $p$, let $t=\Phi^{-1}(1-p)$ and $z=\phi(t)$, with standard-normal CDF $\Phi$ and density $\phi$. The common \src{trunc} routine returns
+For upper-tail fraction $p$, let $t=\Phi^{-1}(1-p)$ and $z=\phi(t)$. The common \src{trunc} routine returns
 \begin{equation}\label{eq:trunc}
 i=z/p,\qquad k=i(i-t),\qquad \Var(Z\mid Z>t)=1-k.
 \end{equation}
-The discrete one-stage response uses \src{rawl3} to replace $i$ by a family-adjusted $i_{\mathrm{eff}}$ in Eq.~\eqref{eq:response}. Its arguments are $(p,n_w,n_{fs},n_{hs},\rho_{fs},\rho_{hs})$: offspring per full-sib family, full-sib families per paternal-half-sib family, paternal-half-sib families, and two index intraclass correlations. These correlations are quadratic forms
+\src{trunc} stops with an error if $p$ lies outside $[0,1]$ (the endpoints pass; $p=0$ gives an infinite $i$). The threshold $t$ comes from \src{gcef}, the rational approximation 26.2.23 of Abramowitz and Stegun (absolute error below $4.5\times10^{-4}$), with $t=-7$ returned for $p=1$ and $t=7$ for $p<10^{-10}$, so $t$ differs slightly from an exact $\Phi^{-1}$; exact reproduction needs \src{gcef} itself.
+
+The discrete one-stage response replaces $i$ in Eq.~\eqref{eq:response} by the family-adjusted $i_{\mathrm{eff}}$ from \src{rawl3}. Its arguments are $(p,n_w,n_{fs},n_{hs},\rho_{fs},\rho_{hs})$: candidates of that sex per full-sib family ($n_m$ or $n_f$), full-sib families per paternal-half-sib family ($d$), paternal-half-sib families ($M_s$), and the two intraclass correlations of index values
 \begin{equation}\label{eq:familycorr}
 \rho_{fs}=\frac{\ve b^{\mathsf T}\ma R_{fs}\ve b}{V_I},\qquad
 \rho_{hs}=\frac{\ve b^{\mathsf T}\ma R_{hs}\ve b}{V_I}.
 \end{equation}
-$R_{fs}$ and $R_{hs}$ are assembled from the same source types as $P_x$, but for two related candidates. The code clips each correlation to $[-1,1]$. \src{rawl3} is an empirical Rawlings/Meuwissen approximation with finite-population branches and interpolation; it is not simply $\phi(t)/p$. Exact numerical reproduction requires porting \src{rawl3} and \src{sintvi}, including their family-size branches. Standard-library normal functions can replace \src{gcef}/\src{sabf} if edge conventions are matched.
+$\ma R_{fs}$ and $\ma R_{hs}$ are covariance matrices between the information vectors of two full sibs and of two half sibs. They are built from the same source types as $\ma P_x$ but include extra finite-sampling terms (mostly divided by the summed group sizes, a few by the size of the group itself); they are not tabulated in this report. The code clips each correlation to $[-1,1]$. \src{rawl3} is an empirical approximation based on Rawlings \cite{rawlings1976} and Meuwissen \cite{meuwissen1991}, with finite-population branches and interpolation; it is not simply $\phi(t)/p$. Appendix~\ref{app:rawlings} gives its equations.
 
-\subsection{Bulmer update}
+\subsection{Bulmer update}\label{sec:bulmer}
 Let $\ma Q=\ma G^{\mathsf T}\ma P_x^{-1}\ma G$ and $\ve q=\ma G^{\mathsf T}\ve b$. For each sex $g$, \src{covariance\_update} has the matrix form
 \begin{align}\label{eq:bulmer}
 \ma A_g^{\mathrm{family,new}}&=\tfrac14\left(\ma A-
@@ -139,33 +276,50 @@ Let $\ma Q=\ma G^{\mathsf T}\ma P_x^{-1}\ma G$ and $\ve q=\ma G^{\mathsf T}\ve b
 \frac{k_g}{V_{I,g}}\ve q_g\ve u_g^{\mathsf T},\qquad
 \ve u_g=\ma G_g^{\mathsf T}\ma P_{x,g}^{-1}\ma G_g\ve v.\nonumber
 \end{align}
-$A_g^{\mathrm{family}}$ is $A_s$ or $A_d$; $S_g$ is the corresponding sire or dam EBV covariance. In exact arithmetic $u_g=q_g$, but the source evaluates the products separately. After both sexes, Eq.~\eqref{eq:reassemble} rebuilds $A,P,F,J$. The within-family additive covariance $A_w$, common environment $C$, and residual covariance $E$ remain fixed. The driver executes exactly 25 rounds, with no convergence test: its reported value is the final iterate.
+$\ma A_g^{\mathrm{family}}$ is $\ma A_s$ or $\ma A_d$, and $\ma S_g$ is the corresponding sire or dam EBV covariance ($\ma S$ or $\ma D$). Both sexes use the same, old $\ma A$. In exact arithmetic $\ve u_g=\ve q_g$, but the source evaluates the products separately, so $\ma S_g$ need not be exactly symmetric. After both sexes, Eq.~\eqref{eq:reassemble} rebuilds $\ma A,\ma P,\ma F,\ma J$. The within-family additive covariance $\ma A_w$, common environment $\ma C$, and residual $\ma E$ never change. For a single trait the update reads $V_{A_g}^{\mathrm{new}}=\tfrac14V_A(1-k_gr_{IH}^2)$: the between-family variance shrinks in proportion to the intensity of selection and the accuracy.
 
+\begin{codenote}
+The driver executes exactly 25 rounds with no convergence test. The reported $r_{IH}$, $V_I$ and responses come from the 25th call of \src{selection\_index}, i.e.\ after 24 updates; the 25th update only affects the printed covariances and the inbreeding calculation. $k_g$ comes once from \src{trunc} at the input fraction and is \emph{not} family-adjusted; only the intensity used for response goes through \src{rawl3}. The starting $\ma S,\ma D$ are a simplified form built with a diagonal approximation of the index variance, $V_{I,g}^{(0)}=(1-k_g)\sum_a h_a^2V_{A,a}v_a^2$ over goal traits; this value is used only there, since the first call of \src{selection\_index} computes $V_I=\ve b^{\mathsf T}\ma P_x\ve b$ itself. The starting $\ma A_s=\ma A_d=\tfrac14\ma A$ are not reduced for selection.
+\end{codenote}
+
+%======================================================================
 \section{Discrete generations}\label{sec:discrete}
+\begin{inwords}
+With discrete generations, all parents are replaced every generation. In one-stage selection the program iterates the shared equations of Section~\ref{sec:shared} and also predicts the rate of inbreeding. In two- or three-stage selection, candidates must pass successive thresholds on successively better indices; because the indices are correlated, the program works with the joint (multivariate normal) distribution of the stage indices.
+\end{inwords}
+
 \subsection{One stage}
-\src{sel1s} builds sire and dam source matrices, initializes Eq.~\eqref{eq:components}, obtains $k_s,k_d$ from Eq.~\eqref{eq:trunc}, and iterates \src{selection\_index} plus \src{covariance\_update} for 25 rounds. Its initial index variance is a diagonal approximation based on goal-trait inputs; the reported variance comes from Eq.~\eqref{eq:index} after iteration. Eqs.~\eqref{eq:response}--\eqref{eq:paths} give the final trait and goal responses.
+\src{sel1s} builds the sire and dam source lists, initialises Eq.~\eqref{eq:components}, obtains $k_s,k_d$ from Eq.~\eqref{eq:trunc}, and iterates \src{selection\_index} plus \src{covariance\_update} for 25 rounds. Equations~\eqref{eq:response}--\eqref{eq:paths} then give the final trait and goal responses, and \src{dFmtblup} the rate of inbreeding (Section~\ref{sec:inbreeding}).
 
 \subsection{Two and three stages: joint selection}
-Let $p_{g,j}$ be the fraction passing stage $j$ among candidates entering it and $P_{g,j}=\prod_{\ell=1}^{j}p_{g,\ell}$ the cumulative fraction. Each stage has an index from Eq.~\eqref{eq:index}, with additional information sources in later stages. The code runs 25 covariance rounds using the final-stage index, then reevaluates earlier-stage indices on the resulting matrices. The final multistage calculation does not add independent values of Eq.~\eqref{eq:response}.
+Let $p_{g,j}$ be the fraction passing stage $j$ among the candidates entering it and $P_{g,j}=\prod_{\ell=1}^{j}p_{g,\ell}$ the cumulative fraction. Each stage has its own index from Eq.~\eqref{eq:index}, with more information sources in later stages. The code runs the 25 covariance rounds on the final-stage index, then re-evaluates the earlier-stage indices on the resulting matrices.
 
-For nested indices, the source approximates standardized index correlations by the accuracy ratio:
+\begin{codenote}
+During the 25 rounds, $k_g$ comes from \src{trunc} at the cumulative fraction $P_{g,m}$: the equilibrium treats the scheme as single-stage truncation on the final index. The multistage structure is not fed back into the covariance update.
+\end{codenote}
+
+For nested indices the source approximates the correlation between stage indices by the ratio of accuracies, capped at 0.93:
 \begin{equation}\label{eq:stagecorr}
 r_{g,j\ell}=r_{IH,g,j}/r_{IH,g,\ell}\quad(j<\ell),\qquad
 r_{g,j\ell}\leftarrow\min(r_{g,j\ell},0.93).
 \end{equation}
-The upper cap of $0.93$ is source-specific. Let $\ve Z=(Z_1,\ldots,Z_m)$ be standardized stage indices with correlation matrix $R_g$. Thresholds $t_1,\ldots,t_m$ satisfy successive joint-tail probabilities
+Let $\ve Z=(Z_1,\ldots,Z_m)$ be the standardised stage indices with correlation matrix $\ma R_g$. The thresholds $t_1,\ldots,t_m$ satisfy successive joint-tail probabilities
 \begin{equation}\label{eq:jointtails}
 \Pr(Z_1>t_1)=P_{g,1},\quad
 \Pr(Z_1>t_1,Z_2>t_2)=P_{g,2},\quad
-\Pr(Z_1>t_1,Z_2>t_2,Z_3>t_3)=P_{g,3}.
+\Pr(Z_1>t_1,Z_2>t_2,Z_3>t_3)=P_{g,3},
 \end{equation}
-Only the first $m$ equations apply. This is \src{sseuil1/2/3}; \src{sdutt1/2/3} evaluate normal tails. Figure~\ref{fig:stages} shows the intersection of passing sets.
+of which only the first $m$ apply. Figure~\ref{fig:stages} shows the idea: the final selected set is the intersection of the passing sets.
 \begin{figure}[ht]
 \centering\includegraphics[width=.86\linewidth]{selaction_stages.pdf}
-\caption{Conditional survival across stages; the final selected set is the intersection of all stage-tail events. Editable XML/SVG source: \src{selaction\_stages.svg}.}\label{fig:stages}
+\caption{Conditional survival across stages; the final selected set is the intersection of all stage-tail events. Editable SVG source: \src{selaction\_stages.svg}.}\label{fig:stages}
 \end{figure}
 
-The mathematical target is the conditional index mean vector $\ve\mu_I=\E[\ve I\mid Z_j>t_j\text{ for all }j]$. For two stages, with correlation $r$, cumulative proportion $P=P_{g,2}$, and $\bar\Phi=1-\Phi$, define
+\begin{codenote}
+The thresholds are found by Newton iteration in \src{sseuil1/2/3} (at most 20 steps, absolute tolerance $10^{-5}$ on the probability), using the general multivariate-normal routine \src{sdutt}. \src{sdutt} uses 10-point Gauss--Hermite quadrature, or an adaptive loop over 10 to 30 points when a threshold exceeds 2 in absolute value or a correlation exceeds 0.5; tails beyond 4--5 standard deviations are set to 0 or 1. The failure test in \src{sseuil} checks for 50 iterations and therefore never triggers: non-convergence is silent. The quadrature tables are filled only up to 20 points, which can make the adaptive loop return a wrong value (Section~\ref{sec:issues}). In the boundary terms below, one-dimensional tails come from \src{sdutt1} (exact, via \src{erfc}) and two-dimensional tails from \src{sdutt2} with 20 points.
+\end{codenote}
+
+The quantity of interest is the vector of mean stage indices among the finally selected, $\ve\mu_I=\E[\ve I\mid Z_j>t_j\text{ for all }j]$. For two stages, with correlation $r$ and cumulative fraction $P=P_{g,2}$, define
 \begin{equation}\label{eq:twoboundaries}
 B_1=\phi(t_1)\bar\Phi\left(\frac{t_2-rt_1}{\sqrt{1-r^2}}\right),\qquad
 B_2=\phi(t_2)\bar\Phi\left(\frac{t_1-rt_2}{\sqrt{1-r^2}}\right).
@@ -186,110 +340,209 @@ The common boundary-density identity behind the three-stage sums is
 \begin{equation}\label{eq:mmeans}
 \mu_{I,j}=\frac{\sqrt{V_{I,j}}}{P_{g,m}}\sum_{\ell=1}^{m}r_{j\ell}B_\ell,\qquad r_{jj}=1.
 \end{equation}
-The three-stage source sets one intermediate conditional correlation, used with stage 2 fixed at its threshold, to zero instead of evaluating Eq.~\eqref{eq:partialcorr}. Some $B_j$ terms are recomputed with reversed argument order for later displayed stage contributions. Equation~\eqref{eq:mmeans} is the coherent mathematical expression; exact emulation should follow the call sequence in \src{sel3s}.
 
-For trait $a$, set $\ve c_a=(\Cov(A_a,I_1),\ldots,\Cov(A_a,I_m))^{\mathsf T}$, where $\Cov(A_a,I_j)=\ve b_j^{\mathsf T}\ma G_{j,:,a}$. The source uses nested-index covariance $V_{j\ell}=V_{I,\min(j,\ell)}$ and calculates
+\begin{codenote}
+The three-stage source sets one conditional correlation, $r_{13\mid2}$ (stages 1 and 3 with stage 2 held at its threshold), to zero instead of evaluating Eq.~\eqref{eq:partialcorr}; $r_{12\mid3}$ and $r_{23\mid1}$ are evaluated properly. Some $B_j$ terms are recomputed with the arguments of \src{sdutt2} in reversed order; \src{sdutt2} is symmetric in its two thresholds, so this is redundant but changes nothing. Apart from $r_{13\mid2}$, the source therefore implements Eq.~\eqref{eq:mmeans}.
+\end{codenote}
+
+For trait $a$, let $\ve c_a=(\Cov(A_a,I_1),\ldots,\Cov(A_a,I_m))^{\mathsf T}$ with $\Cov(A_a,I_j)=\ve b_j^{\mathsf T}\ma G_{j,:,a}$. The source uses the nested-index covariance $V_{j\ell}=V_{I,\min(j,\ell)}$ and calculates
 \begin{equation}\label{eq:multitrait}
 \ve\beta_a=\ma V^{-1}\ve c_a,\qquad
 \Delta A_{g,a}=\ve\beta_a^{\mathsf T}\ve\mu_I,\qquad
 \Delta A_{\mathrm{gen},a}=\tfrac12(\Delta A_{s,a}+\Delta A_{d,a}).
 \end{equation}
-It also displays Rawlings-adjusted stage results using ratios of \src{rawl3} to ordinary $i$ at cumulative fractions. These display adjustments are separate from the joint-tail means. Adding individually calculated stage gains double-counts earlier information.
+Adding separately calculated stage gains would double-count the information shared between stages; Eq.~\eqref{eq:multitrait} avoids that.
 
-\subsection{Discrete-generation inbreeding}
-The one-stage routine calls \src{dFmtblup} after its 25 rounds. The overlapping routine does not call it. Let $M,F$ be selected sire and dam counts, $d=F/M$ the mating ratio, and $C_{ss},C_{sd},C_{ds},C_{dd}$ the covariances between offspring information and parental selective advantage constructed in \src{create\_C}. For example, an own-phenotype row of $C_{ss}$ is $\tfrac12A_s^{\mathrm{selected}}+\tfrac1{2d}A_d^{\mathrm{selected}}$; $C_{sd}$ uses $\tfrac12A_s^{\mathrm{selected}}+\tfrac12A_d^{\mathrm{selected}}$. Other source types have their own rows. Define
+\begin{codenote}
+The printed multistage responses are \emph{not} the joint-tail means themselves. Each is multiplied by $i_{\mathrm{eff}}(P_{g,m})/i(P_{g,m})$, the ratio of the \src{rawl3} intensity (with the final-stage sib correlations) to the ordinary intensity at the cumulative fraction, as a family-structure correction. The unadjusted means are not printed. The responses printed ``after stage 1'' come from a separate one-stage calculation at $P_{g,1}$ with the \src{rawl3} intensity, and in three-stage selection those ``after stage 2'' from a separate two-stage calculation at $P_{g,2}$; the joint-tail means $\mu_{I,1},\mu_{I,2}$ of the full scheme are used only inside Eq.~\eqref{eq:multitrait}.
+\end{codenote}
+
+\subsection{Discrete-generation inbreeding}\label{sec:inbreeding}
+\begin{inwords}
+The rate of inbreeding is predicted from how unequally the selected parents contribute genes to future generations. Parents with a high selective advantage (a high breeding value, plus good mates) have more selected offspring, and so do their offspring in turn. The equations below compute the expected long-term contributions from the selection parameters already obtained, and add a correction for the finite size of families.
+\end{inwords}
+
+The one-stage routine \src{sel1s} calls \src{dFmtblup} after its 25 rounds and after \src{intra\_sd} (which computes the sire--dam sib correlations). Two- and three-stage selection and overlapping generations do not predict inbreeding. The arguments are the selected-parent additive covariances $\ma A_s^{\mathrm{sel}}=4\ma A_s$ and $\ma A_d^{\mathrm{sel}}=4\ma A_d$ after iteration, the EBV covariances $\ma S,\ma D$, the index weights $\ve b_s,\ve b_d$ and variances $V_{I,s},V_{I,d}$, the fractions $p_s,p_d$, the six full- and half-sib index correlations, $n_m,n_f$ and $M_s,M_d$. Let $d=M_d/M_s$ and let $\ma\Gamma_{gq}$ be the covariance between an information source in the sex-$g$ index and the selective advantage of a sire ($q=s$) or dam ($q=d$), built in \src{create\_C}:
+\begin{center}
+\begin{tabular}{lll}\toprule
+Information source & $\ma\Gamma_{gs}$ (sire advantage) & $\ma\Gamma_{gd}$ (dam advantage)\\\midrule
+Own performance, full-sib mean & $\tfrac12\ma A_s^{\mathrm{sel}}+\tfrac1{2d}\ma A_d^{\mathrm{sel}}$ & $\tfrac12\ma A_s^{\mathrm{sel}}+\tfrac12\ma A_d^{\mathrm{sel}}$\\
+Dam EBV & $\ma D/d$ & $\ma D$\\
+Sire EBV & $\ma S$ & $\ma S$\\
+Half-sib mean & $\tfrac12\ma A_s^{\mathrm{sel}}+\tfrac1{2d}\ma A_d^{\mathrm{sel}}$ & $\tfrac12\ma A_s^{\mathrm{sel}}$\\
+Mean dam EBV of half-sib group & $\ma D/d$ & $0$\\
+Progeny mean & $\tfrac14\ma A_s^{\mathrm{sel}}+\tfrac1{4d}\ma A_d^{\mathrm{sel}}$ & $\tfrac14\ma A_s^{\mathrm{sel}}+\tfrac14\ma A_d^{\mathrm{sel}}$\\\bottomrule
+\end{tabular}
+\end{center}
+Define the variances of selective advantage
 \begin{equation}\label{eq:vsa}
-W_s=\ve v^{\mathsf T}(A_s^{\mathrm{selected}}+A_d^{\mathrm{selected}}/d)\ve v,\qquad
-W_d=\ve v^{\mathsf T}(A_s^{\mathrm{selected}}+A_d^{\mathrm{selected}})\ve v.
+W_s=\ve v^{\mathsf T}(\ma A_s^{\mathrm{sel}}+\ma A_d^{\mathrm{sel}}/d)\ve v,\qquad
+W_d=\ve v^{\mathsf T}(\ma A_s^{\mathrm{sel}}+\ma A_d^{\mathrm{sel}})\ve v.
 \end{equation}
 Two $2\times2$ matrices are formed from these covariance blocks:
 \begin{equation}\label{eq:inbreedmatrix}
-\Lambda_{gq}=\frac12\frac{i_g\,\ve b_g^{\mathsf T}C_{gq}\ve v}{\sqrt{V_{I,g}}W_q},\qquad
-\Pi_{gq}=\frac12\left(\frac12-\frac{k_g\,\ve b_g^{\mathsf T}C_{gq}\ve v}{W_q}\right).
+\Lambda_{gq}=\frac12\frac{i_g\,\ve b_g^{\mathsf T}\ma\Gamma_{gq}\ve v}{\sqrt{V_{I,g}}W_q},\qquad
+\Pi_{gq}=\frac12\left(\frac12-\frac{k_g\,\ve b_g^{\mathsf T}\ma\Gamma_{gq}\ve v}{W_q}\right).
 \end{equation}
-With $\ve h=(1/2,1/2)^{\mathsf T}$, solve $(I-\Pi^{\mathsf T})\ve z=\Lambda^{\mathsf T}\ve h$, and put $\beta_s=z_s/M$, $\beta_d=z_d/F$. After finite-parent corrections $W'_s=(1-1/M)W_s$ and $W'_d=(1-1/M)\ve v^{\mathsf T}A_s^{\mathrm{selected}}\ve v+(1-1/F)\ve v^{\mathsf T}A_d^{\mathrm{selected}}\ve v$, the uncorrected result is
+With $\ve h=(1/2,1/2)^{\mathsf T}$, solve $(\ma I-\Pi^{\mathsf T})\ve z=\Lambda^{\mathsf T}\ve h$, and put $\beta_s=z_s/M_s$, $\beta_d=z_d/M_d$. With the finite-parent corrections $W'_s=(1-1/M_s)W_s$ and $W'_d=(1-1/M_s)\ve v^{\mathsf T}\ma A_s^{\mathrm{sel}}\ve v+(1-1/M_d)\ve v^{\mathsf T}\ma A_d^{\mathrm{sel}}\ve v$, the uncorrected rate of inbreeding is
 \begin{equation}\label{eq:inbreed}
-\Delta F_0=\frac12\left\{\frac1{4M}+M\beta_s^2W'_s+
-\frac1{4F}+F\beta_d^2W'_d\right\}.
+\Delta F_0=\frac12\left\{\frac1{4M_s}+M_s\beta_s^2W'_s+
+\frac1{4M_d}+M_d\beta_d^2W'_d\right\}.
 \end{equation}
-\src{Poissoncorr} and \src{hyper\_correct} add a finite-family correction. The former replaces each full-/half-sib correlation by $\rho-\rho(1-\rho^2)(a/M+b/F)$, where $(a,b)=(0.8634,0.954)$ for full sibs and $(1.4075,1.4581)$ for half sibs. Below 20 sires it adjusts the selected fraction to $(1-\rho)p+\rho\max(p,1/M)$. Each adjusted pair yields a conditional-to-unconditional selection ratio of the form
+\src{Poissoncorr} and \src{hyper\_correct} add a finite-family correction. \src{Poissoncorr} replaces each full- or half-sib correlation $\rho$ by $\rho-\rho(1-\rho^2)(a/M_s+b/M_d)$, with $(a,b)=(0.8634,0.954)$ for full sibs and $(1.4075,1.4581)$ for half sibs. With fewer than 20 sires it also adjusts the selected fraction of the same-sex pairs to $(1-\rho)p+\rho\max(p,1/M_s)$ and recomputes $i$, $t$ and $k$ with \src{trunc}. Each adjusted pair gives a conditional-to-unconditional selection ratio
 \begin{equation}\label{eq:poissonratio}
-C_{uv}=\frac{\Phi\{(i_u\rho_{uv}-t_v)/\sqrt{1-k_u\rho_{uv}^2}\}}{p_v}.
+\kappa_{uv}=\frac{\Phi\{(i_u\rho_{uv}-t_v)/\sqrt{1-k_u\rho_{uv}^2}\}}{p_v},
 \end{equation}
-Six such ratios generate full- and half-sib count covariance matrices in \src{hyper\_correct}. Its additive correction is $\tfrac18[M\delta_s+F\delta_d]$, with $\delta_q=\ve\alpha^{\mathsf T}V_q\ve\alpha$ plus long-term-contribution terms when $M>19$ and $\ve\alpha=(1/(2M),1/(2F))^{\mathsf T}$. The six matrix entries and the $M>19$ branch should be copied from \src{hyper\_correct} for exact numerical agreement. Equation~\eqref{eq:inbreed} alone is not the displayed final rate.
+using $i,k$ of the first sex and $t,p$ of the second. Six such ratios generate the full- and half-sib count covariance matrices in \src{hyper\_correct}, whose correction $\tfrac18(M_s\delta_s+M_d\delta_d)$ is added to Eq.~\eqref{eq:inbreed} (Appendix~\ref{app:inbreeding}). Equation~\eqref{eq:inbreed} alone is therefore not the displayed final rate.
 
+\begin{codenote}
+In the $M_s<20$ adjustment, $1/M_s$ is used for the female fraction as well as the male one; this looks like a source quirk. The mixed (sire--dam) pairs reuse the male $i,k$ and the female $t,p$ obtained from the same-sex adjustments; the sire--dam correlation itself is not used to adjust a fraction. Negative variances in \src{hyper\_correct} only print a warning.
+\end{codenote}
+
+%======================================================================
 \section{Overlapping generations}\label{sec:overlap}
+\begin{inwords}
+With overlapping generations, candidates of each sex come in $K$ age classes. Young animals are on average genetically better, because they were produced by more recent, already improved parents. Older animals may have more information. Each age class gets its own index; then one threshold per sex is chosen so that exactly the required number of parents is selected across all classes. The share of parents coming from each age class determines the generation interval, and the response per year is the response per generation divided by that interval.
+\end{inwords}
+
 \subsection{Classes and selection probabilities}
-\src{ovlp} stores $K$ sire classes followed by $K$ dam classes. Each has candidate count $N_{g,c}$, selected count $n_{g,c}$, fraction $p_{g,c}=n_{g,c}/N_{g,c}$, index variance $V_{I,g,c}$ and Eq.~\eqref{eq:trunc} quantities. With specified counts $n_{g,c}$ are inputs. Under common-threshold selection, a threshold $x_g$ solves
+\src{ovlp} stores $K$ sire classes (positions $1..K$) followed by $K$ dam classes ($K+1..2K$). Each class has candidate count $N_{g,c}$, selected count $n_{g,c}$, fraction $p_{g,c}=n_{g,c}/N_{g,c}$, index variance $V_{I,g,c}$, and the quantities of Eq.~\eqref{eq:trunc}. The youngest class is not an input: $N_{s,1}=M_dn_m$ and $N_{d,1}=M_dn_f$. Two modes exist. In \emph{specified-count} mode, the $n_{g,c}$ are inputs. In \emph{threshold} (truncation) mode, a common threshold $x_g$ solves
 \begin{equation}\label{eq:agecount}
 n_{g,c}=N_{g,c}\bar\Phi\left(\frac{x_g-m_{g,c}}{\sqrt{V_{I,g,c}}}\right),\qquad
 m_{g,c}=-(c-1)\Delta H_g^{\mathrm{year}},\qquad
-\sum_c n_{s,c}=M,\quad\sum_c n_{d,c}=F.
+\sum_c n_{s,c}=M_s,\quad\sum_c n_{d,c}=M_d.
 \end{equation}
-\src{trunc\_delta} evaluates each standardized threshold with the exact normal survival function ($\bar\Phi$, computed by \src{sdutt1} via the Fortran \src{erfc} intrinsic), and \src{riddr\_root} solves the count equation with $x_g$ bracketed within $\pm 8$ index standard deviations of each class mean. Earlier versions approximated $\bar\Phi$ by Gauss--Hermite quadrature, which is inaccurate beyond about 4 standard deviations, and clipped standardized thresholds to $[-3,3]$; that clip forced at least $\bar\Phi(3)\approx 0.135\%$ of every age class to be selected (see \src{NEWS.md}).
+Here $m_{g,c}$ is the mean index of class $c$ relative to the youngest class: each older class is one more cohort interval of genetic progress behind (Figure~\ref{fig:agethreshold}). $\Delta H_g^{\mathrm{year}}$ is the response per cohort interval (``per year'') along the path of sex $g$ (Eq.~\eqref{eq:annualpath}), taken from the previous round.
+\begin{figure}[ht]
+\centering\includegraphics[width=\linewidth]{selaction_agethreshold.pdf}
+\caption{One threshold applied to two age classes of sires (illustrative numbers). The older class lags behind and contributes few selected animals even though it is large. Editable SVG source: \src{selaction\_agethreshold.svg}.}\label{fig:agethreshold}
+\end{figure}
+
+\src{trunc\_delta} evaluates each class with the exact normal upper tail ($\bar\Phi$, computed by \src{sdutt1} via the Fortran \src{erfc} intrinsic), and \src{riddr\_root} (Ridders' method) solves the count equation. Threshold mode starts from a uniform fraction $p=M_s/\sum_cN_{s,c}$ (and likewise for dams). Classes without information sources get $p=0$; in threshold mode a class without new information inherits the sources of the previous class.
+
+\begin{codenote}
+The search interval for $x_g$ is the union of $m_{g,c}\pm8\sqrt{V_{I,g,c}}$ over classes, extended to include 0. At 8 index standard deviations essentially no animals are selected, so any feasible target is bracketed. \src{trunc\_delta} also stores the class fractions as a side effect, so it is re-evaluated at the root after \src{riddr\_root} returns. Earlier versions approximated $\bar\Phi$ by Gauss--Hermite quadrature (inaccurate beyond about 4 standard deviations), clipped standardised thresholds to $[-3,3]$, and searched only $\pm1.5$ standard deviations; together these forced at least 6.7\% of the youngest class and 0.135\% of every class to be selected (see \src{NEWS.md}).
+\end{codenote}
+
 \begin{figure}[ht]
 \centering\includegraphics[width=.86\linewidth]{selaction_ages.pdf}
-\caption{Selected age classes determine each parental path, the generation interval, and the covariance mixture. Editable XML/SVG source: \src{selaction\_ages.svg}.}\label{fig:ages}
+\caption{Selected age classes determine each parental path, the generation interval, and the covariance mixture. Editable SVG source: \src{selaction\_ages.svg}.}\label{fig:ages}
 \end{figure}
 
 \subsection{Generation interval and annual response}
-Set $N_g^*=\sum_c n_{g,c}$ and $w_{g,c}=n_{g,c}/N_g^*$. The intended generation interval, measured in the source's cohort intervals, is
+Set $N_g^*=\sum_c n_{g,c}$ and $w_{g,c}=n_{g,c}/N_g^*$ (Figure~\ref{fig:ages}). The generation interval, in the program's age-class units (``cohort intervals''), is intended to be
 \begin{equation}\label{eq:interval}
 L_s=\sum_c c\,w_{s,c},\qquad L_d=\sum_c c\,w_{d,c},\qquad L=(L_s+L_d)/2.
 \end{equation}
-For every active class, construct $P_x,G,b,V_I$ with Eq.~\eqref{eq:index}. The annual response is the count-weighted mean of class responses divided by $L$:
-\begin{equation}\label{eq:annual}
-\Delta A_a^{\mathrm{year}}=\frac1{2L}\sum_{g\in\{s,d\}}\sum_c
-w_{g,c}i_{g,c}\frac{g_{I,g,c,a}}{\sqrt{V_{I,g,c}}},\qquad
-\Delta H^{\mathrm{year}}=\frac1{2L}\sum_g\sum_c w_{g,c}i_{g,c}\sqrt{V_{I,g,c}}.
+The program does not compute exactly this; see the implementation note at the end of this subsection.
+
+For every active class, $\ma P_x,\ma G,\ve b,V_I$ are built with Eq.~\eqref{eq:index}. Let $\mu_{g,c,a}=i_{g,c}\,q_{g,c,a}/\sqrt{V_{I,g,c}}$ be the mean breeding value for trait $a$ of the animals selected from class $c$, where $q_{g,c,a}$ is component $a$ of $\ma G_{g,c}^{\mathsf T}\ve b_{g,c}$ and $i_{g,c}$ is the ordinary truncation intensity of that class. The response per year along the path of sex $g$, and the overall response per year, are
+\begin{equation}\label{eq:annualpath}
+\Delta A_{g,a}^{\mathrm{year}}=\frac1L\sum_c w_{g,c}\mu_{g,c,a},\qquad
+\Delta H_g^{\mathrm{year}}=\frac1L\sum_c w_{g,c}i_{g,c}\sqrt{V_{I,g,c}},
 \end{equation}
-$g_{I,g,c,a}$ is component $a$ of $G_{g,c}^{\mathsf T}b_{g,c}$. Here $i_{g,c}$ is ordinary truncation intensity; overlapping response does not call \src{rawl3}. Thus Eq.~\eqref{eq:annual} reuses Eq.~\eqref{eq:response} and adds age weights and $L$. Contrary to the older report, the code does not assemble a gene-flow transition matrix.
+\begin{equation}\label{eq:annual}
+\Delta A_a^{\mathrm{year}}=\tfrac12\left(\Delta A_{s,a}^{\mathrm{year}}+\Delta A_{d,a}^{\mathrm{year}}\right),\qquad
+\Delta H^{\mathrm{year}}=\tfrac12\left(\Delta H_s^{\mathrm{year}}+\Delta H_d^{\mathrm{year}}\right).
+\end{equation}
+The ``sires'' and ``dams'' columns of the output show $\tfrac12\Delta A_{g,a}^{\mathrm{year}}$, so that they add up to the total. No gene-flow transition matrix is assembled.
+
+\begin{codenote}
+\emph{Intensity.} \src{selection\_index} still evaluates \src{rawl3} for every class, but \src{ovlp} discards that result and recomputes the responses with the ordinary intensity $i_{g,c}$ from \src{trunc}: overlapping-generation responses are not corrected for family structure.
+
+\emph{Generation interval (known defect).} The loops that should accumulate Eq.~\eqref{eq:interval} assign instead of add (\src{genints\_local=genints+tempresponse}), so only the last active class contributes, on top of the value \src{genints} left by \src{trunc\_delta}. In threshold mode the interval used (from the second round on) is $\tfrac12(L_s+c^*w_{s,c^*}+L_d+c^*w_{d,c^*})$, where $c^*$ is the highest-numbered class of that sex with a nonzero fraction, which double-counts that class. In specified-count mode \src{trunc\_delta} never runs, \src{genints} is never assigned (it is zero only by the compiler's default for static storage), and only the last-class terms remain; the same holds for the first round in threshold mode. For the \src{ovlpgrp} regression example the program uses $L=1.046$ (printed 1.05) instead of 1.015, making the annual response about 3\% too low; for a specified-count example with correct $L=1.325$ it uses 0.65, roughly doubling the annual response. The value divides every annual response and is printed. This is listed in Section~\ref{sec:issues} and awaits a fix.
+\end{codenote}
 
 \subsection{Age-specific covariance update}
-Each active class receives its own rank-one family covariance update by \src{ovlp\_cov\_update}, analogous to Eq.~\eqref{eq:bulmer}. Let $\mu_{g,c,a}=i_{g,c}g_{I,g,c,a}/\sqrt{V_{I,g,c}}$ be the selected trait mean before division by $L$. The source computes class lag $\ell_{g,c,a}=\mu_{g,c,a}-c\Delta A_{g,a}^{\mathrm{year}}$ and path mean $\bar\ell_{g,a}=\sum_cw_{g,c}\ell_{g,c,a}$. Its across-class update is a law-of-total-covariance mixture:
+Each active class receives its own rank-one family-covariance update by \src{ovlp\_cov\_update}, the same as Eq.~\eqref{eq:bulmer}. The source then computes the lag of each class behind the path average,
+$\ell_{g,c,a}=\mu_{g,c,a}-c\,\Delta A_{g,a}^{\mathrm{year}}$, and the path mean $\bar\ell_{g,a}=\sum_cw_{g,c}\ell_{g,c,a}$. Its across-class update is a law-of-total-covariance mixture: the covariance within classes plus the covariance between class means,
 \begin{align}\label{eq:agemixture}
 (A_g^{\mathrm{family}})_{ab}&=\sum_cw_{g,c}\left[(A_{g,c}^{\mathrm{family}})_{ab}
 +\tfrac14(\ell_{g,c,a}-\bar\ell_{g,a})(\ell_{g,c,b}-\bar\ell_{g,b})\right],\\
 (S_g)_{ab}&=\sum_cw_{g,c}\left[(S_{g,c})_{ab}
 +(\ell_{g,c,a}-\bar\ell_{g,a})(\ell_{g,c,b}-\bar\ell_{g,b})\right].\nonumber
 \end{align}
-It copies mixed matrices into all age classes and repeats 25 times, recalculating selection proportions each round in threshold mode.
+Sire classes are mixed only with sire classes, and dam classes with dam classes. The mixed matrices are copied into all age classes and the cycle is repeated 25 times; in threshold mode the fractions, intensities, generation interval and selected numbers are re-solved at the end of every round.
 
-Two statements in the current source warrant comparison with fixtures before literal reproduction. The generation-interval loop initializes local accumulators but assigns the sum of a global interval and the current class contribution to them, rather than accumulating across classes. The final per-age $P$ assignment uses local \src{covapaq}, whose aggregation is not evident in that loop. Equations~\eqref{eq:interval} and \eqref{eq:reassemble} specify the coherent mathematical model; a bitwise port needs to test these source statements as implemented.
+\begin{codenote}
+The phenotypic matrix of each class is rebuilt as $\ma P=\ma A+\ma C+\ma E$ using the $\ma A$ of the \emph{previous} round, while the stored $\ma A$ is updated in the same step; $\ma P$ therefore lags $\ma A$ by one round (in discrete generations both are updated together). The effect vanishes at convergence but matters for a bitwise port. Because responses are computed before the end-of-round threshold update, the printed fractions and generation interval are one update ahead of the printed responses.
+\end{codenote}
 
-\section{Source map and numerical contract}
-\begin{longtable}{p{.27\linewidth}p{.64\linewidth}}
+%======================================================================
+\section{Source map and numerical contract}\label{sec:sourcemap}
+\begin{longtable}{>{\raggedright}p{.30\linewidth}>{\raggedright\arraybackslash}p{.63\linewidth}}
 \toprule Source routine & Mathematical responsibility\\\midrule\endhead
 \src{sel1s}, \src{sel2s}, \src{sel3s} & Discrete input, iteration, and one- to three-stage outputs; Eqs.~\eqref{eq:paths}, \eqref{eq:jointtails}, \eqref{eq:multitrait}.\\
-\src{selection\_index} & Source covariance table, $P_x,G,b$, family correlations and group response; Eqs.~\eqref{eq:blocks}, \eqref{eq:index}--\eqref{eq:familycorr}.\\
-\src{covariance\_update}, \src{ovlp\_cov\_update} & Rank-one family and EBV covariance updates; Eqs.~\eqref{eq:bulmer}, \eqref{eq:reassemble}.\\
-\src{trunc}, \src{rawl3} & Normal truncation and related-family intensity; Eq.~\eqref{eq:trunc} and text below Eq.~\eqref{eq:familycorr}.\\
-\src{sseuil*}, \src{sdutt*} & Joint-normal thresholds and tails; Eqs.~\eqref{eq:jointtails}--\eqref{eq:mmeans}.\\
-\src{ovlp}, \src{trunc\_delta} & Age counts, interval, annual response and mixture; Eqs.~\eqref{eq:agecount}--\eqref{eq:agemixture}.\\
-\src{dFmtblup} & Discrete inbreeding; Eqs.~\eqref{eq:vsa}--\eqref{eq:poissonratio}.\\\bottomrule
+\src{info\_sources*} & Ordered list of trait--source pairs, including the BLUP expansion (Section~\ref{sec:sources}).\\
+\src{selection\_index} & Source covariance table, $\ma P_x,\ma G,\ve b$, family correlations, and the \src{rawl3}-based response; Eqs.~\eqref{eq:blocks}, \eqref{eq:index}--\eqref{eq:familycorr}.\\
+\src{covariance\_update} & Rank-one family and EBV updates and reassembly; Eqs.~\eqref{eq:bulmer}, \eqref{eq:reassemble}.\\
+\src{ovlp\_cov\_update} & Rank-one update per age class only; the mixture and reassembly are in \src{ovlp}; Eqs.~\eqref{eq:bulmer}, \eqref{eq:agemixture}.\\
+\src{trunc}, \src{gcef} & Normal truncation $i,k$ and approximate $\Phi^{-1}$; Eq.~\eqref{eq:trunc}.\\
+\src{rawl3}, \src{sintvi} & Family-adjusted and finite-population intensity; Appendix~\ref{app:rawlings}.\\
+\src{sseuil*}, \src{sdutt}, \src{sdutt1}, \src{sdutt2} & Joint-normal thresholds and tails; Eqs.~\eqref{eq:jointtails}--\eqref{eq:mmeans}.\\
+\src{ovlp}, \src{trunc\_delta}, \src{riddr\_root} & Age counts, generation interval, annual response and mixture; Eqs.~\eqref{eq:agecount}--\eqref{eq:agemixture}.\\
+\src{dFmtblup}, \src{create\_C}, \src{Poissoncorr}, \src{hyper\_correct} & Discrete inbreeding; Eqs.~\eqref{eq:vsa}--\eqref{eq:poissonratio} and Appendix~\ref{app:inbreeding}.\\\bottomrule
 \end{longtable}
-For a reproducible port, preserve source-row and goal-trait order, separate sire/dam and stage-specific source lists, family-group sizes, selection fractions, 25-round update order, correlation caps, and threshold clipping. Use double precision for joint tails as the source does. Compare index weights and per-trait response against Fortran, not just aggregate gain: a transposed covariance block can conceal itself in the latter.
+For a reproducible port, preserve: the order of sources (sorted) and goal traits; separate sire/dam and stage-specific source lists; group sizes; selection fractions; the 25-round update order (including the one-round lag of $\ma P$ under overlapping generations); the 0.93 cap on stage correlations and the $[-1,1]$ clip on family correlations; exact normal tails (\src{sdutt1}) and the $\pm8$ standard-deviation bracket; and the \src{gcef}/\src{sintvi} approximations. Use double precision for joint tails, as the source does. Compare index weights and per-trait responses against the Fortran, not just aggregate gain: a transposed covariance block can hide in the latter.
+
+%======================================================================
+\section{Known issues and open questions}\label{sec:issues}
+\begin{inwords}
+These are places where the code is known or suspected to differ from the intended model. The first and the fifth can change results noticeably; the others are minor or only matter for exact reproduction. Fixes and their effects are recorded in \src{NEWS.md}.
+\end{inwords}
+\begin{enumerate}
+\item \textbf{Generation interval under overlapping generations} (Section~\ref{sec:overlap}). Accumulators are overwritten instead of summed, so the interval, and therefore every annual response, is wrong: about 3\% too low in \src{ovlpgrp}, and by a factor of about two in specified-count mode. A fix is a one-line change per sex; it will change the overlapping-generation outputs.
+\item \textbf{One-round lag of $\ma P$ behind $\ma A$} under overlapping generations. Negligible at convergence.
+\item \textbf{$r_{13\mid2}=0$} in three-stage selection instead of Eq.~\eqref{eq:partialcorr}, and the empirical 0.93 cap on stage correlations (Eq.~\ref{eq:stagecorr}). Both are approximations whose justification is not documented in the source.
+\item \textbf{Silent non-convergence} of the multistage threshold search (\src{sseuil}): the failure test can never trigger.
+\item \textbf{Incomplete quadrature tables in \src{sdutt}.} The Gauss--Hermite nodes and weights (\src{racine}) are tabulated for 2 to 20 points, but the adaptive loop in \src{sdutt} continues to 30. If it has not converged by 20 points, the empty tables give exactly 0.25 (two dimensions) or 0.125 (three), two equal values count as convergence, and that value is returned without warning. Example: $\Pr(Z_1>2.5,Z_2>2.8)$ with $r=0.93$ is returned as 0.25 instead of 0.0021. Stage correlations reach the 0.93 cap, so multistage selection with small fractions can be affected. Not yet fixed.
+\item \textbf{Half-sib sources with $M_s=M_d$ in two-stage selection.} \src{sel2s} removes sources 24--43 but not the dam-EBV sources 44--63 (Section~\ref{sec:sources}); one- and three-stage selection remove both.
+\item \textbf{Uninitialised starting values in discrete generations.} The progeny common-environment fraction is read only when both progeny groups and common environment are requested, but used unconditionally (the same defect was fixed under overlapping generations), and the starting dam index variance is accumulated without being reset when sire and dam indices differ. Both only affect starting values or inputs that are zero in practice with \src{gfortran}, but are undefined by the Fortran standard.
+\item \textbf{Symmetric-block assumption.} When filling $\ma P_x$ the source mirrors blocks without transposing trait indices (Appendix~\ref{app:sourceblocks}), which is exact only for symmetric blocks; $\ma S$ and $\ma D$ are not exactly symmetric after the Bulmer update.
+\item \textbf{$1/M_s$ used for the female fraction} in the small-population adjustment of \src{Poissoncorr}.
+\item \textbf{Overlapping generations have no check for indices without phenotypic information.} Discrete generations make the user change the information sources or correlations when a trait has no phenotypic source and no genetic correlation with one (always the case for an index with BLUP as the only source); overlapping generations run to an all-zero response.
+\item \textbf{Unused duplicate of the inbreeding code.} \src{sel1s} calls the \src{dFmtblup} in \src{selroutines.f90}. A second copy in \src{selinbreeding.f90} is compiled but never called. It contains two defects: its first two \src{trunc} calls use positional arguments, so the intensity receives the normal ordinate $z$, $k$ receives the intensity, and $k$ itself is never computed; and a 0 entry in a source list stops the program. It should not be switched in without fixing these.
+\end{enumerate}
+
+%======================================================================
+\begin{thebibliography}{9}
+\bibitem{bijmawoolliams2000} Bijma, P. and J.A. Woolliams. 2000. Prediction of rates of inbreeding in populations selected on best linear unbiased prediction of breeding value. \emph{Genetics} 156:361--373. \href{https://doi.org/10.1093/genetics/156.1.361}{doi:10.1093/genetics/156.1.361}
+\bibitem{bulmer1971} Bulmer, M.G. 1971. The effect of selection on genetic variability. \emph{American Naturalist} 105:201--211. \href{https://doi.org/10.1086/282718}{doi:10.1086/282718}
+\bibitem{hazel1943} Hazel, L.N. 1943. The genetic basis for constructing selection indexes. \emph{Genetics} 28:476--490. \href{https://doi.org/10.1093/genetics/28.6.476}{doi:10.1093/genetics/28.6.476}
+\bibitem{meuwissen1991} Meuwissen, T.H.E. 1991. Reduction of selection differentials in finite populations with a nested full--half sib family structure. \emph{Biometrics} 47:195. \href{https://doi.org/10.2307/2532506}{doi:10.2307/2532506}
+\bibitem{rawlings1976} Rawlings, J.O. 1976. Order statistics for a special class of unequally correlated multinormal variates. \emph{Biometrics} 32:875. \href{https://doi.org/10.2307/2529271}{doi:10.2307/2529271}
+\bibitem{rutten2002} Rutten, M.J.M., et al. 2002. SelAction: software to predict selection response and rate of inbreeding in livestock breeding programs. \emph{Journal of Heredity} 93:456--458. \href{https://doi.org/10.1093/jhered/93.6.456}{doi:10.1093/jhered/93.6.456}
+\bibitem{villanueva1993} Villanueva, B., N.R. Wray and R. Thompson. 1993. Prediction of asymptotic rates of response from selection on multiple traits using univariate and multivariate best linear unbiased predictors. \emph{Animal Production} 57:1--13. \href{https://doi.org/10.1017/S0003356100006541}{doi:10.1017/S0003356100006541}
+\bibitem{wrayhill1989} Wray, N.R. and W.G. Hill. 1989. Asymptotic rates of response from index selection. \emph{Animal Production} 49:217--227. \href{https://doi.org/10.1017/S0003356100032347}{doi:10.1017/S0003356100032347}
+\bibitem{wraythompson1990} Wray, N.R. and R. Thompson. 1990. Prediction of rates of inbreeding in selected populations. \emph{Genetical Research} 55:41--54. \href{https://doi.org/10.1017/S0016672300025180}{doi:10.1017/S0016672300025180}
+\end{thebibliography}
+
+%======================================================================
 \appendix
 \section{Remaining information-source covariance blocks}\label{app:sourceblocks}
-Here are the remaining $P_x$ rules from \src{selection\_index}. Each entry is a $T\times T$ block; rows corresponding to unused sources are dropped afterward. Write $O$ for own phenotype, $B_d,B_s$ for dam/sire EBV, $F_u$ for full-sib mean, $J_u$ for paternal-half-sib mean, $D_u$ for mean dam EBV in that half-sib group, and $Q_u$ for a progeny mean. Group-diagonal blocks for $F_u,J_u,Q_u$ are in Eq.~\eqref{eq:blocks}.
+These are the remaining $\ma P_x$ rules from \src{selection\_index}. Each entry is a $T\times T$ block; rows for unused sources are dropped afterwards. Write $O$ for own phenotype, $B_d,B_s$ for dam and sire EBV, $F_u$ for a full-sib mean, $J_u$ for a paternal-half-sib mean, $\bar B_u$ for the mean dam EBV of half-sib group $u$, and $Q_u$ for a progeny mean. Group-diagonal blocks for $F_u,J_u,Q_u$ are in Eq.~\eqref{eq:blocks}.
 \begin{center}
-\begin{tabular}{p{.27\linewidth}p{.57\linewidth}}\toprule
+\begin{tabular}{p{.30\linewidth}p{.55\linewidth}}\toprule
 Source pair & Covariance block\\\midrule
-$O,O$; $O,B_d$; $O,B_s$ & $P$; $D/2$; $S/2$\\
-$B_d,B_d$; $B_d,B_s$; $B_s,B_s$ & $D$; $0$; $S$\\
-$O,F_u$; $O,J_u$; $O,D_u$; $O,Q_u$ & $F$; $J$; $0$; $A/2$\\
-$B_d,F_u$; $B_d,J_u$; $B_d,D_u$; $B_d,Q_u$ & $D/2$; $0$; $0$; $D/4$\\
-$B_s,F_u$; $B_s,J_u$; $B_s,D_u$; $B_s,Q_u$ & $S/2$; $S/2$; $0$; $S/4$\\
-$F_u,F_v$; $F_u,J_v$; $F_u,D_v$; $F_u,Q_v$ & $F$; $J$; $0$; $(A_s+A_d)/2$\\
-$J_u,J_v$; $J_u,D_v$; $J_u,Q_v$ & $J$; $0$; $J/2$\\
-$D_u,D_v$; $D_u,Q_v$ & $0$; $0$\\
-$Q_u,Q_v$ & $A/4$ for a sire candidate; $A/2$ for a dam candidate\\\bottomrule
+$O,O$; $O,B_d$; $O,B_s$ & $\ma P$; $\ma D/2$; $\ma S/2$\\
+$B_d,B_d$; $B_d,B_s$; $B_s,B_s$ & $\ma D$; $0$; $\ma S$\\
+$O,F_u$; $O,J_u$; $O,\bar B_u$; $O,Q_u$ & $\ma F$; $\ma J$; $0$; $\ma A/2$\\
+$B_d,F_u$; $B_d,J_u$; $B_d,\bar B_u$; $B_d,Q_u$ & $\ma D/2$; $0$; $0$; $\ma D/4$\\
+$B_s,F_u$; $B_s,J_u$; $B_s,\bar B_u$; $B_s,Q_u$ & $\ma S/2$; $\ma S/2$; $0$; $\ma S/4$\\
+$F_u,F_v$; $F_u,J_v$; $F_u,\bar B_v$; $F_u,Q_v$ & $\ma F$; $\ma J$; $0$; $(\ma A_s+\ma A_d)/2$\\
+$J_u,J_v$; $J_u,\bar B_v$; $J_u,Q_v$ & $\ma J$; $0$; $\ma J/2$\\
+$\bar B_u,\bar B_v$; $\bar B_u,Q_v$ & $0$; $0$\\
+$Q_u,Q_v$ & $\ma A/4$ for a sire candidate; $\ma A/2$ for a dam candidate\\\bottomrule
 \end{tabular}
 \end{center}
-Here $u\ne v$ where two group indices occur. For the same group, $\Var(D_u)=D/m_{H,u}$ and $\Cov(J_u,D_u)=D/(2m_{H,u})$. These rules include zeros fixed by the source, even where a broader pedigree model could use a nonzero covariance. When switching both trait and source order, transpose the block.
+For pairs of the \emph{same} type ($F_u,F_v$; $J_u,J_v$; $\bar B_u,\bar B_v$; $Q_u,Q_v$) the table gives $u\ne v$; the same-group values are in Eq.~\eqref{eq:blocks} and, for the half-sib group, $\Var(\bar B_u)=\ma D/m_{H,u}$ and $\Cov(J_u,\bar B_u)=\ma D/(2m_{H,u})$. For pairs of \emph{different} types, the listed value is used for every $u,v$, including $u=v$, except $\Cov(J_u,\bar B_u)$ just given. Same-group values apply only to configured groups; unused group slots take the $u\ne v$ value and are dropped anyway. These rules include zeros fixed by the source, even where a fuller pedigree model would give a nonzero covariance.
+
+\begin{codenote}
+The source fills the lower triangle of the source-by-source table by copying blocks with the source indices swapped but the trait indices unchanged. This is correct only when the block is symmetric. A port should use $\Cov(x_{a,j},x_{b,i})=\text{block}(i,j)_{ba}$. The same-source blocks $\ma D$, $\ma S$ and $\ma D/m_{H,u}$ make $\ma P_x$ non-symmetric by themselves whenever $\ma S,\ma D$ are; a port should symmetrise $\ma S$ and $\ma D$ or confirm they are symmetric; the update of Eq.~\eqref{eq:bulmer} gives symmetric matrices in exact arithmetic, but the simplified starting values (Section~\ref{sec:bulmer}) need not be.
+\end{codenote}
 
 \section{Family-adjusted intensity approximation}\label{app:rawlings}
-Let $n=n_wn_{fs}n_{hs}$, $n_{\rm sel}=pn$, and $I_N(p)=\src{sintvi}(p,N)$, the finite-candidate intensity approximation. \src{rawl3} forms three reference intensities: $i_a=I_{\operatorname{nint}(n)}(p)$ for unrelated candidates, $i_b$ for perfectly correlated members within each full-sib family, and $i_c$ for a perfectly correlated paternal half-sib family. For $i_b$, take family size $h=n_w$ and family count $N=n_{fs}n_{hs}$; for $i_c$, take $h=n_wn_{fs}$ and $N=n_{hs}$. With $r=\operatorname{mod}(n_{\rm sel},h)$ and $a=\operatorname{nint}((n_{\rm sel}-r)/h)+1$, the source's reference calculation is
+Let $n=\operatorname{nint}(n_wn_{fs}n_{hs})$ (rounded, used in every $n-1$ below), $n_{\rm sel}=p\,n_wn_{fs}n_{hs}$ (not rounded), and $I_N(p)=\src{sintvi}(p,N)$, the finite-candidate intensity approximation. \src{rawl3} forms three reference intensities: $i_a=I_n(p)$ for unrelated candidates, $i_b$ for perfectly correlated members within each full-sib family, and $i_c$ for a perfectly correlated paternal half-sib family. For $i_b$, take family size $h=n_w$ and family count $N=n_{fs}n_{hs}$; for $i_c$, take $h=n_wn_{fs}$ and $N=n_{hs}$. With $r=\operatorname{mod}(n_{\rm sel},h)$ and $a=\operatorname{nint}((n_{\rm sel}-r)/h)+1$, the source's reference calculation is
 \begin{equation}\label{eq:rawref}
 I_{\rm family}(h,N)=
 \begin{cases}
@@ -298,7 +551,7 @@ I_{\operatorname{nint}(N)}(1/N),&r=n_{\rm sel},\\[2mm]
 +I_{\operatorname{nint}(N)}(a/N)\,a r}{n_{\rm sel}},&\text{otherwise}.
 \end{cases}
 \end{equation}
-For real-valued family sizes, the \src{mod}/\src{nint} conventions matter. Define
+For real-valued family sizes (the mating ratio $d$ need not be an integer) the \src{mod}/\src{nint} conventions matter. Define
 \begin{equation}
 f(x)=0.63e^{3.36(x-1)}+0.37e^{86(x-1)}.
 \end{equation}
@@ -308,7 +561,7 @@ b_1=\frac{\log i_c-\log i_a}{\log\{1-(n_w-1)/(n-1)\}},\quad
 b=\tfrac12\{1-f(\rho_{fs})\}+b_1f(\rho_{fs}),\quad
 i_{\rm eff}=i_a\{1-\rho_{fs}(n_w-1)/(n-1)\}^{b}.
 \end{equation}
-If $n_w=1$, replace $n_w$ by $n_{fs}$ and $\rho_{fs}$ by $\rho_{hs}$ in Eq.~\eqref{eq:rawone}. If $n_{hs}=1$, use Eq.~\eqref{eq:rawone} with $i_b$ in place of $i_c$ and $\rho_{fs}-\rho_{hs}$ in place of $\rho_{fs}$, then multiply the result by $\sqrt{1-\rho_{hs}}$.
+If $n_w=1$, replace $n_w$ by $n_{fs}$ and $\rho_{fs}$ by $\rho_{hs}$ in Eq.~\eqref{eq:rawone}. If $n_{hs}=1$, use Eq.~\eqref{eq:rawone} with $i_b$ in place of $i_c$ and $\rho_{fs}-\rho_{hs}$ in place of $\rho_{fs}$, then multiply the result by $\sqrt{1-\rho_{hs}}$. (The equality tests use a tolerance of $10^{-4}$.)
 
 For the general branch define
 \begin{align}\label{eq:rawrho}
@@ -330,38 +583,40 @@ b_a&=\frac{b_0-b_{bc}y_h}{1-y_h},&
 b&=b_a\{1-f(\rho_{fs})\}+b_{bc}f(\rho_{fs}),&
 i_{\rm eff}&=i_a(1-\rho_a)^b.\nonumber
 \end{align}
-At $y_h=1$, the current Mac source sets $b_a=b_{bc}$ to avoid an indeterminate division. \src{sintvi}'s polynomial and small-$p$ table are numerical approximations, not further population-genetic equations.
+When $|1-y_h|<10^{-6}$ the source sets $b_a=b_{bc}$ to avoid an indeterminate division.
+
+\src{sintvi} is a numerical approximation, not further population genetics: it raises $p$ to at least $1/N$, returns 0 for $p\ge1$, uses Falconer's tabulated intensities with linear interpolation for $p<0.001$ and Brascamp's polynomial in $\log(1/p-1)$ otherwise, and applies the finite-population correction $i-(1/p-1)/\{(2N+2)\,i\}$ (both skipped when $N=0$).
 
 \section{Finite-family inbreeding correction}\label{app:inbreeding}
-Denote the six selection ratios from Eq.~\eqref{eq:poissonratio} by full-sib values $C^F_{ss},C^F_{sd},C^F_{dd}$ and half-sib values $C^J_{ss},C^J_{sd},C^J_{dd}$. Let $n_m,n_f$ be male/female candidates per dam, $M,F$ selected parents, and $T_m=n_mF$, $T_f=n_fF$. \src{hyper\_correct} forms
+Denote the six selection ratios from Eq.~\eqref{eq:poissonratio} by full-sib values $\kappa^F_{ss},\kappa^F_{sd},\kappa^F_{dd}$ and half-sib values $\kappa^J_{ss},\kappa^J_{sd},\kappa^J_{dd}$. With $n_m,n_f$ male and female candidates per dam, $M_s,M_d$ selected parents, and $T_m=n_mM_d$, $T_f=n_fM_d$ the numbers of male and female candidates, \src{hyper\_correct} forms
 \begin{align}\label{eq:hyperbase}
-(V_F)_{11}&=\frac{n_m(n_m-1)M(M-1)C^F_{ss}}{T_m(T_m-1)},&
-(V_F)_{12}&=\frac{n_mn_fMF C^F_{sd}}{T_mT_f},\\
-(V_F)_{22}&=\frac{n_f(n_f-1)F(F-1)C^F_{dd}}{T_f(T_f-1)},&
-(V_J)_{11}&=\frac{n_m^2M(M-1)C^J_{ss}}{T_m(T_m-1)},\nonumber\\
-(V_J)_{12}&=\frac{n_mn_fMF C^J_{sd}}{T_mT_f},&
-(V_J)_{22}&=\frac{n_f^2F(F-1)C^J_{dd}}{T_f(T_f-1)}.\nonumber
+(V_F)_{11}&=\frac{n_m(n_m-1)M_s(M_s-1)\kappa^F_{ss}}{T_m(T_m-1)},&
+(V_F)_{12}&=\frac{n_mn_fM_sM_d \kappa^F_{sd}}{T_mT_f},\\
+(V_F)_{22}&=\frac{n_f(n_f-1)M_d(M_d-1)\kappa^F_{dd}}{T_f(T_f-1)},&
+(V_J)_{11}&=\frac{n_m^2M_s(M_s-1)\kappa^J_{ss}}{T_m(T_m-1)},\nonumber\\
+(V_J)_{12}&=\frac{n_mn_fM_sM_d \kappa^J_{sd}}{T_mT_f},&
+(V_J)_{22}&=\frac{n_f^2M_d(M_d-1)\kappa^J_{dd}}{T_f(T_f-1)}.\nonumber
 \end{align}
-Both matrices are symmetric. The source sets $V_s=dV_F+d(d-1)V_J$ and $V_d=V_F$, then subtracts squared conditional-mean matrices. With the finite-parent $W'_s,W'_d$ from the text and $\lambda_{gq}=\Lambda_{gq}$ from Eq.~\eqref{eq:inbreedmatrix}, these matrices are
+Both matrices are symmetric. The source sets $V_s=dV_F+d(d-1)V_J$ and $V_d=V_F$, then subtracts squared conditional-mean matrices. With $W'_s,W'_d$ from Section~\ref{sec:inbreeding} and $\lambda_{gq}=\Lambda_{gq}$ from Eq.~\eqref{eq:inbreedmatrix}, these are
 \begin{align}\label{eq:hypermean}
-M_s&=\begin{pmatrix}
+\ma M_s&=\begin{pmatrix}
 1+4\lambda_{ss}^2W'_s&d(1+4\lambda_{ss}\lambda_{ds}W'_s)\\
 d(1+4\lambda_{ss}\lambda_{ds}W'_s)&d^2(1+4\lambda_{ds}^2W'_s)
 \end{pmatrix},\\
-M_d&=\begin{pmatrix}
+\ma M_d&=\begin{pmatrix}
 (1+4\lambda_{sd}^2W'_d)/d^2&(1+4\lambda_{sd}\lambda_{dd}W'_d)/d\\
 (1+4\lambda_{sd}\lambda_{dd}W'_d)/d&1+4\lambda_{dd}^2W'_d
-\end{pmatrix}.
+\end{pmatrix}.\nonumber
 \end{align}
-After subtraction, retain names $V_s,V_d$ and let $\ve\alpha=(1/(2M),1/(2F))^{\mathsf T}$. Set $\delta_q=\ve\alpha^{\mathsf T}V_q\ve\alpha$. For $M>19$, also calculate
+After the subtraction, keep the names $V_s,V_d$ and let $\ve\alpha=(1/(2M_s),1/(2M_d))^{\mathsf T}$. Set $\delta_q=\ve\alpha^{\mathsf T}V_q\ve\alpha$. For $M_s>19$, also calculate
 \begin{equation}\label{eq:hyperextra}
 \delta_s\leftarrow\delta_s+W'_s\,\ve t_s^{\mathsf T}V_s\ve t_s,\quad
 \delta_d\leftarrow\delta_d+W'_d\,\ve t_d^{\mathsf T}V_d\ve t_d,\quad
 \ve t_q=(\beta_s(2\Pi_{sq}),\,\beta_d(2\Pi_{dq}))^{\mathsf T}.
 \end{equation}
-The final predicted rate is
+The final predicted rate, printed as a percentage, is
 \begin{equation}\label{eq:hyperfinal}
-\Delta F=\Delta F_0+\tfrac18(M\delta_s+F\delta_d).
+\Delta F=\Delta F_0+\tfrac18(M_s\delta_s+M_d\delta_d).
 \end{equation}
-The called \src{dFmtblup} is the copy in \src{selroutines.f90}; its \src{trunc} calls use named arguments for intensity and $k$. A second copy exists in \src{selinbreeding.f90}.
+The \src{dFmtblup} that is called is the copy in \src{selroutines.f90}; its \src{trunc} calls use named arguments for intensity and $k$. The copy in \src{selinbreeding.f90} is never called (Section~\ref{sec:issues}).
 \end{document}

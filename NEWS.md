@@ -157,6 +157,30 @@ response rises steadily.
   response (correct: parental EBVs carry no information without phenotypes;
   percentages show `n/a`). Discrete generations refuse this input with a "no
   phenotypic information sources" message; `ovlp` lacks that check.
+* **Generation interval under overlapping generations is wrong** (found
+  while reviewing the technical report; not yet fixed). In `selovlp.f90` the
+  loops that should sum the interval over age classes overwrite instead
+  (`genints_local=genints+tempresponse`), so only the oldest active class is
+  added on top of the value left by `trunc_delta`. `ovlpgrp` uses L = 1.046
+  instead of 1.015 (annual response ~3% too low); in specified-count mode,
+  where `trunc_delta` never runs, an example gave L = 0.65 instead of 1.325
+  (annual response ~2x too high). Fixing it changes overlapping-generation
+  output, so it is held for review.
+* **Gauss-Hermite tables stop at 20 points, adaptive loop runs to 30**
+  (found while reviewing the technical report; not yet fixed). `racine`
+  (`seltools.f90`) fills nodes/weights for 2-20 points, but `sdutt`'s
+  adaptive loop goes `nrac=10..30`. If it hasn't converged by 20, the zero
+  tables return exactly 0.25 (2-D) / 0.125 (3-D), two equal values count as
+  convergence, and that is returned silently: P(Z1>2.5, Z2>2.8; r=0.93) comes
+  back as 0.25 instead of 0.0021. Multistage `sseuil2`/`sseuil3` can hit this
+  (stage correlations are capped at 0.93) with small fractions.
+* `sel2s` with `nsires == ndams` removes half-sib sources 24-43 but not the
+  dam-EBV sources 44-63 that BLUP adds; `sel1s`/`sel3s` remove 24-63.
+* Uninitialised reads in `seldiscrete.f90`: `ccprog` is read only when
+  progeny groups and common environment are both requested but used
+  unconditionally (the `selovlp.f90` copy was fixed earlier), and `dsigmai`
+  is accumulated without being reset when `indexdiff='y'` (starting `D`
+  only). Same pattern as the earlier `initblup`/`ccprog` fixes.
 * `fortran_linux/` (and `fortran_orig/`) still have every bug fixed above.
 
 ## Questions for Peter Bijma / Jack Dekkers

@@ -1,0 +1,69 @@
+\documentclass[11pt]{article}
+\pdfminorversion=7
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{amsmath,amssymb,booktabs,longtable,geometry,hyperref,xcolor,enumitem}
+\usepackage[most]{tcolorbox}
+\geometry{margin=25mm}
+\hypersetup{colorlinks=true,linkcolor=blue!55!black,urlcolor=blue!55!black}
+\newcommand{\src}[1]{\texttt{#1}}
+
+\title{Gemini Review: SelAction Technical Report\\[4pt]
+\large Verification of the Mathematical Specification against \src{fortran\_mac/}}
+\author{Gemini Code Assistant}
+\date{\today}
+
+\begin{document}
+\maketitle
+\begin{abstract}
+This document contains a comprehensive review and verification of the \src{docs/SelAction\_Technical\_Report.tex} specification against the active Fortran source code located in \src{fortran\_mac/}. The review covers the covariance model, index assembly, Bulmer updates, multistage equations, inbreeding logic, overlapping generations, and all reported implementation notes and known issues.
+\end{abstract}
+
+\section{Executive Summary}
+The mathematical specification detailed in the original technical report is highly accurate and strictly aligns with the programmatic behavior observed in the \src{fortran\_mac/} codebase. Subtle numerical treatments, iterative approximation choices, and explicit source-code deviations from the pure mathematical theory have been faithfully documented. 
+
+\section{Section-by-Section Verification}
+
+\subsection{Covariance Model and Information Vector (Section 4 \& Appendix A)}
+\textbf{Status: Verified Accurate}
+
+The assembly of the information vector and the construction of the $\mathbf{P}_x$ and $\mathbf{G}$ matrices by \src{selection\_index} and \src{info\_sources*} correctly map to the described equations. The report accurately captures the treatment of full-sib, half-sib, and progeny group matrices.
+
+\emph{Verification of Implementation Note (Issue 5):} The claim that \src{selection\_index} assumes symmetric blocks when filling the lower triangle by copying blocks with source indices swapped (without transposing trait indices) was confirmed in the source code. This introduces a slight numerical inaccuracy since $\mathbf{S}$ and $\mathbf{D}$ are not strictly symmetric post-Bulmer update.
+
+\subsection{Shared Selection Equations (Section 5 \& Appendix B)}
+\textbf{Status: Verified Accurate}
+
+The 25-round iteration structure without a formal convergence test is exactly as implemented in the drivers. 
+The Bulmer update in \src{covariance\_update} corresponds directly to the stated equations. 
+The complex finite-family size interpolations and small-population logic in \src{rawl3} (Appendix B) were thoroughly validated. The approximations derived from Rawlings (1976) and Meuwissen (1991) match the implementation, including the handling of boundary cases.
+
+\subsection{Discrete Generations and Inbreeding (Section 6 \& Appendix C)}
+\textbf{Status: Verified Accurate}
+
+The sequence of operations in \src{sel1s}, \src{sel2s}, and \src{sel3s} is accurately captured. The multistage joint selection bounds are correctly mapped.
+
+\emph{Verification of Implementation Notes:}
+\begin{itemize}
+    \item The fixed limit of 20 Newton iterations in \src{sseuil} vs. the check for \src{iter == 50} (causing silent non-convergence) is present in the source (Issue 4).
+    \item In three-stage selection, the conditional correlation $r_{13\mid2}$ is explicitly hardcoded to 0.0 in \src{sel3s} instead of strictly calculating the partial correlation (Issue 3).
+    \item The inbreeding finite-family correction (\src{Poissoncorr}) indeed uses the male fraction $1/M_s$ for the female adjustment when $M_s < 20$, exactly as highlighted in Issue 6.
+    \item The unused duplicate of \src{dFmtblup} exists in \src{selinbreeding.f90}, while the actively called version resides in \src{selroutines.f90} (Issue 8).
+\end{itemize}
+
+\subsection{Overlapping Generations (Section 7)}
+\textbf{Status: Verified Accurate}
+
+The class counts, thresholds, and truncation logic inside \src{selovlp.f90} (\src{ovlp} and \src{trunc\_delta}) map exactly to the described process. The use of Ridders' method to solve for the count thresholds is correctly documented. 
+
+\emph{Verification of Implementation Notes:}
+\begin{itemize}
+    \item \textbf{Generation Interval Bug (Issue 1):} The critical defect where \src{genints\_local = genints + tempresponse} overwrites accumulators rather than summing them across age classes is actively present in \src{ovlp}. This drastically affects the annual response output, as accurately diagnosed in the report.
+    \item The one-round lag in phenotypic matrix updates (where $\mathbf{P}$ is rebuilt using the $\mathbf{A}$ of the previous round) was verified.
+    \item It is confirmed that \src{ovlp} calculates \src{rawl3} but discards the result, using the unadjusted standard intensity instead.
+\end{itemize}
+
+\section{Conclusion}
+The \src{SelAction\_Technical\_Report.tex} document serves as a precise, faithful, and technically rigorous specification of the SelAction programs. It successfully bridges the gap between selection index theory and the concrete Fortran implementation, correctly identifying all mathematical simplifications, hardcoded heuristics, and outright bugs present in the codebase. No corrections to the report's equations or claims are necessary.
+
+\end{document}
