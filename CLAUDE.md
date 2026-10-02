@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Overview
 
-SelAction is a Fortran-based animal breeding selection index program that calculates genetic responses and inbreeding effects for various selection schemes. This repository holds the original reference code from Peter Bijma plus a lightly-modified fork that makes it compile with a modern gfortran on Linux. A macOS fork (`fortran_mac/`) was started fresh from `fortran_linux/` on 2026-10-01; see "macOS" below.
+SelAction is a Fortran-based animal breeding selection index program that calculates genetic responses and inbreeding effects for various selection schemes. This repository holds the original reference code from Piter Bijma plus a lightly-modified fork that makes it compile with a modern gfortran on Linux. A macOS fork (`fortran_mac/`) was started fresh from `fortran_linux/` on 2026-10-01; see "macOS" below.
 
 There is no "modernized 2.0" codebase in this repository — earlier drafts of this file described one (`fortran/` with `seltools2.f90` etc.), but that work was never started and the placeholder directory has been dropped. Don't recreate that section from memory; if a rewritten/modular version is wanted, it should be scoped as new work, not assumed to exist.
 
@@ -35,7 +35,7 @@ gfortran -o msselo seltools.f90 selparameters.f90 selroutines.f90 selovlp.f90 ms
 cd fortran_orig/
 # Same compilation commands as Linux, but may need -ffixed-line-length-none
 # or fail outright on modern gfortran. This directory is a byte-for-byte
-# copy of Peter Bijma's original code and exists for comparison only.
+# copy of Piter Bijma's original code and exists for comparison only.
 ```
 
 There is no top-level Makefile in this repository. Each platform directory is compiled directly with the `gfortran` invocations above.
@@ -48,7 +48,7 @@ There is no top-level Makefile in this repository. Each platform directory is co
 
 | Directory | Description | Status |
 |-----------|-------------|--------|
-| `fortran_orig/` | Original Fortran code from Peter Bijma | **Never modify — treat as read-only reference** |
+| `fortran_orig/` | Original Fortran code from Piter Bijma | **Never modify — treat as read-only reference** |
 | `fortran_linux/` | Linux-compatible fork | Working, recommended |
 | `fortran_mac/` | macOS fork of `fortran_linux/` | Working — active development directory, see "macOS" above |
 | `manual/` | User manual + program description (Markdown + PDF) | Reference documentation |

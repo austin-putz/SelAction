@@ -64,7 +64,7 @@ SelAction is a Fortran-based program developed by Marc J.M. Rutten and Piter Bij
 
 | Directory | Description | Status |
 |-----------|-------------|--------|
-| `fortran_orig/` | Original Fortran code from Peter Bijma | Reference only — never modified |
+| `fortran_orig/` | Original Fortran code from Piter Bijma | Reference only — never modified |
 | `fortran_linux/` | Linux-compatible fork of the original code | Working — recommended for use |
 | `fortran_mac/` | macOS fork, started from `fortran_linux/` | Working — verified on macOS (Intel, gfortran 14.2), see [macOS](#macos) below |
 | `manual/` | User manual and program description (Markdown + original PDF) | Complete |
@@ -415,7 +415,7 @@ An R package reimplementation, `SelActionR`, is being developed as a separate pr
 
 This project is licensed under the **GNU General Public License v3.0 (GPLv3)** — see [`LICENSE`](LICENSE) for the full text.
 
-The original Fortran code was authored by Marc J.M. Rutten and Piter Bijma at Wageningen University. Peter Bijma gave direct permission (via email) to release this repository, including the original code, under GPLv3.
+The original Fortran code was authored by Marc J.M. Rutten and Piter Bijma at Wageningen University. Piter Bijma gave direct permission (via email) to release this repository, including the original code, under GPLv3.
 
 > [!CAUTION]
 > **NO WARRANTY** — This software is provided **as-is**, without warranty of any kind, express or

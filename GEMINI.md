@@ -8,7 +8,7 @@ SelAction is a Fortran-based animal breeding selection index program that calcul
 
 ## Directory Structure
 
-- `fortran_orig/`: Original Fortran code from Peter Bijma (unmodified reference — never edit).
+- `fortran_orig/`: Original Fortran code from Piter Bijma (unmodified reference — never edit).
 - `fortran_linux/`: Linux-compatible fork (working, minimal changes for compilation only).
 - `fortran_mac/`: macOS-specific fork (currently not working due to conflicts).
 - `manual/`: Documentation in Markdown and PDF format.

@@ -257,7 +257,7 @@ fixtures byte-identical.
   of them except the generation-interval error (change 3), which was
   introduced in the Linux fork.
 
-## Questions for Peter Bijma / Jack Dekkers
+## Questions for Piter Bijma / Jack Dekkers
 
 1. Was the ±1.5 SD search bracket in `selovlp.f90` deliberate, or just a
    starting range? It is now ±8 SD.
