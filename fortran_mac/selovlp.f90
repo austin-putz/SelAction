@@ -12,6 +12,10 @@
 
 	implicit none
         real :: genints_local, genintd_local, genint_local, rootdelta, missdelta_s, missdelta_d
+        integer :: nwcl
+        integer, allocatable, dimension(:) :: wcl
+        character (len=1) :: initwarn
+        character (len=4) :: sexlabel
 
 
         print *,"filename? (max = 8 characters)"
@@ -1145,6 +1149,46 @@
           print '(a,f10.3,a)', "  WARNING: requested number of dams cannot be met; selected ", &
             & ndams+missdelta_d," (check numbers of candidates per age class)"
         end if
+        ! a trait without phenotypic information in an age class, and without a
+        ! genetic correlation with a trait that has some there, loses its genetic
+        ! variance (the discrete drivers stop and ask for other sources or
+        ! correlations, see note_pheninfo; here we warn and continue)
+        allocate(wcl(nclass))
+        do q=1,ntraits
+          if (desttraits(q).ne."n") then
+            do k=0,1 ! 0 = sire classes 1..nclass, 1 = dam classes nclass+1..2*nclass
+              nwcl=0
+              do p=k*nclass+1,(k+1)*nclass
+                if (sumits(p).gt.0 .and. pheninfo(p,q).eq."n") then
+                  initwarn="y"
+                  do j=1,ntraits
+                    if (pheninfo(p,j).eq."y" .and. gcorr(q,j).ne.0.0) initwarn="n"
+                  end do
+                  if (initwarn.eq."y") then
+                    nwcl=nwcl+1
+                    wcl(nwcl)=p
+                  end if
+                end if
+              end do
+              if (nwcl.gt.0) then
+                if (k.eq.0) then
+                  sexlabel="sire"
+                else
+                  sexlabel="dam "
+                end if
+                write(unit=20, fmt='(4a,*(i4))') "  WARNING: ",trim(xtraits(q)), &
+                  & " has no phenotypic information (nor a genetic correlation with a trait that has) in ", &
+                  & trim(sexlabel)//" age class(es)",wcl(1:nwcl)
+                write(unit=20, fmt='(a)') "           its genetic variance goes to zero and its response is not meaningful"
+                print '(4a,*(i4))', "  WARNING: ",trim(xtraits(q)), &
+                  & " has no phenotypic information (nor a genetic correlation with a trait that has) in ", &
+                  & trim(sexlabel)//" age class(es)",wcl(1:nwcl)
+                print '(a)', "           its genetic variance goes to zero and its response is not meaningful"
+              end if
+            end do
+          end if
+        end do
+        deallocate(wcl)
         write(unit=20, fmt='(a49,f8.3)') " number of male selection candidates per dam   : ",noffs
         write(unit=20, fmt='(a49,f8.3)') " number of female selection candidates per dam : ",noffd
         write(unit=20, fmt=*) " "

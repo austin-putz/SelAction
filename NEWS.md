@@ -150,6 +150,18 @@ fixtures byte-identical.
 
 ## Bug fixes
 
+* `msselo` now warns (output file and screen) when, in some age class, a
+  trait used in the index or breeding goal has no phenotypic information
+  source and no genetic correlation with a trait that has one - e.g. BLUP
+  (code 2) as the only source. Its genetic variance then goes to zero and
+  the response is not meaningful; before, `ovlp` ran on silently to an
+  all-zero response. The rule is the discrete drivers' check
+  (`note_pheninfo`), but as a warning: the discrete drivers stop and ask for
+  new sources or correlations, which would change `ovlp`'s input sequence.
+  Checked: BLUP-only input warns for both traits in all four classes; one
+  trait BLUP-only and uncorrelated warns for that trait only; the same with
+  a genetic correlation of 0.3 gives no warning. Numbers unchanged in every
+  case; all fixtures byte-identical (normal and strict builds).
 * The multistage threshold search (`sseuil1/2/3`, `seltools.f90`) now
   prints a WARNING (screen, and the output file when open) if Newton's
   method has not reached its tolerance after its 20 steps. The original
@@ -236,10 +248,6 @@ fixtures byte-identical.
   above, in a 72-input sweep of BLUP combined with full-sib, half-sib and
   progeny groups. The triggering input was not recorded. It may have been the
   silent root-finder failure fixed above; not confirmed.
-* BLUP (code 2) as the *only* info source under `ovlp` runs to an all-zero
-  response (correct: parental EBVs carry no information without phenotypes;
-  percentages show `n/a`). Discrete generations refuse this input with a "no
-  phenotypic information sources" message; `ovlp` lacks that check.
 * With `nsires == ndams` (mating ratio 1, no paternal half sibs), the
   earlier-stage source lists of `sel2s`/`sel3s` are not filtered for
   half-sib sources; only the final-stage list is. Unchanged from the
