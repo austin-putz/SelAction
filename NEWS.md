@@ -122,6 +122,18 @@ response rises steadily.
 
 ## Bug fixes
 
+* `sel1s`/`sel2s`/`sel3s` zero `ccprog` before use and reset `dsigmai`
+  before accumulating it. `ccprog` (progeny-test c-square) is only read when
+  both progeny groups and common environment are requested, but feeds the
+  progeny-group covariance blocks whenever progeny groups are used - the
+  same bug fixed earlier in `selovlp.f90`. Shown with a scratch build that
+  writes garbage (`ccprog=0.5`, `dsigmai=1000`) into both right after
+  allocation: on an input with progeny groups and no common environment the
+  index weights changed (progeny-group weight -0.479 -> -0.412); with the fix
+  the poisoned and clean runs are identical. The `dsigmai` reset (only used
+  for the starting dam EBV covariance when `indexdiff='y'`) had no visible
+  effect - the 25 rounds wash it out - but the read was undefined. All
+  fixtures byte-identical (normal and strict builds).
 * `sel2s` with `nsires == ndams` now removes half-sib sources 24-63 from
   the stage-2 lists, as `sel1s`/`sel3s` do; it removed only 24-43, leaving
   the "mean ebv of the dams of hs-group" sources that BLUP adds. Those got
@@ -202,11 +214,6 @@ response rises steadily.
   earlier-stage source lists of `sel2s`/`sel3s` are not filtered for
   half-sib sources; only the final-stage list is. Unchanged from the
   original; not yet looked into.
-* Uninitialised reads in `seldiscrete.f90`: `ccprog` is read only when
-  progeny groups and common environment are both requested but used
-  unconditionally (the `selovlp.f90` copy was fixed earlier), and `dsigmai`
-  is accumulated without being reset when `indexdiff='y'` (starting `D`
-  only). Same pattern as the earlier `initblup`/`ccprog` fixes.
 * `fortran_linux/` (and `fortran_orig/`) still have every bug fixed above.
 
 ## Questions for Peter Bijma / Jack Dekkers

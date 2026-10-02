@@ -602,6 +602,12 @@
     !    print *,"ssumits ",ssumits
      !   print *,"dsumits ",dsumits
 
+        ! ccprog (progeny-test common-environmental effect) is only read
+        ! when initprog.eq."y" .and. initc.eq."y", but progsigmac uses it
+        ! unconditionally below - zero it so that read is defined (same fix
+        ! as in selovlp.f90)
+        ccprog=0.0
+
         ! get progeny testing information
         if (initprog.eq."y" .and. initc.eq."y") then
           do q=1,ntraits
@@ -637,6 +643,7 @@
 
         ! variance starting values
         ssigmai=0.0
+        dsigmai=0.0 ! accumulated below when indexdiff.eq."y"; was never reset
         do p=1,ntraits
 	  sigmaa(p)=hh(p)*sigmap(p)
 	  sigmac(p)=cc(p)*sigmap(p)
@@ -1816,6 +1823,12 @@
     !    print *,"ssumits2 ",ssumits2
      !   print *,"dsumits2 ",dsumits2
 
+        ! ccprog (progeny-test common-environmental effect) is only read
+        ! when initprog.eq."y" .and. initc.eq."y", but progsigmac uses it
+        ! unconditionally below - zero it so that read is defined (same fix
+        ! as in selovlp.f90)
+        ccprog=0.0
+
         ! get progeny testing information
         if (initprog.eq."y" .and. initc.eq."y") then
           do q=1,ntraits
@@ -1859,6 +1872,7 @@
 
         ! variance starting values
         ssigmai=0.0
+        dsigmai=0.0 ! accumulated below when indexdiff.eq."y"; was never reset
         do p=1,ntraits
 	  sigmaa(p)=hh(p)*sigmap(p)
 	  sigmac(p)=cc(p)*sigmap(p)
@@ -3514,6 +3528,12 @@
     !    print *,"ssumits ",ssumits
      !   print *,"dsumits ",dsumits
 
+        ! ccprog (progeny-test common-environmental effect) is only read
+        ! when initprog.eq."y" .and. initc.eq."y", but progsigmac uses it
+        ! unconditionally below - zero it so that read is defined (same fix
+        ! as in selovlp.f90)
+        ccprog=0.0
+
         ! get progeny testing information
         if (initprog.eq."y" .and. initc.eq."y") then
           do q=1,ntraits
@@ -3563,6 +3583,7 @@
 
         ! variance starting values
         ssigmai=0.0
+        dsigmai=0.0 ! accumulated below when indexdiff.eq."y"; was never reset
         do p=1,ntraits
 	  sigmaa(p)=hh(p)*sigmap(p)
 	  sigmac(p)=cc(p)*sigmap(p)
