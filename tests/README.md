@@ -376,6 +376,16 @@ independently built prototype). All `sdutt1` arguments seen during the
 fixtures are within ±3.5 SD. Full accuracy table, before/after numbers and
 the 74-input sweep results are in `NEWS.md`.
 
+## Changed: generation interval under overlapping generations (`ovlp2`/`ovlpgrp` regenerated a third time)
+
+The loops in `selovlp.f90` that sum the generation interval over age classes
+assigned instead of accumulating, so the interval that divides every annual
+response was wrong (`ovlp2` 1.14 instead of 1.04, `ovlpgrp` 1.05 instead of
+1.01). Fixed; both expected outputs regenerated. Total annual response
+(economic units): `ovlp2` 16.637 -> 18.173, `ovlpgrp` 28.748 -> 29.626.
+The new intervals were checked by hand against the printed class counts.
+All discrete-generation fixtures byte-identical. Details in `NEWS.md`.
+
 ## Previously reported: BLUP breeding values + groups under overlapping generations
 
 Earlier notes recorded that combining BLUP (code 2) with a group under `ovlp`

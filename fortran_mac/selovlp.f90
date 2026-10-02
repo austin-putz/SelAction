@@ -697,10 +697,10 @@
             if (pvalcl(p).gt.0.0) then
               if (p.le.nclass) then
                 tempresponse=((nselec(p)*p)/sselec)
-                genints_local=genints+tempresponse
+                genints_local=genints_local+tempresponse
               else
                 tempresponse=((nselec(p)*(p-nclass))/dselec)
-                genintd_local=genintd+tempresponse
+                genintd_local=genintd_local+tempresponse
               end if
             end if
           end do
@@ -1028,10 +1028,10 @@
               if (pvalcl(p).gt.0.0) then
                 if (p.le.nclass) then
                   tempresponse=((nselec(p)*p)/sselec)
-                  genints_local=genints+tempresponse
+                  genints_local=genints_local+tempresponse
                 else
                   tempresponse=((nselec(p)*(p-nclass))/dselec)
-                  genintd_local=genintd+tempresponse
+                  genintd_local=genintd_local+tempresponse
                 end if
               end if
             end do

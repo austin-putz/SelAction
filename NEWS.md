@@ -42,7 +42,7 @@ classes equals `nsires` (or `ndams`). Two bugs in the original code
 The bracket was first widened to ±3 SD (the clamp then in `trunc_delta`);
 change 2 below widens it to ±8 SD.
 
-### 2. Exact normal tail probabilities; ±3 SD clamp removed (this commit)
+### 2. Exact normal tail probabilities; ±3 SD clamp removed (commit 29d251d)
 
 `sdutt1` (`seltools.f90`) returns the upper normal tail P(Z > s). It used a
 Gauss-Hermite quadrature (`racine` nodes, 10 or 20 points). Compared against
@@ -119,6 +119,34 @@ the variance update, since an older cohort lags a generation behind (a
 plausible mechanism, not traced in the code). After the change, variance and accuracy
 fall steadily as selection intensifies, as the Bulmer effect predicts, and
 response rises steadily.
+
+### 3. Generation interval computed correctly
+
+The generation interval L = (L_s + L_d)/2, with L_g = sum over age classes
+of c * (selected from class c) / (total selected), divides every annual
+response. In `ovlp` the loops meant to accumulate it assigned instead
+(`genints_local=genints+tempresponse`), so only the highest-numbered active
+class was added - on top of the full value `trunc_delta` had left in
+`genints` in threshold mode (double-counting that class), and on top of an
+unassigned (in practice zero) value in specified-count mode. Fixed in all
+four places (`genints_local=genints_local+tempresponse`, and the same for
+dams). Present in `fortran_orig/` too. Checked against the class counts in
+the new output:
+
+| | L before | L after | L by hand | total response before | after |
+|---|---|---|---|---|---|
+| `ovlp2` (threshold) | 1.14 | 1.04 | 1.040 | 16.637 | 18.173 |
+| `ovlpgrp` (threshold) | 1.05 | 1.01 | 1.014 | 28.748 | 29.626 |
+| specified count (sires 6.5/3.5, dams 35/15) | 0.65 | 1.32 | 1.325 | 49.965 | 16.662 |
+
+In threshold mode the annual response rises by about the ratio of the old to
+the new L. In specified-count mode it falls by a factor of 3, more than the
+factor 2 in L: the too-small L inflated the annual response, which also
+feeds the between-age-class lag term of the covariance mixture, so the old
+run's genetic variances were inflated too (breeding goal variance 962 vs
+612; phenotypic variance of `wt` 112 vs 97, base 100). The new values
+behave as selection should. `ovlp2`/`ovlpgrp` regenerated; all discrete
+fixtures byte-identical.
 
 ## Bug fixes
 
@@ -201,15 +229,6 @@ response rises steadily.
   response (correct: parental EBVs carry no information without phenotypes;
   percentages show `n/a`). Discrete generations refuse this input with a "no
   phenotypic information sources" message; `ovlp` lacks that check.
-* **Generation interval under overlapping generations is wrong** (found
-  while reviewing the technical report; not yet fixed). In `selovlp.f90` the
-  loops that should sum the interval over age classes overwrite instead
-  (`genints_local=genints+tempresponse`), so only the oldest active class is
-  added on top of the value left by `trunc_delta`. `ovlpgrp` uses L = 1.046
-  instead of 1.015 (annual response ~3% too low); in specified-count mode,
-  where `trunc_delta` never runs, an example gave L = 0.65 instead of 1.325
-  (annual response ~2x too high). Fixing it changes overlapping-generation
-  output, so it is held for review.
 * With `nsires == ndams` (mating ratio 1, no paternal half sibs), the
   earlier-stage source lists of `sel2s`/`sel3s` are not filtered for
   half-sib sources; only the final-stage list is. Unchanged from the
