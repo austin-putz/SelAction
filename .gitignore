@@ -30,3 +30,9 @@ docs/*.synctex.gz
 
 # macOS debug-symbol bundles from gfortran -g
 *.dSYM/
+
+# LaTeX build artifacts (correspondence)
+correspondence/**/*.aux
+correspondence/**/*.log
+correspondence/**/*.toc
+correspondence/**/*.out

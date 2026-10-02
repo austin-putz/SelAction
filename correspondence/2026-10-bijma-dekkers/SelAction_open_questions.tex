@@ -1,0 +1,407 @@
+\documentclass[11pt]{article}
+\pdfminorversion=7
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{amsmath,amssymb,booktabs,graphicx,geometry,hyperref,xcolor,array,enumitem,listings}
+\usepackage[most]{tcolorbox}
+\geometry{margin=25mm}
+\hypersetup{colorlinks=true,linkcolor=blue!55!black,urlcolor=blue!55!black,citecolor=blue!55!black}
+\newcommand{\src}[1]{\texttt{#1}}
+\newcommand{\ma}[1]{\mathbf{#1}}
+\newcommand{\ve}[1]{\boldsymbol{#1}}
+\newcommand{\E}{\operatorname{E}}
+\newcommand{\Cov}{\operatorname{Cov}}
+\newcommand{\Var}{\operatorname{Var}}
+\setlist{itemsep=2pt,topsep=4pt}
+\lstset{language=Fortran,basicstyle=\ttfamily\small,columns=fullflexible,keepspaces=true,
+  frame=single,rulecolor=\color{black!25},backgroundcolor=\color{black!3},xleftmargin=4pt,xrightmargin=4pt,
+  commentstyle=\color{black!55},keywordstyle=\color{blue!45!black},breaklines=true,showstringspaces=false}
+\newtcolorbox{question}[1]{colback=blue!3!white,colframe=blue!35!black,boxrule=0.5pt,arc=2pt,
+  left=6pt,right=6pt,top=4pt,bottom=4pt,fonttitle=\bfseries,title=#1}
+\newtcolorbox{recommend}{colback=green!4!white,colframe=green!35!black,boxrule=0.5pt,arc=2pt,
+  left=6pt,right=6pt,top=4pt,bottom=4pt,fonttitle=\bfseries,title=Our recommendation}
+
+\title{SelAction: open questions on the model\\[4pt]
+\large Background, equations, numerical evidence and recommendations\\
+for Piter Bijma and Jack Dekkers}
+\author{Austin Putz}
+\date{2 October 2026}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+We have been bringing the SelAction Fortran code (Rutten and Bijma) up to date, writing a regression test suite for it, and writing a technical report that ties every equation to the routine that computes it. That work turned up a number of places where we cannot tell from the code alone what the intended model is. This document sets out each of them in enough detail to be answered without re-reading the source: what the code computes, in equations and with the relevant lines quoted; the alternative we think may have been intended; how much the choice changes the predictions, measured by running both versions; and what we recommend. Plain programming errors have already been fixed and are listed only briefly (Appendix~\ref{app:fixed}). Nothing described here as a question has been changed in the code.
+\end{abstract}
+
+\tableofcontents
+
+%======================================================================
+\section{Purpose and how to read this}
+
+Piter, it has been a long time since you worked on this code, so we have tried to make each section self-contained: it starts with the relevant piece of the model, then shows what the program actually does, and ends with a specific question and our recommendation. Jack, the questions are mostly about selection-index and inbreeding theory rather than programming, which is where we would value your view most.
+
+Table~\ref{tab:summary} lists the questions. ``Effect'' is the largest change in the program's predictions we found when the alternative was put in, over the examples we ran; for most questions the effect is small in typical inputs but can be large in some.
+
+\begin{table}[ht]
+\centering\small
+\caption{Summary of the open questions.}\label{tab:summary}
+\begin{tabular}{>{\raggedright}p{.03\linewidth}>{\raggedright}p{.30\linewidth}>{\raggedright}p{.30\linewidth}>{\raggedright\arraybackslash}p{.27\linewidth}}
+\toprule
+& Question & Effect of the alternative & Recommendation\\\midrule
+\multicolumn{4}{l}{\emph{Overlapping generations}}\\
+1 & Definition of the generation interval (already corrected) & 3--9\% (threshold mode) to a factor 3 (specified counts) in annual response & Confirm the definition used now\\
+2 & Genetic lag between age classes: per-sex path response or population trend? & $<1$\% of response in our examples; grows with more age classes & Use the population trend; please confirm\\
+3 & Former $\pm1.5$\,SD search range and $\pm3$\,SD clamp (already removed) & up to 35\% in response for very intense selection & Confirm removal\\
+4 & No family-structure correction of intensity & not measured & Intended?\\
+5 & BLUP + groups giving zero response & not reproducible & Do you recall the case?\\
+\multicolumn{4}{l}{\emph{Multistage selection}}\\
+6 & $r_{13\mid2}=0$ and the 0.93 cap on stage correlations & up to 5.3\% of stage-3 response & Compute $r_{13\mid2}$; keep the cap for now\\
+7 & Half-sib information in earlier stages when each sire has one dam; size of half-sib groups & 5.6\% of stage-1 response & Remove it, as in the final stage; check group sizes\\
+\multicolumn{4}{l}{\emph{Rate of inbreeding}}\\
+8 & $1/M_s$ for the female fraction in the Wray et al.\ correction; jump at 20 sires & up to 1.7 percentage points of $\Delta F$ & Probably $1/M_d$; please confirm\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Section~\ref{sec:background} summarises the state of the code and what has been changed so far. Sections~\ref{sec:ovlp}--\ref{sec:inbreeding} contain the questions. Section~\ref{sec:numerics} lists three numerical points that need no decision but that you may want to know about. The source of record is \src{fortran\_mac/} at commit \src{dbdd69f} of the repository; the full mathematical description is in \src{docs/SelAction\_Technical\_Report.pdf}, which uses the same notation.
+
+%======================================================================
+\section{Background}\label{sec:background}
+
+\subsection{The code and how it has been checked}
+The working copy is \src{fortran\_mac/}, which started as a copy of the original code with the minimum changes needed to compile with a current gfortran. All changes since are recorded in \src{NEWS.md}. A set of seven regression inputs with stored outputs covers one-, two- and three-stage selection, BLUP, the group information sources, and overlapping generations with and without groups. Every change is checked against them, and also under a strict debug build that traps on any floating-point exception, out-of-bounds access, or read of an uninitialised variable.
+
+\subsection{Notation}
+We follow the technical report. For sex $g\in\{s,d\}$: $M_s,M_d$ selected sires and dams; $d=M_d/M_s$; $p_g$ selected fraction; $t$ the truncation point, $i=\phi(t)/p$ the intensity and $k=i(i-t)$ the variance reduction; $V_I$, $r_{IH}$ index variance and accuracy; $H=\ve v^{\mathsf T}\ve A$ the breeding goal. Under overlapping generations, $K$ age classes per sex, $N_{g,c}$ candidates and $n_{g,c}$ selected in class $c$, and $w_{g,c}=n_{g,c}/\sum_c n_{g,c}$.
+
+\subsection{Changes to results so far}
+Four changes alter the program's predictions. All four are programming errors with no ambiguity about the intended result; they are listed here because they change numbers you may remember.
+\begin{enumerate}
+\item \textbf{Overlapping generations: truncation-point search.} The Ridders search for the common truncation point covered only $\pm1.5$ index standard deviations, so at least 6.7\% of the youngest class was always selected; with 10 sires from 1500 candidates the program selected 67.5. Now $\pm8$ standard deviations (Question~3).
+\item \textbf{Overlapping generations: normal tail and clamp.} The univariate normal tail used Gauss--Hermite quadrature, which is wrong beyond about 4 standard deviations, and the standardised truncation point was clamped to $\pm3$, which forced at least 0.135\% of every age class to be selected. The tail is now exact (\src{erfc}) and the clamp is gone (Question~3).
+\item \textbf{Overlapping generations: generation interval} (Question~1).
+\item \textbf{Multistage selection: quadrature tables.} The two- and three-dimensional normal integrals use Dutt's representation \cite{dutt1973} with Gauss--Hermite quadrature, refined adaptively from 10 to 30 points. The tables of nodes and weights stopped at 20 points, so beyond 20 the integral came out as exactly 0.25 (two dimensions) or 0.125 (three) and was accepted as converged. With small selected fractions and highly correlated stages this gave grossly wrong responses (in one two-stage example a sire response of 0.6 instead of 19.9 economic units). The tables now go to 30 points.
+\end{enumerate}
+
+%======================================================================
+\section{Overlapping generations}\label{sec:ovlp}
+
+\subsection{How the program models overlapping generations}
+Each sex has $K$ age classes; class 1 are the youngest candidates, born from the current parents. Each class has its own index, built from the information available at that age, with variance $V_{I,g,c}$. In ``threshold'' mode one truncation point $x_g$ per sex is applied to all classes of that sex. Because older classes were born earlier they have a lower genetic mean, $m_{g,c}$ below the youngest, and the number selected from each class is
+\begin{equation}\label{eq:agecount}
+n_{g,c}=N_{g,c}\,\bar\Phi\!\left(\frac{x_g-m_{g,c}}{\sqrt{V_{I,g,c}}}\right),\qquad
+\sum_c n_{g,c}=M_g .
+\end{equation}
+In ``specified-count'' mode the $n_{g,c}$ are inputs. The selection differential of each path is the weighted mean of the class differentials, and the annual response follows Rendel and Robertson \cite{rendel1950}:
+\begin{equation}\label{eq:rr}
+\Delta G^{\mathrm{year}}=\frac{S_s+S_d}{L_s+L_d},\qquad
+S_g=\sum_c w_{g,c}\,i_{g,c}\sqrt{V_{I,g,c}} .
+\end{equation}
+The program writes this as $\tfrac12(\Delta H_s^{\mathrm{year}}+\Delta H_d^{\mathrm{year}})$ with $\Delta H_g^{\mathrm{year}}=S_g/L$ and $L=\tfrac12(L_s+L_d)$, which is the same thing. It then updates the genetic covariances of each class for the Bulmer effect and mixes the classes of each sex, adding the variance between the means of the selected animals of different classes (law of total variance). This is repeated for 25 rounds.
+
+\subsection{Question 1: the generation interval}
+The interval is meant to be the mean age of the selected parents,
+\begin{equation}\label{eq:interval}
+L_g=\sum_c c\,w_{g,c},\qquad L=\tfrac12(L_s+L_d),
+\end{equation}
+with the youngest class at age 1. The original code had the loops that compute it assigning instead of adding:
+\begin{lstlisting}
+do p=1,2*nclass
+  if (pvalcl(p).gt.0.0) then
+    if (p.le.nclass) then
+      tempresponse=((nselec(p)*p)/sselec)
+      genints_local=genints+tempresponse     ! now: genints_local+tempresponse
+\end{lstlisting}
+so only the oldest class with selected animals was counted, added to whatever value \src{genints} already held (Figure~\ref{fig:interval}). In threshold mode that was the full $L_g$, from another routine, so the oldest class was counted twice; in specified-count mode it was zero, so only the oldest class was counted. The interval divides every annual response, and through the lag term of the covariance mixture it also affected the variances.
+
+\begin{figure}[ht]
+\centering\includegraphics[width=\linewidth]{fig_interval.pdf}
+\caption{The generation interval for the dams of the \src{ovlpgrp} regression example, as now computed and as in the original code.}\label{fig:interval}
+\end{figure}
+
+\begin{table}[ht]
+\centering\small
+\caption{Effect of the generation-interval correction. ``By hand'' is Eq.~\eqref{eq:interval} applied to the numbers selected that the program prints.}\label{tab:interval}
+\begin{tabular}{lccccc}\toprule
+Example & $L$ before & $L$ after & $L$ by hand & $\Delta G^{\mathrm{year}}$ before & after\\\midrule
+\src{ovlp2} (threshold) & 1.14 & 1.04 & 1.040 & 16.64 & 18.17\\
+\src{ovlpgrp} (threshold) & 1.05 & 1.01 & 1.014 & 28.75 & 29.63\\
+specified counts (sires 6.5/3.5, dams 35/15) & 0.65 & 1.32 & 1.325 & 49.97 & 16.66\\\bottomrule
+\end{tabular}
+\end{table}
+
+In the specified-count example the response fell by a factor of three although the interval only doubled: the too-short interval had also inflated the lag between classes and therefore the genetic variance (breeding-goal variance 962 before, 612 after; the phenotypic variance of the first trait had risen to 112 from a base of 100).
+
+\begin{question}{Question 1}
+Is Eq.~\eqref{eq:interval} the intended definition: classes numbered from 1, weighted by the numbers selected, and the average of the two sexes dividing both paths? In particular, should the youngest class have age 1, or should ages be counted from a separately specified age at first offspring?
+\end{question}
+\begin{recommend}
+Keep Eq.~\eqref{eq:interval}. It is the standard Rendel--Robertson interval and matches what the code was evidently written to do.
+\end{recommend}
+
+\subsection{Question 2: the genetic lag between age classes}\label{sec:lag}
+At equilibrium every cohort of candidates is better than the cohort born one interval earlier by the population's annual genetic gain, $\Delta G^{\mathrm{year}}$ of Eq.~\eqref{eq:rr}. Male and female candidates born in the same year descend from the same parents, so their expected means are the same, and the mean of class $c$ relative to class 1 should be $-(c-1)\Delta G^{\mathrm{year}}$ for both sexes \cite{hill1974}. The program instead uses each sex's own path response:
+\begin{lstlisting}
+! trunc_delta (selroutines.f90): class means for the threshold search
+tmean(p)=tmean(1)-((p-1)*stotalresponse)                ! sires
+tmean(p)=tmean(nclass+1)-((p-nclass-1)*dtotalresponse)  ! dams
+! ovlp (selovlp.f90): breeding values of the selected, for the covariance mixture
+mean(q,p)=tempresponse-(q*sresponse(p)) !let op
+mean(q,p)=tempresponse-((q-nclass)*dresponse(p)) !let op
+\end{lstlisting}
+Here \src{stotalresponse} is $\Delta H_s^{\mathrm{year}}=S_s/L$, twice the sire path's contribution to the population gain, not a rate of change of any cohort mean. (\emph{Let op}: the original author seems to have had doubts here too.) When sires are selected much more intensely than dams, which is the usual case, older sire classes are placed too far behind and older dam classes too close. In the \src{ovlpgrp} example the sire lag is 41.9 and the dam lag 17.3 economic units per class, against a population gain of 29.6 (Figure~\ref{fig:agelag}).
+
+\begin{figure}[ht]
+\centering\includegraphics[width=\linewidth]{fig_agelag.pdf}
+\caption{Mean of each age class relative to the youngest, as coded (separately per sex) and under the population trend, for the \src{ovlpgrp} example.}\label{fig:agelag}
+\end{figure}
+
+We ran both lags through the program: (A) the population gain in the threshold search, (B) the population gain per trait in the covariance mixture, and both together.
+
+\begin{table}[ht]
+\centering\small
+\caption{Effect of using the population gain as the lag. $n$: selected from sire class 1/2 and dam class 1/2. Responses are annual, in economic units.}\label{tab:lag}
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{llcccc}\toprule
+Example & Lag used & $n$ selected & $L$ & $\Delta G^{\mathrm{year}}$ & $\sigma_H^2$\\\midrule
+\src{ovlp2} & as coded & 9.97/0.03/46.20/3.80 & 1.04 & 18.173 & 570.3\\
+ & population, both places & 9.90/0.10/48.13/1.87 & 1.02 & 18.235 & 570.8\\
+\src{ovlpgrp} & as coded & 10.00/0.00/194.50/5.50 & 1.01 & 29.626 & 512.1\\
+ & population, both places & 9.99/0.01/199.75/0.25 & 1.00 & 29.750 & 512.3\\
+specified counts & as coded & fixed & 1.32 & 16.662 & 612.3\\
+ & population, both places & fixed & 1.32 & 16.558 & 607.9\\\bottomrule
+\end{tabular}
+\end{table}
+
+The effect is below 1\% here because in these examples almost all parents come from the youngest class. It grows with the number of age classes and with the share of older parents; in specified-count mode, where older classes contribute by design, the effect on the variance is already visible.
+
+\begin{question}{Question 2}
+Should the lag between age classes be the population gain $\Delta G^{\mathrm{year}}$ (per trait, $\tfrac12(\Delta A_{s,a}^{\mathrm{year}}+\Delta A_{d,a}^{\mathrm{year}})$) for both sexes, or is there a reason for the per-sex path response?
+\end{question}
+\begin{recommend}
+Use the population gain in both places. We are fairly confident this is what the theory requires, and it would also remove the \emph{let op}. We have not changed it, because it is a change to the model rather than a programming error.
+\end{recommend}
+
+\subsection{Question 3: the former search range and clamp}
+Two limits in the original code bounded how intense selection across age classes could be. The Ridders search for $x_g$ in Eq.~\eqref{eq:agecount} was bracketed by $\pm1.5\sqrt{V_{I,g,c}}$ around each class mean, so it could never select fewer than $\bar\Phi(1.5)=6.7\%$ of the youngest class; when more intense selection was needed the root was not bracketed, the search gave up silently, and the selected numbers no longer added up to $M_g$. And the standardised truncation point $(x_g-m_{g,c})/\sqrt{V_{I,g,c}}$ was clamped to $[-3,3]$, so every age class always contributed at least $\bar\Phi(3)=0.135\%$ of its animals. The clamp was probably there because the old quadrature for $\bar\Phi$ broke down beyond about 4 standard deviations (it was off by orders of magnitude beyond 5). Both are now removed: $\bar\Phi$ is exact and the search covers $\pm8$ standard deviations.
+
+\begin{table}[ht]
+\centering\small
+\caption{\src{ovlpgrp} with 1000 young and 500 older sire candidates, as the number of sires varies, before and after removing the clamp. BG: breeding-goal variance; acc.: accuracy of the young-sire index; response: total annual response in the first trait.}\label{tab:clamp}
+\begin{tabular}{rcccc}\toprule
+& \multicolumn{2}{c}{before} & \multicolumn{2}{c}{after}\\\cmidrule(lr){2-3}\cmidrule(lr){4-5}
+Sires & young / old & BG, acc., response & young / old & BG, acc., response\\\midrule
+1 & 1.350 / 0.675 & 595.7, 0.746, 5.18 & 1.000 / 0.000 & 510.2, 0.704, 6.98\\
+5 & 4.325 / 0.675 & 549.3, 0.725, 5.64 & 5.000 / 0.000 & 511.4, 0.705, 6.25\\
+10 & 9.325 / 0.675 & 526.9, 0.713, 5.58 & 10.000 / 0.000 & 512.1, 0.705, 5.91\\
+40 & 39.325 / 0.675 & 515.2, 0.707, 5.05 & 39.965 / 0.035 & 514.3, 0.706, 5.13\\
+100 & 99.224 / 0.776 & 516.9, 0.708, 4.50 & identical & identical\\\bottomrule
+\end{tabular}
+\end{table}
+
+Before the change, the breeding-goal variance was U-shaped and the accuracy \emph{rose} as selection became more intense, both because of the forced 0.675 older sires. After it, variance and accuracy fall steadily with intensity, as the Bulmer effect predicts. (These numbers predate the generation-interval correction of Question~1.)
+
+\begin{question}{Question 3}
+Were the $\pm1.5$ standard-deviation bracket and the $\pm3$ clamp deliberate parts of the model, or numerical safeguards? Does the new behaviour in Table~\ref{tab:clamp} agree with what you would expect?
+\end{question}
+\begin{recommend}
+Keep them removed. They look like safeguards for the old quadrature, and with an exact tail they are no longer needed.
+\end{recommend}
+
+\subsection{Question 4: family structure under overlapping generations}
+In discrete generations the intensity used for the response is corrected for the correlation between the index values of sibs (the routine \src{rawl3}, after Rawlings \cite{rawlings1976} and Meuwissen \cite{meuwissen1991}). Under overlapping generations \src{rawl3} is still evaluated for every class, but its result is discarded and the uncorrected $i=\phi(t)/p$ is used.
+
+\begin{question}{Question 4}
+Was it intended that overlapping-generation responses are not corrected for family structure (for example because a single correction across age classes with a common truncation point is not well defined), or was the correction meant to be applied per class?
+\end{question}
+\begin{recommend}
+Leave as is unless you know of a suitable correction; document it as a limitation.
+\end{recommend}
+
+\subsection{Question 5: BLUP with groups}
+An earlier note in this project said that BLUP combined with full-sib, half-sib or progeny groups under overlapping generations gave an all-zero response. We could not reproduce this in 72 combinations, before or after the changes above, and the triggering input was not recorded.
+
+\begin{question}{Question 5}
+Do you recall such a case? The only related behaviour we can find is an index with BLUP as its only source, which correctly gives zero response because parental EBVs carry no information without phenotypes. The program now warns about this.
+\end{question}
+
+%======================================================================
+\section{Multistage selection}\label{sec:multistage}
+
+\subsection{How the program models multistage selection}
+With $m=2$ or 3 stages, each stage has its own index $I_j$, using all information available up to that stage. Candidates must pass every stage; with standardised indices $Z_j$ and correlation matrix $\ma R$, the truncation points satisfy $\Pr(Z_1>t_1)=p_1$, $\Pr(Z_1>t_1,Z_2>t_2)=p_1p_2$, and so on. The mean of the stage indices among the finally selected is the truncated-normal mean of Tallis \cite{tallis1961}:
+\begin{equation}\label{eq:tallis}
+\E[Z_j\mid\text{all pass}]=\frac{1}{P}\sum_{\ell=1}^m r_{j\ell}\,\phi(t_\ell)\,
+\Pr\!\big(Z_k>t_k\ \forall k\ne\ell \,\big|\, Z_\ell=t_\ell\big),
+\end{equation}
+where $P$ is the overall fraction selected. For three stages the conditional probability in each term is a bivariate normal tail with standardised thresholds $t_{k\mid\ell}=(t_k-r_{\ell k}t_\ell)/\sqrt{1-r_{\ell k}^2}$ and partial correlation
+\begin{equation}\label{eq:partial}
+r_{jk\mid\ell}=\frac{r_{jk}-r_{j\ell}r_{k\ell}}{\sqrt{(1-r_{j\ell}^2)(1-r_{k\ell}^2)}} .
+\end{equation}
+The response in each trait is then obtained by regressing the breeding values on the vector of stage indices.
+
+\subsection{Question 6: the stage correlations, $r_{13\mid2}$ and the 0.93 cap}
+The program approximates the correlation between stage indices by the ratio of accuracies, caps it at 0.93, and in three-stage selection sets one of the three partial correlations to zero:
+\begin{lstlisting}
+corrsrih12=srih/srih2          ! r12 = rIH,1 / rIH,2, then capped at 0.93
+corrsrih13=srih/srih3          ! r13, capped at 0.93
+corrsrih23=srih2/srih3         ! r23, capped at 0.93
+dumcorrsrih123=(corrsrih12-corrsrih13*corrsrih23)/((sqrt(1-corrsrih13**2))*(sqrt(1-corrsrih23**2)))
+dumcorrsrih132=0.0             ! r13|2
+dumcorrsrih231=(corrsrih23-corrsrih12*corrsrih13)/((sqrt(1-corrsrih12**2))*(sqrt(1-corrsrih13**2)))
+\end{lstlisting}
+
+\paragraph{The ratio of accuracies is exact here.} If each stage index is the best linear predictor of $H$ from its information $\ve x_j$, and the information is nested ($\ve x_1\subseteq\ve x_2\subseteq\ve x_3$, which the input routine enforces), then $\Cov(\ve x_j,H-I_\ell)=0$ for $j\le\ell$, so $\Cov(I_j,I_\ell)=\Var(I_j)$ and
+\[
+r_{j\ell}=\frac{\sigma_{I_j}}{\sigma_{I_\ell}}=\frac{r_{IH,j}}{r_{IH,\ell}} .
+\]
+All stages are evaluated with the same equilibrium covariances, so the condition holds; the printed index variances reproduce all three accuracies against a single $\sigma_H^2$.
+
+\paragraph{So is $r_{13\mid2}=0$.} With the ratio, $r_{12}r_{23}=(\sigma_1/\sigma_2)(\sigma_2/\sigma_3)=r_{13}$, so the numerator of Eq.~\eqref{eq:partial} for $r_{13\mid2}$ is exactly zero: given the stage-2 index, stages 1 and 3 are conditionally independent. Setting it to zero is therefore correct, and presumably why it was done.
+
+\paragraph{The cap breaks this.} If one correlation is capped and the others are not, $r_{12}r_{23}\ne r_{13}$ and the true $r_{13\mid2}$ is no longer zero. The cap binds in both of our multistage regression examples: the uncapped stage correlations were 0.977 (two stages) and 0.971, 0.870, 0.896 (three stages). With $r_{12}$ capped at 0.93 the partial correlation should be 0.224, not 0. We compared the program as coded with (A) $r_{13\mid2}$ computed from Eq.~\eqref{eq:partial} and with an exact model in which thresholds are solved exactly and nothing is capped.
+
+\begin{table}[ht]
+\centering\small
+\caption{Three-stage selection: total sire response after stage 3 (economic units) for variants of the \src{test3s} example. Errors are relative to the exact model.}\label{tab:stage3}
+\begin{tabular}{lccccc}\toprule
+Sire fractions per stage & as coded & (A) & no cap & error as coded & error with (A)\\\midrule
+0.5 / 0.2 / 0.1 (\src{test3s}) & 18.112 & 18.112 & 18.112 & $-0.00\%$ & $+0.00\%$\\
+0.1 / 0.5 / 0.2 & 17.778 & 18.046 & 18.041 & $-1.45\%$ & $+0.03\%$\\
+0.02 / 0.5 / 0.5 & 17.849 & 18.873 & 18.843 & $-5.30\%$ & $+0.13\%$\\
+0.05 / 0.2 / 0.5 & 18.553 & 18.879 & 18.867 & $-1.68\%$ & $+0.05\%$\\\bottomrule
+\end{tabular}
+\end{table}
+
+For one case we also checked Eq.~\eqref{eq:tallis} itself against direct numerical integration of the conditional normal: with the computed $r_{13\mid2}$ the means agree to $4\times10^{-9}$, with $r_{13\mid2}=0$ they are off by $4\times10^{-5}$.
+
+\paragraph{Why not remove the cap?} Because the cap protects the numerical integration, not the theory. The bivariate and trivariate normal probabilities are computed with Dutt's integral representation \cite{dutt1973} and Gauss--Hermite quadrature, whose accuracy collapses as the correlation approaches 1: we measured a maximum relative error of $2.5\times10^{-5}$ up to $r=0.93$, $5\times10^{-4}$ at 0.97, and complete failure at 0.99. In a two-stage example with an uncapped correlation of 0.9998, raising the cap to 0.99 gave 2.5 times, and removing it 7.6 times, the correct response. Where the integration does work, the cap costs at most about 1.7\% of response.
+
+\begin{question}{Question 6}
+Was the 0.93 cap introduced for the numerical integration, as it appears? Do you agree that with nested best-linear-predictor indices the ratio of accuracies is the intended correlation, and that $r_{13\mid2}$ should then be computed from Eq.~\eqref{eq:partial} rather than set to zero?
+\end{question}
+\begin{recommend}
+Compute $r_{13\mid2}$ from Eq.~\eqref{eq:partial}: it gives the same result whenever the cap does not bind, and removes a bias of up to 5\% when it does. Keep the 0.93 cap until the bivariate and trivariate normal integrals are replaced by a method that is accurate for correlations near 1, such as Genz's \cite{genz2004}; then remove it.
+\end{recommend}
+
+\subsection{Question 7: half-sib information when each sire has one dam}
+If $M_s=M_d$, every offspring of a sire is a full sib of the candidate and there are no paternal half sibs. The program says so (``half-sib information is thus not possible, and will be removed'') and removes half-sib sources, but only from the final-stage index. A half-sib group given as an earlier-stage source stays in that stage's index and receives large weights. In a two-stage example with 50 sires and 50 dams and a half-sib group at stage 1, the half-sib group got index weights of 1.08 and $-5.45$ on two traits, raising stage-1 accuracy from 0.508 to 0.537 and stage-1 response by 5.6\%, all from information that cannot exist. The final-stage response is unaffected.
+
+A related point: the program never checks the number of dams in a half-sib group against the mating ratio. A half-sib group represents the offspring of the candidate's sire by $m_H$ other dams, so presumably $m_H\le d-1$. Our own three-stage regression example uses half-sib groups of 200 dams with 20 dams per sire, and the program accepts it.
+
+\begin{question}{Question 7}
+Should half-sib sources be removed from every stage when $M_s=M_d$? And what is the intended meaning of the number of dams in a half-sib group: should it be limited to $d-1$, or can a half-sib group be defined more widely?
+\end{question}
+\begin{recommend}
+Remove half-sib sources from every stage. This applies the program's own stated rule consistently, and we would make the change unless you see a reason not to. Add a warning when $m_H>d-1$, without refusing the input.
+\end{recommend}
+
+%======================================================================
+\section{Rate of inbreeding}\label{sec:inbreeding}
+
+\subsection{How the program predicts the rate of inbreeding}
+The rate of inbreeding in one-stage discrete selection follows Bijma and Woolliams \cite{bijmawoolliams2000}: expected long-term contributions are obtained from the selective advantage of the parents, and a correction for finite family sizes is added. The correction (routines \src{Poissoncorr} and \src{hyper\_correct}) uses co-selection probabilities of sibs in the manner of Burrows, as reappraised by Wray, Woolliams and Thompson \cite{wray1990}. For a pair of sibs of sexes $u$ and $v$ with intra-class correlation $\rho_{uv}$ of their index values, the ratio of the probability that a sib is selected given that the other one is, to the unconditional probability, is
+\begin{equation}\label{eq:kappa}
+\kappa_{uv}=\frac{1}{p_v}\,\Phi\!\left(\frac{i_u\rho_{uv}-t_v}{\sqrt{1-k_u\rho_{uv}^2}}\right),
+\end{equation}
+and six such ratios (full and half sibs; male--male, male--female, female--female) give the variances of family sizes. Before this, each sample correlation is adjusted for finite population size,
+\[
+\rho \leftarrow \rho-\rho(1-\rho^2)\left(\frac{a}{M_s}+\frac{b}{M_d}\right),\qquad
+(a,b)=\begin{cases}(0.8634,\,0.954)&\text{full sibs},\\(1.4075,\,1.4581)&\text{half sibs}.\end{cases}
+\]
+
+\subsection{Question 8: the female fraction in the Wray et al.\ correction, and the jump at 20 sires}
+With fewer than 20 sires the selected fractions used in Eq.~\eqref{eq:kappa} are first adjusted. The code says this follows Wray et al.\ (1990) as used in Bijma and Woolliams (2000):
+\begin{lstlisting}
+!correction of the selected proportion according to Wray et al., 1990
+ IF(m<20) THEN
+      pmfs=(1.0-rhofsmm)*pm + rhofsmm*MAX(pm,1.0/REAL(m))
+      pffs=(1.0-rhofsff)*pf + rhofsff*MAX(pf,1.0/REAL(m))   ! females: 1/m
+      pmhs=(1.0-rhohsmm)*pm + rhohsmm*MAX(pm,1.0/REAL(m))
+      pfhs=(1.0-rhohsff)*pf + rhohsff*MAX(pf,1.0/REAL(m))   ! females: 1/m
+\end{lstlisting}
+(\src{m} is $M_s$, \src{f} is $M_d$.) That is, for a sib pair of sex $g$,
+\[
+p_g^{*}=(1-\rho_{gg})\,p_g+\rho_{gg}\max\!\left(p_g,\frac{1}{M_s}\right),
+\]
+for males \emph{and} females. Our reading of the adjustment: as $\rho\to1$, sibs have almost the same index, Eq.~\eqref{eq:kappa} with the infinite-population $p$ then predicts that nearly all sibs are co-selected, and in a finite population the probability of co-selection is bounded by the order of one over the number selected. That bound should depend on the number selected \emph{of the sex in question}, i.e.\ $1/M_d$ for female pairs. We see no reason why the number of sires should bound co-selection among female sibs. On the other hand, the switch itself depends only on $M_s$, and with $1/M_d$ the female adjustment would almost never take effect ($p_f<1/M_d$ is rare), which could be why it was written this way.
+
+The mixed (male--female) pairs take $i,k$ from the adjusted male fraction and $t,p$ from the adjusted female fraction, so the choice affects them too.
+
+\begin{table}[ht]
+\centering\small
+\caption{Predicted rate of inbreeding (\% per generation) as coded and with $1/M_d$ for the female fractions. One-stage selection based on the \src{test1} example; $p_f$ is the female selected fraction.}\label{tab:deltaf}
+\begin{tabular}{rrrccc}\toprule
+$M_s$ & $M_d$ & $p_f$ & $1/M_s$ & as coded & with $1/M_d$\\\midrule
+3 & 50 & 0.20 & 0.333 & 8.680 & 8.937\\
+3 & 50 & 0.05 & 0.333 & 10.183 & 11.868\\
+3 & 200 & 0.05 & 0.333 & 9.952 & 11.385\\
+5 & 50 & 0.05 & 0.200 & 8.217 & 9.514\\
+10 & 50 & 0.05 & 0.100 & 6.134 & 6.719\\
+10 & 200 & 0.20 & 0.100 & 4.046 & 4.046\\
+19 & 50 & 0.05 & 0.053 & 4.590 & 4.624\\
+20 & 50 & 0.05 & -- & 4.682 & 4.682\\\bottomrule
+\end{tabular}
+\end{table}
+
+The choice only matters when $M_s<20$ and $p_f<1/M_s$; then $1/M_d$ always gives a higher $\Delta F$, by up to 1.7 percentage points in our examples. With $p_f=0.2$, as in all our regression examples, nothing changes.
+
+Figure~\ref{fig:deltaf} also shows a second point. At 20 sires two things switch at once: the adjustment above is turned off, and \src{hyper\_correct} adds the $\beta$ terms of the long-term contributions. The predicted $\Delta F$ then \emph{rises} from 4.59\% with 19 sires to 4.68\% with 20. The header of \src{dFmtblup} notes that ``there may be some discontinuity in the prediction'' at this point.
+
+\begin{figure}[ht]
+\centering\includegraphics[width=\linewidth]{fig_deltaf.pdf}
+\caption{Predicted rate of inbreeding against the number of sires, with 50 dams and a female selected fraction of 0.05.}\label{fig:deltaf}
+\end{figure}
+
+\begin{question}{Question 8}
+(a) Should the female fractions in the Wray et al.\ adjustment use $1/M_d$ rather than $1/M_s$? Is there a published form of the adjustment we could check against? (b) Should the switch be on $M_s<20$ only, or on the number of parents of each sex? (c) Is the rise in $\Delta F$ at 20 sires acceptable, or should the two switches be made separately or smoothly?
+\end{question}
+\begin{recommend}
+(a) Use $1/M_d$ for the female fractions, if you agree and unless the original derivation says otherwise. (b, c) We have no recommendation without the derivation; at minimum the discontinuity should be documented for users.
+\end{recommend}
+
+%======================================================================
+\section{Numerical points, for information}\label{sec:numerics}
+These need no decision.
+\begin{itemize}
+\item \textbf{Asymmetry of the EBV covariance matrices.} The starting values of the sire and dam EBV covariance matrices $\ma S,\ma D$ use $h_q^2\Cov(A_p,A_q)$, which is not symmetric when heritabilities differ, and the update carries the asymmetry forward. It decays by about a factor of three per round and is at rounding level by round 13 of 25, so it does not affect the reported results; making the matrices symmetric changes no output. We may symmetrise them anyway for clarity.
+\item \textbf{Tolerance of the multistage threshold search.} The Newton search stops when the selected fraction is within $10^{-5}$ in absolute terms, which is coarse for small fractions (0.2\% relative at $p=0.005$, worth about 0.1\% of response). It now prints a warning when it does not converge within its 20 steps; before, non-convergence was silent.
+\item \textbf{One-round lag under overlapping generations.} Each class's phenotypic covariance matrix is rebuilt from the additive matrix of the previous round. This has no effect at convergence.
+\end{itemize}
+
+%======================================================================
+\section{What we would do next}
+Depending on your answers: compute $r_{13\mid2}$ (Question~6); remove half-sib sources from all stages and warn on large half-sib groups (Question~7); and, if you agree, change the age-class lag (Question~2) and the female fraction in the inbreeding correction (Question~8). Each would be a separate, documented change with before-and-after results on the regression examples. Replacing the bivariate and trivariate normal integration would follow, after which the 0.93 cap could go.
+
+We would be grateful for any answers, partial or not, and for pointers to derivations or notes from the original development, in particular for the inbreeding correction.
+
+%======================================================================
+\begin{thebibliography}{99}
+\bibitem{bijmawoolliams2000} Bijma, P. and J.A. Woolliams. 2000. Prediction of rates of inbreeding in populations selected on best linear unbiased prediction of breeding value. \emph{Genetics} 156:361--373. \href{https://doi.org/10.1093/genetics/156.1.361}{doi:10.1093/genetics/156.1.361}
+\bibitem{dutt1973} Dutt, J.E. 1973. A representation of multivariate normal probability integrals by integral transforms. \emph{Biometrika} 60:637--645. \href{https://doi.org/10.1093/biomet/60.3.637}{doi:10.1093/biomet/60.3.637}
+\bibitem{genz2004} Genz, A. 2004. Numerical computation of rectangular bivariate and trivariate normal and $t$ probabilities. \emph{Statistics and Computing} 14:251--260. \href{https://doi.org/10.1023/B:STCO.0000035304.20635.31}{doi:10.1023/B:STCO.0000035304.20635.31}
+\bibitem{hill1974} Hill, W.G. 1974. Prediction and evaluation of response to selection with overlapping generations. \emph{Animal Production} 18:117--139. \href{https://doi.org/10.1017/S0003356100017372}{doi:10.1017/S0003356100017372}
+\bibitem{meuwissen1991} Meuwissen, T.H.E. 1991. Reduction of selection differentials in finite populations with a nested full--half sib family structure. \emph{Biometrics} 47:195. \href{https://doi.org/10.2307/2532506}{doi:10.2307/2532506}
+\bibitem{rawlings1976} Rawlings, J.O. 1976. Order statistics for a special class of unequally correlated multinormal variates. \emph{Biometrics} 32:875. \href{https://doi.org/10.2307/2529271}{doi:10.2307/2529271}
+\bibitem{rendel1950} Rendel, J.M. and A. Robertson. 1950. Estimation of genetic gain in milk yield by selection in a closed herd of dairy cattle. \emph{Journal of Genetics} 50:1--8. \href{https://doi.org/10.1007/BF02986789}{doi:10.1007/BF02986789}
+\bibitem{tallis1961} Tallis, G.M. 1961. The moment generating function of the truncated multi-normal distribution. \emph{Journal of the Royal Statistical Society B} 23:223--229. \href{https://doi.org/10.1111/j.2517-6161.1961.tb00408.x}{doi:10.1111/j.2517-6161.1961.tb00408.x}
+\bibitem{wray1990} Wray, N.R., J.A. Woolliams and R. Thompson. 1990. Methods for predicting rates of inbreeding in selected populations. \emph{Theoretical and Applied Genetics} 80:503--512. \href{https://doi.org/10.1007/BF00226752}{doi:10.1007/BF00226752}
+\end{thebibliography}
+
+%======================================================================
+\appendix
+\section{Programming errors already fixed}\label{app:fixed}
+For completeness, the other corrections made since the original code, none of which raises a modelling question. Unless stated, they do not change any result on the regression examples.
+\begin{itemize}
+\item Overlapping generations crashed: two arrays were used before being allocated.
+\item Uninitialised values: the progeny-test common-environment fraction (read only when both progeny groups and common environment are requested, but always used; this one did change index weights when memory held other values), a BLUP flag in the four information-source routines, the group-size arrays, and a starting index variance.
+\item Divisions by zero for group types that are not configured, a square root of a transiently negative index variance, and a division by zero in \src{rawl3} at a correlation of exactly 1.
+\item Two-stage selection with $M_s=M_d$ left the mean dam-EBV sources of half-sib groups in the final index (with zero weight).
+\item Warnings added: when the requested number of parents cannot be selected under overlapping generations; when the multistage threshold search does not converge; and when an overlapping-generation index has a trait without phenotypic information and without genetic correlation to one that has.
+\item ``\% of total response'' prints \texttt{n/a} instead of dividing by a near-zero total.
+\end{itemize}
+
+\section{Reproducing the numbers}
+All results were produced from \src{fortran\_mac/} at commit \src{dbdd69f} with GNU Fortran 14.2.0. ``As coded'' is that commit; each alternative changed only the lines quoted in its section, in a scratch copy. The regression examples are in \src{tests/fixtures/}; the other inputs are variants of them that change the numbers of parents, selected fractions or information sources as stated in the tables. The inputs and modified sources can be provided on request.
+\end{document}

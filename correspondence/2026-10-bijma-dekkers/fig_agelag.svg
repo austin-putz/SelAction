@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 920 400" role="img" aria-label="Genetic lag of older age classes: as coded per sex path, and the population trend">
+  <defs><style>
+text{font-family:Arial,Helvetica,sans-serif;fill:#14243b;font-size:14px}
+.head{font-size:17px;font-weight:700}
+.small{font-size:13px;fill:#476276}
+.tiny{font-size:12px;fill:#476276}
+.s{fill:#e5f0ed;stroke:#2d756b;stroke-width:1.5}
+.d{fill:#e9eef5;stroke:#4f719b;stroke-width:1.5}
+.sdot{fill:#2d756b}
+.ddot{fill:#4f719b}
+.pdot{fill:#b07a12}
+.out{fill:#f7f8fa;stroke:#8294a5;stroke-width:1.4}
+.line{stroke:#8294a5;stroke-width:1.6;fill:none}
+.pline{stroke:#b07a12;stroke-width:2;fill:none;stroke-dasharray:6 4}
+.axis{stroke:#647e90;stroke-width:1.3;fill:none}
+.grid{stroke:#e3e8ee;stroke-width:1}
+.arrow{stroke:#647e90;stroke-width:2;fill:none;marker-end:url(#a)}
+</style><marker id="a" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L8 4L0 8Z" fill="#647e90"/></marker></defs>
+  <rect width="920" height="400" fill="white"/>
+  <text class="head" x="25" y="31">Mean of the candidates in each age class, relative to the youngest class</text>
+  <path class="grid" d="M110 95.4H560"/><text class="tiny" x="100" y="99.4" text-anchor="end">0</text>
+  <path class="grid" d="M110 146.3H560"/><text class="tiny" x="100" y="150.3" text-anchor="end">-20</text>
+  <path class="grid" d="M110 197.2H560"/><text class="tiny" x="100" y="201.2" text-anchor="end">-40</text>
+  <path class="grid" d="M110 248.0H560"/><text class="tiny" x="100" y="252.0" text-anchor="end">-60</text>
+  <path class="grid" d="M110 298.9H560"/><text class="tiny" x="100" y="302.9" text-anchor="end">-80</text>
+  <path class="axis" d="M110 70V330H560"/>
+  <text class="small" x="174.3" y="350" text-anchor="middle">age class 1</text>
+  <text class="small" x="335.0" y="350" text-anchor="middle">age class 2</text>
+  <text class="small" x="495.7" y="350" text-anchor="middle">age class 3</text>
+  <text class="small" x="335.0" y="372" text-anchor="middle">(born 0, 1, 2 cohort intervals before the youngest)</text>
+  <text class="small" transform="translate(40 200) rotate(-90)" text-anchor="middle">mean index / breeding goal (economic units)</text>
+  <path class="pline" d="M174.3 95.4L495.7 246.1"/>
+  <circle class="sdot" cx="160.3" cy="95.4" r="6"/>
+  <circle class="ddot" cx="188.3" cy="95.4" r="6"/>
+  <circle class="pdot" cx="174.3" cy="95.4" r="5"/>
+  <circle class="sdot" cx="321.0" cy="202.1" r="6"/>
+  <circle class="ddot" cx="349.0" cy="139.5" r="6"/>
+  <circle class="pdot" cx="335.0" cy="170.8" r="5"/>
+  <circle class="sdot" cx="481.7" cy="308.7" r="6"/>
+  <circle class="ddot" cx="509.7" cy="183.6" r="6"/>
+  <circle class="pdot" cx="495.7" cy="246.1" r="5"/>
+  <circle class="sdot" cx="600" cy="90" r="6"/><text x="614" y="95">sire classes, as coded</text>
+  <text class="tiny" x="614" y="112">sire-path annual response = 41.9 per class</text>
+  <circle class="ddot" cx="600" cy="140" r="6"/><text x="614" y="145">dam classes, as coded</text>
+  <text class="tiny" x="614" y="162">dam-path annual response = 17.3 per class</text>
+  <circle class="pdot" cx="600" cy="190" r="5"/><text x="614" y="195">population trend (both sexes)</text>
+  <text class="tiny" x="614" y="212">ΔG per year = ½(ΔH_s + ΔH_d) = 29.6</text>
+  <text class="tiny" x="600" y="255">Numbers: the ovlpgrp regression example.</text>
+  <text class="tiny" x="600" y="272">Candidates of both sexes born in the same</text>
+  <text class="tiny" x="600" y="289">year descend from the same parents, so</text>
+  <text class="tiny" x="600" y="306">their expected means should coincide.</text>
+</svg>

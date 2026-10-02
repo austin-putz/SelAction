@@ -1,0 +1,58 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 920 360" role="img" aria-label="Predicted rate of inbreeding against number of sires, as coded and with the alternative">
+  <defs><style>
+text{font-family:Arial,Helvetica,sans-serif;fill:#14243b;font-size:14px}
+.head{font-size:17px;font-weight:700}
+.small{font-size:13px;fill:#476276}
+.tiny{font-size:12px;fill:#476276}
+.s{fill:#e5f0ed;stroke:#2d756b;stroke-width:1.5}
+.d{fill:#e9eef5;stroke:#4f719b;stroke-width:1.5}
+.sdot{fill:#2d756b}
+.ddot{fill:#4f719b}
+.pdot{fill:#b07a12}
+.out{fill:#f7f8fa;stroke:#8294a5;stroke-width:1.4}
+.line{stroke:#8294a5;stroke-width:1.6;fill:none}
+.pline{stroke:#b07a12;stroke-width:2;fill:none;stroke-dasharray:6 4}
+.axis{stroke:#647e90;stroke-width:1.3;fill:none}
+.grid{stroke:#e3e8ee;stroke-width:1}
+.arrow{stroke:#647e90;stroke-width:2;fill:none;marker-end:url(#a)}
+</style><marker id="a" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L8 4L0 8Z" fill="#647e90"/></marker></defs>
+  <rect width="920" height="360" fill="white"/>
+  <text class="head" x="25" y="31">Predicted rate of inbreeding against the number of sires</text>
+  <path class="grid" d="M90 274.7H560"/><text class="tiny" x="82" y="278.7" text-anchor="end">4%</text>
+  <path class="grid" d="M90 224.2H560"/><text class="tiny" x="82" y="228.2" text-anchor="end">6%</text>
+  <path class="grid" d="M90 173.7H560"/><text class="tiny" x="82" y="177.7" text-anchor="end">8%</text>
+  <path class="grid" d="M90 123.2H560"/><text class="tiny" x="82" y="127.2" text-anchor="end">10%</text>
+  <path class="grid" d="M90 72.6H560"/><text class="tiny" x="82" y="76.6" text-anchor="end">12%</text>
+  <text class="tiny" x="142.2" y="318" text-anchor="middle">3</text>
+  <text class="tiny" x="177.0" y="318" text-anchor="middle">5</text>
+  <text class="tiny" x="264.1" y="318" text-anchor="middle">10</text>
+  <text class="tiny" x="351.1" y="318" text-anchor="middle">15</text>
+  <text class="tiny" x="420.7" y="318" text-anchor="middle">19</text>
+  <text class="tiny" x="438.1" y="318" text-anchor="middle">20</text>
+  <text class="tiny" x="525.2" y="318" text-anchor="middle">25</text>
+  <path class="axis" d="M90 50V300H560"/>
+  <text class="small" x="325" y="340" text-anchor="middle">number of sires M_s (50 dams)</text>
+  <path class="grid" d="M429.4 50V300" style="stroke:#c9a14a;stroke-dasharray:4 3"/>
+  <text class="tiny" x="435.4" y="62">M_s &lt; 20 branch switches off</text>
+  <path class="pline" d="M142.2 76.0 L177.0 135.4 L264.1 206.0 L420.7 259.0"/>
+  <path class="line" style="stroke:#2d756b;stroke-width:2" d="M142.2 118.5 L177.0 168.2 L264.1 220.8 L420.7 259.8"/>
+  <path class="line" style="stroke:#2d756b;stroke-width:2" d="M438.1 257.5 L525.2 275.4"/>
+  <circle class="sdot" cx="142.2" cy="118.5" r="5"/>
+  <circle class="sdot" cx="177.0" cy="168.2" r="5"/>
+  <circle class="sdot" cx="264.1" cy="220.8" r="5"/>
+  <circle class="sdot" cx="420.7" cy="259.8" r="5"/>
+  <circle class="sdot" cx="438.1" cy="257.5" r="5"/>
+  <circle class="sdot" cx="525.2" cy="275.4" r="5"/>
+  <circle class="pdot" cx="142.2" cy="76.0" r="5"/>
+  <circle class="pdot" cx="177.0" cy="135.4" r="5"/>
+  <circle class="pdot" cx="264.1" cy="206.0" r="5"/>
+  <circle class="pdot" cx="420.7" cy="259.0" r="5"/>
+  <circle class="sdot" cx="600" cy="90" r="6"/><text x="614" y="95">as coded: female fractions use 1/M_s</text>
+  <circle class="pdot" cx="600" cy="124" r="6"/><text x="614" y="129">alternative: female fractions use 1/M_d</text>
+  <text class="tiny" x="600" y="170">Female selected fraction p_f = 0.05 is below 1/M_s</text>
+  <text class="tiny" x="600" y="187">for M_s &lt; 20, so the choice matters here. With</text>
+  <text class="tiny" x="600" y="204">p_f = 0.2 (as in the test fixtures) both give the</text>
+  <text class="tiny" x="600" y="221">same answer. Note the rise from 19 to 20 sires,</text>
+  <text class="tiny" x="600" y="238">where both the adjustment and the extra β terms</text>
+  <text class="tiny" x="600" y="255">of hyper_correct switch at once.</text>
+</svg>
