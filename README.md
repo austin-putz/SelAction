@@ -73,13 +73,19 @@ SelAction is a Fortran-based program developed by Marc J.M. Rutten and Piter Bij
 
 `fortran_linux/` is **not** a rewrite — it's `fortran_orig/` with the minimum changes needed to satisfy a modern gfortran compiler (array-constructor syntax, line-continuation formatting, a couple of local-variable renames, one added `USE` statement). There is no separate "2.0" or "modernized" codebase; earlier drafts of this documentation referenced one, but it was never built and has been removed from these docs. `fortran_mac/` follows the same approach: it's a copy of `fortran_linux/` plus only the fixes made since (see `NEWS.md`).
 
-### Files (present in `fortran_orig/` and `fortran_linux/` today; same set expected once `fortran_mac/` exists)
+### Files
+
+`fortran_mac/` has a single main program, `selaction.f90`, which builds the
+single `selaction` binary. `fortran_orig/` and `fortran_linux/` still have
+the original three main programs (`mssel.f90`, `msseld.f90`, `msselo.f90`).
+`fortran_linux/` will be brought in line when it is next updated.
 
 | File | Description | Lines | Purpose |
 |------|-------------|-------|---------|
-| `mssel.f90` | Main program (full version) | 45 | Entry point supporting all selection types |
-| `msseld.f90` | Discrete generations main | 46 | Entry point for discrete generations only |
-| `msselo.f90` | Overlapping generations main | 46 | Entry point for overlapping generations only |
+| `selaction.f90` (`fortran_mac/`) | Main program | 45 | Entry point supporting all selection types (1/2/3 stages, overlapping generations) |
+| `mssel.f90` (`fortran_orig/`, `fortran_linux/`) | Main program (full version) | 45 | Entry point supporting all selection types; `fortran_mac/selaction.f90` is this file renamed |
+| `msseld.f90` (`fortran_orig/`, `fortran_linux/`) | Discrete generations main | 46 | Entry point for discrete generations only |
+| `msselo.f90` (`fortran_orig/`, `fortran_linux/`) | Overlapping generations main | 46 | Entry point for overlapping generations only |
 | `seldiscrete.f90` | Discrete selection routines | 4,794 | Core calculations for 1-, 2-, 3-stage selection |
 | `selovlp.f90` | Overlapping generations | ~1,000 | Overlapping generation calculations |
 | `selinbreeding.f90` | Inbreeding calculations | 368 | BLUP-based inbreeding rate calculations |
@@ -132,20 +138,18 @@ All three binaries build with this exact sequence and are covered by regression 
 
 ### macOS
 
-Install gfortran with Homebrew (`brew install gcc` - gfortran ships inside Homebrew's `gcc` formula; Apple's own `gcc` is clang and has no Fortran compiler). Then use the same commands, same file order, from `fortran_mac/`:
+Install gfortran with Homebrew (`brew install gcc` - gfortran ships inside Homebrew's `gcc` formula; Apple's own `gcc` is clang and has no Fortran compiler). `fortran_mac/` builds **one program, `selaction`**, which handles every selection scheme (1, 2 or 3 stages, or overlapping generations). Use the same file order, with the main program last:
 
 ```bash
 cd fortran_mac/
 
-gfortran -o mssel seltools.f90 selparameters.f90 selroutines.f90 \
-         selinbreeding.f90 selovlp.f90 seldiscrete.f90 mssel.f90
-gfortran -o msseld seltools.f90 selparameters.f90 selroutines.f90 \
-         selinbreeding.f90 seldiscrete.f90 msseld.f90
-gfortran -o msselo seltools.f90 selparameters.f90 selroutines.f90 \
-         selovlp.f90 msselo.f90
+gfortran -g -O2 -Wall -o selaction seltools.f90 selparameters.f90 selroutines.f90 \
+         selinbreeding.f90 selovlp.f90 seldiscrete.f90 selaction.f90
 ```
 
-Verified with GNU Fortran 14.2.0 on macOS (x86_64): all three binaries build without errors and pass every fixture (`tests/run_tests.sh fortran_mac`). No macOS-specific source changes were needed; `fortran_mac/` differs from `fortran_linux/` only by bug fixes listed in `NEWS.md`.
+Use the flags shown. Without them, the `blup1` fixture differs in the sign of one near-zero value (`-0.000` vs `0.000`). That difference is a compiler floating-point effect, not a bug; see `tests/README.md`, "Numerical precision and the reference toolchain". `-Wall` prints many warnings on the legacy code; they are expected.
+
+Verified with GNU Fortran 14.2.0 on macOS (x86_64): `selaction` builds without errors and passes every fixture (`tests/run_tests.sh fortran_mac`). No macOS-specific source changes were needed; `fortran_mac/` differs from `fortran_linux/` only by bug fixes listed in `NEWS.md`.
 
 ### Original version (reference only)
 
@@ -169,6 +173,18 @@ cd fortran_orig/
 ## Program Descriptions
 
 ### Main Executables
+
+#### selaction (`fortran_mac/`)
+The single program users run. It is the former `mssel` renamed, and it
+supports every selection scheme (the features listed under `mssel` below).
+The `.out` report banner still reads "MSSEL version 1.1" for now.
+
+```bash
+./selaction
+```
+
+The three programs below are built from `fortran_orig/` and
+`fortran_linux/`.
 
 #### mssel (Full Version)
 The complete program supporting all selection schemes:
@@ -323,10 +339,13 @@ See `docs/SelAction_Technical_Report.pdf` and the individual module reports (`do
 
 ## Usage Examples
 
+All examples use `selaction` from `fortran_mac/`. With `fortran_linux/`,
+use `./mssel` or `./msselo` instead.
+
 ### Example 1: Single Trait, Single Stage
 
 ```bash
-./mssel
+./selaction
 # Select: 1 (single stage)
 # Input: filename example1, 1 trait, h² 0.3, 10 sires, 100 dams, own performance
 ```
@@ -334,7 +353,7 @@ See `docs/SelAction_Technical_Report.pdf` and the individual module reports (`do
 ### Example 2: Two Traits, Two Stages
 
 ```bash
-./mssel
+./selaction
 # Select: 2 (two stage)
 # Trait 1: h² = 0.4, economic weight = 1.0
 # Trait 2: h² = 0.2, economic weight = 0.5
@@ -345,7 +364,8 @@ See `docs/SelAction_Technical_Report.pdf` and the individual module reports (`do
 ### Example 3: Overlapping Generations
 
 ```bash
-./msselo
+./selaction
+# Select: o (overlapping generations)
 # filename overlap1, 1 trait, 3 age classes
 ```
 
@@ -355,7 +375,7 @@ See `examples/output_discrete_1_stage/` for a complete 3-trait, single-stage wor
 
 ## Known Issues
 
-- **Overlapping generations: use `fortran_mac/` sources.** `msselo` in `fortran_orig/`/`fortran_linux/` often selects the wrong number of sires (e.g. 67.5 instead of 10) because of a too-narrow threshold search; fixed in `fortran_mac/` only so far (the code is plain gfortran and builds on Linux too). See `NEWS.md`.
+- **Overlapping generations: use `selaction` from `fortran_mac/`.** `msselo` in `fortran_orig/`/`fortran_linux/` often selects the wrong number of sires (e.g. 67.5 instead of 10) because of a too-narrow threshold search; fixed in `fortran_mac/` only so far (the code is plain gfortran and builds on Linux too). See `NEWS.md`.
 - **`selroutines.f90` contains dead, duplicated code.** Somewhere in its history, the entire `dFmtblup` inbreeding function (and its helpers `create_C`, `Poissoncorr`, `hyper_correct`) got copy-pasted into `selroutines.f90` in addition to living in `selinbreeding.f90`/`MODULE Inbreeding` where it's actually used. This is present in `fortran_orig/` too — it's not something introduced by the Linux fork. It only becomes a build error because `selinbreeding.f90` does `USE selroutines` unrestricted, which collides with its own `dFmtblup`. `fortran_linux/selinbreeding.f90` fixes this with `USE selroutines, ONLY: trunc` (the one symbol it actually needs); `fortran_orig/` is untouched by that fix, so `mssel`/`msseld` from `fortran_orig/` still won't build even with correct file order. `fortran_mac/` carries the same fix.
 - **Singular matrix errors**: usually caused by inconsistent genetic parameters (correlation matrices that aren't positive definite) — check inputs before assuming a code bug.
 - **Module not found / build order**: always compile `seltools.f90` → `selparameters.f90` → `selroutines.f90` → `selinbreeding.f90`/`selovlp.f90`/`seldiscrete.f90` → the main program, in that order (see [Installation and Compilation](#installation-and-compilation)). The main program must always come last.

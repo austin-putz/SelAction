@@ -9,6 +9,27 @@
   directory; every change below is *fortran_mac only* and has not been
   applied to `fortran_linux/`.
 
+* **One program: `selaction`.** `fortran_mac/` now builds a single binary,
+  `selaction`, instead of `mssel`/`msseld`/`msselo`.
+  * `mssel.f90` was renamed to `selaction.f90` (`program selaction`); no
+    other change. It accepts every mode: 1, 2 or 3 stages, or `o`.
+  * `msseld.f90` and `msselo.f90` were removed. They were cut-down copies
+    of `mssel.f90` that refused some modes, and all three called the same
+    routines. The originals remain in `fortran_orig/`.
+  * Output is byte-identical. All 7 fixtures, including `ovlp2`/`ovlpgrp`,
+    which previously ran only through `msselo`, pass through `selaction`.
+    `tests/fixtures/manifest.txt` lists `selaction` for every fixture and
+    keeps the old names for `fortran_linux/`.
+  * The macOS build command is now
+    `gfortran -g -O2 -Wall -o selaction ... selaction.f90`. The flags
+    matter: without them, `blup1` shows `-0.000` instead of `0.000` for one
+    near-zero index weight. The same happens when the old `mssel.f90` is
+    built without flags, so this is a floating-point/compiler effect, not
+    a change in the code.
+  * The banner in `.out` reports still reads "MSSEL version 1.1"; renaming
+    it will come with a version bump.
+  * `fortran_linux/` is unchanged and still builds the three old programs.
+
 ## Changes to results (overlapping generations, `msselo`)
 
 These change `msselo` output. Discrete-generation output (`mssel`/`msseld`

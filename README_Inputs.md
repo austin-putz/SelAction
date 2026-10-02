@@ -81,7 +81,7 @@ The sel1s subroutine normally runs interactively, prompting for each input. Howe
 
 ### To Run Interactively:
 ```bash
-./mssel
+./selaction            # fortran_mac/; use ./mssel with fortran_linux/
 # Choose option "1" for single-stage selection
 # Answer prompts one by one
 ```
@@ -93,7 +93,7 @@ echo "1" > input.txt          # Choose single-stage selection
 echo "eADG" >> input.txt      # Filename
 echo "3" >> input.txt         # Number of traits
 # ... continue with all parameters in sequence
-./mssel < input.txt
+./selaction < input.txt
 ```
 
 ## Key Validation Rules

@@ -37,14 +37,15 @@ brought up incrementally).
 
 ## How a fixture is invoked
 
-`mssel`/`msseld`/`msselo` are interactive programs: they read prompts from
+`selaction` (`fortran_mac/`) and `mssel`/`msseld`/`msselo` (`fortran_linux/`)
+are interactive programs: they read prompts from
 stdin, and separately re-open a file by name (derived from the "filenames"
 prompt answer) to read the bulk of the input and to write output. So a
 fixture named `test1` is run as:
 
 ```bash
 cp tests/fixtures/test1.in ./          # must be present under this exact name
-./mssel < test1.in                      # produces ./test1.out
+./selaction < test1.in                  # produces ./test1.out (./mssel for fortran_linux)
 ```
 
 `run_tests.sh` does this in a scratch temp dir per run and diffs the result
@@ -62,9 +63,16 @@ the `.in` file itself under 8 characters and identical to each other.
 
 ## manifest.txt
 
-Each fixture must declare which binaries it's valid for. The three programs
-have different interactive prompt sequences:
+Each fixture must declare which binaries it's valid for.
 
+`fortran_mac/` builds **one binary, `selaction`** (the former `mssel`,
+renamed). It accepts every mode, so it is listed for **every** fixture.
+`fortran_linux/` still builds the original three programs, and their
+entries stay until that directory is updated. `run_tests.sh` skips any
+listed binary that isn't built, so each platform runs only its own. The
+three legacy programs have different interactive prompt sequences:
+
+- `selaction` (`fortran_mac/`) — identical to `mssel`; accepts `1/2/3/o`
 - `mssel` — asks `1/2/3 stage selection, or overlapping generations? (1/2/3/o)`
 - `msseld` — asks the same `1/2/3` question but rejects `o`
 - `msselo` — only accepts `o`; feeding it a `1/2/3` fixture makes it

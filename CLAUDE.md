@@ -27,7 +27,13 @@ gfortran -o msselo seltools.f90 selparameters.f90 selroutines.f90 selovlp.f90 ms
 
 ### macOS
 
-`fortran_mac/` is a copy of `fortran_linux/` (taken 2026-10-01) and builds with the same three commands and file order, from inside `fortran_mac/`. Verified with GNU Fortran 14.2.0 (Homebrew `gcc`, x86_64): builds clean, passes all fixtures via `tests/run_tests.sh fortran_mac`. No macOS-specific source edits were needed. It is now the active development directory: new fixes land here first and are recorded in `NEWS.md`; `fortran_linux/` is not automatically kept in sync, so check `NEWS.md` for fixes it is missing. macOS builds also emit `*.dSYM` debug-symbol bundles (gitignored).
+`fortran_mac/` is a copy of `fortran_linux/` (taken 2026-10-01). Since 2026-10-02 it builds **one binary, `selaction`**: `mssel.f90` was renamed `selaction.f90`, and `msseld.f90`/`msselo.f90` were deleted (cut-down copies; originals remain in `fortran_orig/`). Build from inside `fortran_mac/` with:
+
+```bash
+gfortran -g -O2 -Wall -o selaction seltools.f90 selparameters.f90 selroutines.f90 selinbreeding.f90 selovlp.f90 seldiscrete.f90 selaction.f90
+```
+
+The flags matter: without them, `blup1` flips `-0.000` to `0.000` for one near-zero weight (a floating-point effect, not a code change). `-Wall` prints ~1400 legacy warnings; they are expected. The "MSSEL version 1.1" banner in `.out` is deliberately unchanged for now. Verified with GNU Fortran 14.2.0 (Homebrew `gcc`, x86_64): builds clean, passes all fixtures via `tests/run_tests.sh fortran_mac`. No macOS-specific source edits were needed. It is now the active development directory: new fixes land here first and are recorded in `NEWS.md`; `fortran_linux/` is not automatically kept in sync, so check `NEWS.md` for fixes it is missing. macOS builds also emit `*.dSYM` debug-symbol bundles (gitignored).
 
 ### Original version (reference only, never modify)
 
@@ -67,14 +73,15 @@ selroutines.f90 (mathematical routines, depends on both above)
     ↓
 seldiscrete.f90, selovlp.f90, selinbreeding.f90 (depend on all above)
     ↓
-Main programs (mssel.f90, msseld.f90, msselo.f90)
+Main programs (fortran_mac: selaction.f90; fortran_orig/fortran_linux: mssel.f90, msseld.f90, msselo.f90)
 ```
 
 ### Key Components
 
-- `mssel.f90` — full version supporting all selection types
-- `msseld.f90` — discrete generations only
-- `msselo.f90` — overlapping generations only
+- `selaction.f90` (`fortran_mac/` only) — the single main program; the former `mssel.f90`, all selection types
+- `mssel.f90` (`fortran_orig/`, `fortran_linux/`) — full version supporting all selection types
+- `msseld.f90` (`fortran_orig/`, `fortran_linux/`) — discrete generations only
+- `msselo.f90` (`fortran_orig/`, `fortran_linux/`) — overlapping generations only
 - `seldiscrete.f90` — core discrete-generation selection calculations (`sel1s`, `sel2s`, `sel3s`)
 - `selovlp.f90` — overlapping generation calculations
 - `selinbreeding.f90` — BLUP-based inbreeding calculations
