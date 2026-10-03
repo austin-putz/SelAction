@@ -26,9 +26,24 @@
     near-zero index weight. The same happens when the old `mssel.f90` is
     built without flags, so this is a floating-point/compiler effect, not
     a change in the code.
-  * The banner in `.out` reports still reads "MSSEL version 1.1"; renaming
-    it will come with a version bump.
+  * The banner was left unchanged in this step and updated in the next
+    entry.
   * `fortran_linux/` is unchanged and still builds the three old programs.
+
+* **Banner: SelAction version 1.2.** The banner printed on screen and at
+  the top of every `.out` report (`intro` in `selroutines.f90`) used to read
+  "Multi-Trait Index Selection Software MSSEL … version 1.1".
+  * It now reads **SelAction, Multi-Trait Index Selection Software,
+    version 1.2**.
+  * It keeps the original credit: "developed by Marc J.M. Rutten and Piter
+    Bijma, Animal Breeding and Genetics Group, Wageningen University, 2000".
+  * It adds "updated by Austin Putz and Jack Dekkers, Iowa State
+    University, 2026".
+  * This is a text change only. All 7 fixture `.out` files were
+    regenerated because each starts with the banner. Before they were
+    replaced, each new report was checked to be byte-identical to the old
+    one everywhere below the banner. The only difference is the banner,
+    which is 4 lines longer.
 
 ## Changes to results (overlapping generations, `msselo`)
 

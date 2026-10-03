@@ -177,7 +177,10 @@ cd fortran_orig/
 #### selaction (`fortran_mac/`)
 The single program users run. It is the former `mssel` renamed, and it
 supports every selection scheme (the features listed under `mssel` below).
-The `.out` report banner still reads "MSSEL version 1.1" for now.
+Its banner (on screen and at the top of every `.out` report) reads
+"SelAction … version 1.2". It credits the original authors (Rutten and
+Bijma, Wageningen University, 2000) and the current update (Austin Putz and
+Jack Dekkers, Iowa State University, 2026).
 
 ```bash
 ./selaction

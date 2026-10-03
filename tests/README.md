@@ -84,6 +84,12 @@ before adding a manifest entry.
 
 ## Numerical precision and the reference toolchain
 
+**Banner regeneration (2026-10-02).** All 7 `.out` files were regenerated
+when the banner changed to "SelAction … version 1.2" (see `NEWS.md`).
+Before they were replaced, each new report was checked to be byte-identical
+to the old one everywhere below the banner. Only the banner lines changed,
+so no result values moved.
+
 These fixtures are captured by actually running a real binary and diffing
 byte-for-byte, so they're sensitive to the exact `gfortran` build that
 produced them. The canonical reference toolchain used to capture the
