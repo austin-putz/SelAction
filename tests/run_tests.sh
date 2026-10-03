@@ -11,12 +11,14 @@
 # or cpp/ build dir exists, pass its name to run the same fixtures against
 # that implementation instead - the fixtures never change.
 #
-# Binaries listed in manifest.txt that don't exist in platform_dir are
-# skipped (with a warning), not failed - this lets the harness run against
-# a platform that builds only some of the listed binaries without the whole
-# suite refusing to run. fortran_mac builds the single `selaction` binary,
-# so the old mssel/msseld/msselo entries are skipped there, while
+# A listed binary that isn't built in platform_dir is skipped (SKIP), as
+# long as at least one of the fixture's binaries ran. fortran_mac builds only
+# `selaction`, so the old mssel/msseld/msselo entries are skipped there;
 # fortran_linux builds the old three and skips `selaction`.
+#
+# Nothing is allowed to pass silently: a fixture with NONE of its binaries
+# built (e.g. a failed or forgotten build), or with its .in/.out missing,
+# is a FAIL. The script exits non-zero on any FAIL.
 
 set -u
 
@@ -48,10 +50,12 @@ while IFS=: read -r base binaries description; do
   out_file="$FIXTURES_DIR/$base.out"
 
   if [[ ! -f "$in_file" || ! -f "$out_file" ]]; then
-    echo "SKIP  $base (missing $base.in or $base.out in $FIXTURES_DIR)"
-    skip=$((skip + 1))
+    echo "FAIL  $base (missing $base.in or $base.out in $FIXTURES_DIR)"
+    fail=$((fail + 1))
     continue
   fi
+
+  ran=0
 
   IFS=',' read -ra binary_list <<< "$binaries"
   for binary in "${binary_list[@]}"; do
@@ -63,6 +67,7 @@ while IFS=: read -r base binaries description; do
       continue
     fi
 
+    ran=$((ran + 1))
     tmp_dir="$(mktemp -d)"
     cp "$in_file" "$tmp_dir/$base.in"
 
@@ -86,6 +91,11 @@ while IFS=: read -r base binaries description; do
       fail=$((fail + 1))
     fi
   done
+
+  if [[ "$ran" -eq 0 ]]; then
+    echo "FAIL  $base (none of its binaries [$binaries] are built in $PLATFORM_DIR)"
+    fail=$((fail + 1))
+  fi
 done < "$MANIFEST"
 
 echo ""

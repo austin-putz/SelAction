@@ -31,9 +31,12 @@ tests/run_tests.sh fortran_mac    # once that directory exists, run against it i
 ```
 
 Binaries listed in `manifest.txt` that aren't built in the target platform
-directory are skipped (not failed), so the suite can run against a
-partially-built platform (useful once `fortran_mac/` exists and is being
-brought up incrementally).
+directory are skipped (not failed) **as long as at least one of that
+fixture's binaries ran**. A fixture with none of its binaries built, or
+with a missing `.in`/`.out`, is a FAIL, so a broken or forgotten build can't
+pass silently. The SKIP rule exists because platforms build different
+binaries: `fortran_mac/` builds only `selaction`, and `fortran_linux/`
+builds `mssel`/`msseld`/`msselo`.
 
 ## How a fixture is invoked
 

@@ -53,6 +53,15 @@
   3-trait example. The copies in `fortran_linux/` stay until that directory
   is updated.
 
+* `tests/run_tests.sh` no longer passes when nothing ran. Before, a
+  platform with no binaries built reported "0 passed, 0 failed" and exited
+  successfully. Now these count as FAIL and the script exits non-zero:
+  * a fixture with **none** of its listed binaries built
+  * a fixture whose `.in`/`.out` is missing
+
+  A single listed binary that isn't built is still a SKIP, as long as
+  another one ran.
+
 ## Changes to results (overlapping generations, `msselo`)
 
 These change `msselo` output. Discrete-generation output (`mssel`/`msseld`
