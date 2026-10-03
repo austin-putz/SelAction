@@ -45,6 +45,14 @@
     one everywhere below the banner. The only difference is the banner,
     which is 4 lines longer.
 
+* Removed `fortran_mac/input.txt` and `fortran_mac/input.out`. They were a
+  leftover sample run from the Linux fork, not part of the original
+  distribution, and they no longer matched each other: re-running
+  `input.txt` gives a half-sib group of 10 animals instead of the 190 in
+  `input.out`. Nothing referenced them. The `test1` fixture covers the same
+  3-trait example. The copies in `fortran_linux/` stay until that directory
+  is updated.
+
 ## Changes to results (overlapping generations, `msselo`)
 
 These change `msselo` output. Discrete-generation output (`mssel`/`msseld`
