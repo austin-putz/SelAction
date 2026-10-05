@@ -10,7 +10,9 @@ trait names). Directory names updated 2026-10-05: `fortran_mac/` is now
 to test on every platform.
 
 **Revision 3 splits this plan around `plans/modernize-inputs-and-outputs.md`**
-(agreed with Austin 2026-10-05; see "Order and hand-off" at the end):
+(agreed with Austin 2026-10-05; see "Order and hand-off" at the end). The
+combined, numbered list of steps from both plans, with dependencies and
+status, is [`implementation-sequence.md`](implementation-sequence.md):
 
 1. **First: T0, T1, T2** (and T6 CI, optional this early). These protect
    the I/O work: T1's strict build and T2's input-path fixtures make the

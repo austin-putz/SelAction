@@ -81,7 +81,7 @@ SelAction is being brought up to date at Iowa State University (Austin Putz and 
 - **Technical report:** `docs/SelAction_Technical_Report.pdf` ties every equation to the routine that computes it.
 - **Open modelling questions** for the original authors are written up with evidence in [`correspondence/2026-10-bijma-dekkers/SelAction_open_questions.pdf`](correspondence/2026-10-bijma-dekkers/SelAction_open_questions.pdf). The model itself has **not** been changed while these are open.
 
-**Next:** the first part of test hardening ([`plans/test-hardening.md`](plans/test-hardening.md)), then scenario-based YAML input and CSV output ([`plans/modernize-inputs-and-outputs.md`](plans/modernize-inputs-and-outputs.md)), then the correctness tests. See [Roadmap](#roadmap).
+**Next:** the first part of test hardening ([`plans/test-hardening.md`](plans/test-hardening.md)), then scenario-based YAML input and CSV output ([`plans/modernize-inputs-and-outputs.md`](plans/modernize-inputs-and-outputs.md)), then the correctness tests. See [Roadmap](#roadmap) and the step-by-step order in [`plans/implementation-sequence.md`](plans/implementation-sequence.md).
 
 ## Overview
 

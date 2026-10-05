@@ -8,7 +8,9 @@ implemented yet. The defaults listed in the last section stand unless
 Austin changes them.
 
 **This plan starts after test-hardening T0, T1 and T2** (agreed with
-Austin 2026-10-05; see the order in `plans/test-hardening.md`, revision 3).
+Austin 2026-10-05). The combined, numbered list of steps from both plans,
+with dependencies and status, is
+[`implementation-sequence.md`](implementation-sequence.md).
 This plan changes no equations, so it only needs the tests that guard the
 code it edits; the rest of test-hardening (T3–T5, T7: unit, correctness
 and property tests) follows Phases 1–3 and builds on `results.csv` and
