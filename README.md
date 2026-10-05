@@ -1,15 +1,34 @@
-<p align="center">
-  <img src="logos/SelAction_Logo_ChatGPT_v1.png" alt="SelAction logo" width="260">
+<!-- badges: start -->
+<table align="center" border="0">
+<tr>
+<td width="230" align="center" valign="middle">
+<img src="logos/SelAction_hex.png" alt="SelAction hex logo" width="210" />
+</td>
+<td valign="middle">
+
+<h1 align="left" style="border-bottom: none;">SelAction</h1>
+
+<p align="left"><strong>Predict selection response and rate of inbreeding in livestock breeding programs.</strong></p>
+
+<p align="left">
+<a href="https://www.repostatus.org/#active"><img src="https://img.shields.io/badge/status-active%20development-2ea44f.svg?style=for-the-badge" alt="Status: active development" /></a>
+<a href="NEWS.md"><img src="https://img.shields.io/badge/version-1.2-4ecdc4.svg?style=for-the-badge" alt="Version 1.2" /></a>
+<a href="LICENSE"><img src="https://img.shields.io/badge/license-GPL--3.0-blue.svg?style=for-the-badge" alt="License: GPL-3.0" /></a>
+<a href="https://doi.org/10.1093/jhered/93.6.456"><img src="https://img.shields.io/badge/cite-J.%20Hered.%202002-b31b1b.svg?style=for-the-badge" alt="Citation: Journal of Heredity 2002" /></a>
 </p>
 
-# SelAction: Selection Index Program for Animal Breeding
+<p align="left">
+<a href="https://fortran-lang.org"><img src="https://img.shields.io/badge/Fortran-90-734f96.svg?style=for-the-badge&logo=fortran&logoColor=white" alt="Fortran 90" /></a>
+<a href="https://gcc.gnu.org/fortran/"><img src="https://img.shields.io/badge/tested%20with-gfortran%2014.2-orange.svg?style=for-the-badge&logo=gnu&logoColor=white" alt="Tested with gfortran 14.2" /></a>
+<a href="#installation-and-compilation"><img src="https://img.shields.io/badge/build-make-427819.svg?style=for-the-badge&logo=gnu&logoColor=white" alt="Build: make" /></a>
+<a href="tests/README.md"><img src="https://img.shields.io/badge/tests-7%20golden%20fixtures-1f9c5a.svg?style=for-the-badge" alt="Tests: 7 golden fixtures" /></a>
+<a href="docs/SelAction_Technical_Report.pdf"><img src="https://img.shields.io/badge/docs-technical%20report-555555.svg?style=for-the-badge&logo=latex&logoColor=white" alt="Docs: technical report" /></a>
+</p>
 
-[![License: GPL v3](https://img.shields.io/badge/license-GPLv3-blue.svg)](LICENSE)
-[![Repo Status: Active](https://www.repostatus.org/badges/latest/active.svg)](https://www.repostatus.org/#active)
-[![Language: Fortran](https://img.shields.io/badge/language-Fortran-734f96.svg)](https://fortran-lang.org/)
-[![gfortran](https://img.shields.io/badge/tested%20with-gfortran%2014.2-orange.svg)](https://gcc.gnu.org/fortran/)
-
-A multi-trait selection index program for animal breeding, predicting genetic response and rate of inbreeding for a range of selection schemes.
+</td>
+</tr>
+</table>
+<!-- badges: end -->
 
 ## Citation
 
