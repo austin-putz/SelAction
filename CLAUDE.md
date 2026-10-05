@@ -137,7 +137,7 @@ A separate R package, `SelActionR`, reimplements this program's selection index 
 
 ## Documentation Resources
 
-- `manual_orig/SelAction_Manual.md` — user manual with GUI instructions (transcription of the original PDF)
-- `manual_orig/SelAction_Program_Description.md` — technical description and mathematics (transcription of the original PDF)
+- `manual_orig/SelAction_Manual.pdf` (transcribed in `SelAction_Manual.md`) — a step-by-step guide to the original **Windows GUI** version of SelAction (click-through windows for traits, population, groups, index and correlations). That GUI was written in Borland Delphi for Windows 95/98/NT (stated in the Program Description). It is **not** in this repository and the manual does **not** describe how to run the Fortran code here; use it for what the inputs mean, not for how to enter them.
+- `manual_orig/SelAction_Program_Description.pdf` (transcribed in `SelAction_Program_Description.md`) — a short description of what SelAction does and how it works: the selection-index, Bulmer-effect, multistage and inbreeding methods behind the predictions. It applies to this Fortran code as well, but `docs/SelAction_Technical_Report.pdf` is the reference for the equations as actually implemented.
 - `docs/SelAction_Technical_Report.pdf` and the per-module reports in `docs/` — detailed derivations
 - `README_Inputs.md` — field-by-field input file mapping guide
