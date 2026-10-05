@@ -2,14 +2,28 @@
 
 ## Status
 
-**Design approved, revision 8 (2026-10-02).** All of Austin's questions
+**Design approved, revision 9 (2026-10-05).** All of Austin's questions
 are answered, and multiple sweeps per folder are confirmed. Nothing is
-implemented yet. The next step is Phase 1. The defaults listed in the last
-section stand unless Austin changes them.
+implemented yet. The defaults listed in the last section stand unless
+Austin changes them.
+
+**This plan waits on `plans/test-hardening.md`.** That plan runs first
+(Austin's rule: the Fortran must be "bullet proof" before bigger changes).
+Two of its steps also do work this plan needs, so they are not repeated
+here:
+
+- **T1's `tests/tools/strict.sh`** is the strict debug build. Phase 2
+  reuses it.
+- **T2's branch map and new golden fixtures** are the branch-coverage
+  fixtures Phase 1 needs for the translator. Phase 1 only adds fixtures
+  for branches T2 leaves uncovered.
+
+Revision 9 changes no design. It updates binary names to `selaction`,
+line references, fixture counts and the overlaps above.
 
 This plan does not touch any selection-index, response or inbreeding
 equations. Every Fortran change is I/O or control flow. The existing `.out`
-text report stays byte-identical, so all 7 fixtures in `tests/fixtures/`
+text report stays byte-identical, so all fixtures in `tests/fixtures/`
 keep passing at every step.
 
 ## Decisions so far
@@ -41,7 +55,7 @@ This work supports that goal rather than competing with it:
 
 ## How it works today (what we're replacing)
 
-- `mssel`/`msseld`/`msselo` read about 160 `read *` prompts from stdin:
+- `selaction` reads about 160 `read *` prompts from stdin:
   105 in `seldiscrete.f90`, 33 in `selovlp.f90` and 22 in `selroutines.f90`.
   **Which prompt comes next depends on earlier answers.** For example, an
   economic value is only asked if a trait's use is `b`, common-environment
@@ -52,7 +66,7 @@ This work supports that goal rather than competing with it:
   does, the program asks "change sire or dam information sources s/d ?" or
   "new value:" for `gcorr` (`seldiscrete.f90` ~480–575). Piped input can't
   predict these, so the program re-prompts on exhausted stdin. An invalid
-  `stages` answer does the same (`mssel.f90`, `goto 1000`).
+  `stages` answer does the same (`selaction.f90`, `goto 1000`).
 - **Two output files, both limited.** `<fnam>.in` echoes the answers with
   `! comment` labels. `<fnam>.out` is a fixed-format report: `f10.3`, so
   only 3 decimals, with different layouts per scheme. `fnam` is
@@ -62,7 +76,7 @@ This work supports that goal rather than competing with it:
   `dFmtblup` inconsistency). Warnings are ad hoc (`selovlp.f90:1139–1183`,
   and multistage non-convergence from eed1236). The exit code is always 0.
 - **Info-source input codes** (confirmed in `info_sources`,
-  `selroutines.f90:285`): 1 = own performance, 2 = BLUP breeding values,
+  `selroutines.f90:293`): 1 = own performance, 2 = BLUP breeding values,
   4–23 = full-sib group k, 24–43 = half-sib group k, 64–83 = progeny group
   k, and `-1` ends the list. The code sorts the list, so order doesn't
   matter.
@@ -445,25 +459,26 @@ that a mistake must make SelAction fail loudly, not finish quietly.)
 
 ### Test builds
 
-The test runner gets a second build of each binary with
-`-fcheck=bounds,do,mem,pointer -finit-real=snan -ffpe-trap=invalid,zero,overflow`.
-Every fixture, valid and invalid, runs against it too. Any out-of-bounds
+The strict debug build comes from test-hardening T1
+(`tests/tools/strict.sh`: `-fcheck=bounds,do,mem,pointer
+-finit-real=snan -ffpe-trap=invalid,zero,overflow`). This plan adds its
+negative (invalid-input) fixtures to that run, so every fixture, valid and
+invalid, runs against it. Any out-of-bounds
 access or use of an uninitialised value then fails loudly instead of
 silently corrupting a result.
 
 ## Architecture
 
-> **Update 2026-10-02:** `fortran_mac/` now builds a single binary,
-> `selaction`, which accepts every scheme. Wherever this plan says
-> `mssel`/`msseld`/`msselo`, read `selaction`. The driver always calls
-> `selaction`; it never chooses between binaries.
+`fortran_mac/` builds a single binary, `selaction`, which accepts every
+scheme. The driver always calls `selaction`; it never chooses between
+binaries.
 
 ```
 scenarios/base.yaml + scenarios/*.yaml
         │   Rscript driver/selaction.R run --folder scenarios
         │   (merge → check conflicts → validate all → translate)
         ▼
-  legacy answer stream (<scenario>.in)  ──►  mssel / msseld / msselo --batch
+  legacy answer stream (<scenario>.in)  ──►  selaction --batch
                                                  │
                                                  ├─ <scenario>.out           (unchanged text report)
                                                  ├─ <scenario>.results.csv   (NEW, written by Fortran)
@@ -634,23 +649,14 @@ gets a `NEWS.md` entry. Work happens in `fortran_mac/` and `driver/` only.
   branch of `sel1s`/`sel2s`/`sel3s`/`ovlp`/`info_sources*`.
 - The `import` command (legacy `.in` → YAML).
 - **Branch-coverage fixtures.** The translator must reproduce the prompt
-  order exactly, but the 7 existing fixtures don't exercise every
-  conditional branch. Add a fixture for each branch no fixture covers yet,
-  for example:
-  - separate indices for sires and dams (`indexdiff=y`)
-  - common environment off in discrete selection
-  - groups and progeny info in 2- and 3-stage selection
-  - `fixed` (rather than truncation) selection under overlapping
-    generations
-  - goal-only traits
-
-  First, map the branches by walking every conditional `read *` and
-  recording which fixture covers it. These fixtures go through the normal
-  `tests/fixtures/` + `manifest.txt` route and also strengthen regression
-  coverage of the Fortran itself.
-- **Acceptance:** for every fixture (the 7 existing ones and the new
-  branch-coverage ones), `import` then translate gives a byte-identical
-  `.out`.
+  order exactly, so every conditional `read *` branch needs a fixture.
+  Test-hardening T2 builds the branch map and most of these fixtures
+  (`sxd1`–`sxd3`, `noce1`, `goalonly`, `prog2s`/`prog3s`, `ovlpfix`, …).
+  Phase 1 starts from that map and adds a fixture only for a branch T2
+  leaves uncovered, through the normal `tests/fixtures/` +
+  `manifest.txt` route.
+- **Acceptance:** for every fixture in `tests/fixtures/`, `import` then
+  translate gives a byte-identical `.out`.
 
 **Phase 2: batch-mode hardening (Fortran control flow only)**
 - A `--batch` flag: no banner padding on stdout.
@@ -661,7 +667,7 @@ gets a `NEWS.md` entry. Work happens in `fortran_mac/` and `driver/` only.
 - The input guards from "Fortran guards: second line of defence" above:
   group counts, trait/age-class counts, info-source codes, proportions,
   and `iostat=` on reads.
-- A strict debug build (`-fcheck=bounds,…`) added to the test runner.
+- The negative fixtures are added to T1's strict build (`strict.sh`).
 - **Acceptance:** fixtures stay byte-identical. Negative fixtures exit fast
   with the right code, including 21 groups, code 99 and text in a numeric
   field. All fixtures pass under the strict build.
@@ -711,7 +717,7 @@ gets a `NEWS.md` entry. Work happens in `fortran_mac/` and `driver/` only.
 ## Testing strategy
 
 - **Existing fixtures:** byte-identical through every phase.
-- **Round trip:** `.in → YAML → .in → .out` for all 7 fixtures.
+- **Round trip:** `.in → YAML → .in → .out` for every fixture.
 - **Structured output:** golden `results.csv` (with tolerance) and the
   `.out` ↔ CSV consistency check.
 - **Merge and conflict cases:** one test folder per row of the conflict
