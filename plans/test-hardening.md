@@ -393,7 +393,7 @@ Fortran is never changed to make it pass without that review.
    decided in T4 design.
 4. **Published examples.**
    - Re-run the worked examples in Rutten et al. (2002) and in the original
-     manual (`manual/`, `examples/output_discrete_1_stage/`) and compare
+     manual (`manual_orig/`, `examples/output_discrete_1_stage/`) and compare
      the printed results.
    - For ΔF, compare the Bijma & Woolliams (2000) predictions for cases
      they tabulate.

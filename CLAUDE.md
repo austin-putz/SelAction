@@ -58,7 +58,7 @@ The top-level `Makefile` is the only build system (no CMake/fpm). `fortran_orig/
 | `fortran_orig/` | Original Fortran code from Piter Bijma | **Never modify — treat as read-only reference** |
 | `fortran/` | The working code (version 1.2), one source tree for all platforms (formerly `fortran_mac/`) | Working — active development directory and the only build, see "Build" above |
 | `build/` | Build output from `make` (binary, `.mod` files, `.dSYM`) | Gitignored, per machine; never commit binaries |
-| `manual/` | User manual + program description (Markdown + PDF) | Reference documentation |
+| `manual_orig/` | Original user manual and program description: the PDFs are the originals; the `.md`/`.html` files are transcriptions of them | **Never modify the PDFs.** The transcriptions are edited only by Austin |
 | `docs/` | LaTeX technical reports on the underlying methods | Reference documentation |
 | `examples/` | Sample input files and a worked GUI example | Reference/test fixtures |
 | `tests/` | Canonical `.in`/`.out` regression fixtures + `run_tests.sh`, shared across all platform builds and the R port | Working |
@@ -100,6 +100,7 @@ Main programs (fortran: selaction.f90; fortran_orig: mssel.f90, msseld.f90, msse
 - Maintain module dependency order during compilation (see above).
 - `fortran/` is **not** an independent rewrite of `fortran_orig/` — it's the same code with the minimum edits needed to satisfy a modern compiler, plus only the fixes recorded in `NEWS.md`.
 - Keep one source tree. Don't create per-platform copies (`fortran_linux/`, `fortran_windows/`, ...); platform differences belong in build commands or CI, not in forked sources.
+- **Never modify the original PDFs in `manual_orig/`** (`SelAction_Manual.pdf`, `SelAction_Program_Description.pdf`). The Markdown/HTML transcriptions next to them (`*.md`, `*_OCR.*`, `.css`, `build_html.sh`) are Austin's modern versions of those PDFs; leave them to him unless asked.
 - **Never edit anything under `fortran_orig/`.** If a fix is needed, make it in `fortran/` and record it in `NEWS.md`.
 - `fortran/selinbreeding.f90` restricts its `USE selroutines` to `USE selroutines, ONLY: trunc`. Both `selroutines.f90` and `selinbreeding.f90` (in `fortran_orig/` too) contain a full copy of `dFmtblup` and its helpers (`create_C`, `Poissoncorr`, `hyper_correct`). **The live copy is the one in `selroutines.f90`**: `sel1s` gets it via `use selroutines`, and `MODULE Inbreeding` in `selinbreeding.f90` is never `USE`d anywhere — it is compiled into `mssel`/`msseld` but dead (and has its own defects, see the technical report's known issues). A blanket `USE selroutines` inside `selinbreeding.f90` would import a second `dFmtblup` and collide with that module's own definition, so the `ONLY: trunc` restriction is what lets the dead module compile; it has no effect on numerics.
 
@@ -136,7 +137,7 @@ A separate R package, `SelActionR`, reimplements this program's selection index 
 
 ## Documentation Resources
 
-- `manual/SelAction_Manual.md` — user manual with GUI instructions
-- `manual/SelAction_Program_Description.md` — technical description and mathematics
+- `manual_orig/SelAction_Manual.md` — user manual with GUI instructions (transcription of the original PDF)
+- `manual_orig/SelAction_Program_Description.md` — technical description and mathematics (transcription of the original PDF)
 - `docs/SelAction_Technical_Report.pdf` and the per-module reports in `docs/` — detailed derivations
 - `README_Inputs.md` — field-by-field input file mapping guide

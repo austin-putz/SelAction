@@ -112,7 +112,7 @@ SelAction is a Fortran program developed by Marc J.M. Rutten and Piter Bijma at 
 | `fortran_orig/` | Original Fortran code from Piter Bijma | Reference only, never modified. Does not build with a current gfortran |
 | `tests/` | Regression test inputs/outputs and runner, shared by all builds | Working, 7 test inputs |
 | `docs/` | LaTeX technical reports on the methods as implemented | Complete; updated October 2026 |
-| `manual/` | Original user manual and program description (Markdown + PDF) | Reference; describes the original Windows GUI |
+| `manual_orig/` | Original user manual and program description (PDF), with Markdown/HTML transcriptions | Reference; describes the original Windows GUI. The PDFs are never modified |
 | `examples/` | Sample input files and a worked GUI-based example | Reference |
 | `correspondence/` | Write-ups sent to collaborators (e.g. open questions for the original authors) | — |
 | `plans/` | Design plans for larger changes, with their status | — |

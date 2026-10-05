@@ -2,6 +2,10 @@
 
 ## Build
 
+* 2026-10-05: `manual/` renamed `manual_orig/`, matching `fortran_orig/`.
+  Its two PDFs are the original documents and are never modified; the
+  Markdown/HTML files beside them are transcriptions. Files moved
+  unchanged; references updated and the technical report PDF rebuilt.
 * 2026-10-05: **build with `make`; output goes to `build/`.** A top-level
   `Makefile` builds `fortran/` into `build/selaction` (with the `.mod`
   files and macOS `.dSYM` there too), so `fortran/` holds only source.
