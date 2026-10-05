@@ -1,5 +1,21 @@
 # SelAction (development version)
 
+## Removed dead code
+
+* 2026-10-05: **`fortran/selinbreeding.f90` deleted** (test-hardening T0,
+  step 1 of `plans/implementation-sequence.md`). It held `MODULE
+  Inbreeding`, an older copy of `dFmtblup` and its helpers that was
+  compiled into `selaction` but never `USE`d. The rate of inbreeding is
+  still calculated by the live `dFmtblup` in `selroutines.f90`, exactly
+  as before.
+  * Dropped from the `Makefile` and from the build-by-hand command.
+  * Results unchanged: all 7 fixtures byte-identical, 6/6 error cases;
+    the strict debug build differs only by the known `blup1` `-0.000`.
+  * The original file is still in `fortran_orig/`.
+  * The `blup1` description in `tests/fixtures/manifest.txt` wrongly
+    said its inbreeding branch was in `selinbreeding.f90`; it now names
+    `selroutines.f90`.
+
 ## Input checks
 
 * 2026-10-05: **bad file and trait names now stop the run instead of being

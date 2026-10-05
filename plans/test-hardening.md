@@ -88,7 +88,8 @@ with GCC's `gcov`) running all 7 fixtures.
 
 `selinbreeding.f90` is expected to show 0%. It holds `MODULE Inbreeding`,
 a dead duplicate of the live `dFmtblup` in `selroutines.f90`: it is
-compiled but never `USE`d (see `CLAUDE.md`).
+compiled but never `USE`d (see `CLAUDE.md`). Measured before T0 removed
+it from `fortran/` on 2026-10-05.
 
 **Branches matter more than lines here.** About half of the if/else paths
 in the two main driver files have never been taken by any test.
@@ -258,6 +259,9 @@ doesn't need extra R packages beyond what generating the references used.
 
 ### T0: Remove dead code (`selinbreeding.f90`)
 
+**Done 2026-10-05** (see `plans/progress.md`).
+
+
 - Run `git rm fortran/selinbreeding.f90`.
 - Drop it from `SOURCES` in the top-level `Makefile`, and from the
   "without make" fallback command in `README.md` and `CLAUDE.md`.
@@ -287,7 +291,7 @@ doesn't need extra R packages beyond what generating the references used.
   line and branch table from 1.2.
   - It locates GCC's `gcov` next to `gfortran`. Apple's `/usr/bin/gcov` is
     LLVM's and can't read GCC's coverage data files.
-  - It excludes `selinbreeding.f90`.
+  - (It no longer needs to exclude `selinbreeding.f90`: T0 removed it.)
   - With `--min-lines N`, it fails below a threshold.
 - **`tests/tools/compare_out.R`:** compares two `.out` files. Non-numeric
   text must match exactly. Numbers must agree within an absolute/relative

@@ -26,7 +26,7 @@ All build output goes to `build/` (gitignored); `fortran/` stays source-only. Va
 
 ```bash
 mkdir -p build
-gfortran -g -O2 -Wall -J build -o build/selaction fortran/seltools.f90 fortran/selparameters.f90 fortran/selroutines.f90 fortran/selinbreeding.f90 fortran/selovlp.f90 fortran/seldiscrete.f90 fortran/selaction.f90
+gfortran -g -O2 -Wall -J build -o build/selaction fortran/seltools.f90 fortran/selparameters.f90 fortran/selroutines.f90 fortran/selovlp.f90 fortran/seldiscrete.f90 fortran/selaction.f90
 ```
 
 The flags matter: without them, `blup1` flips `-0.000` to `0.000` for one near-zero weight (a floating-point effect, not a code change). `-Wall` prints ~1400 legacy warnings; they are expected. The banner (`intro` in `selroutines.f90`; printed on screen and at the top of every `.out`) reads "SelAction … version 1.2", with the original Rutten & Bijma (Wageningen, 2000) credit plus "updated by Austin Putz and Jack Dekkers, Iowa State University, 2026". Changing banner text changes every fixture `.out`. When regenerating them, first verify each new report is byte-identical below the banner. Verified with GNU Fortran 14.2.0 (Homebrew `gcc`, macOS x86_64): builds clean, passes all fixtures via `make test`. The same build should work on Linux, Apple Silicon and Windows (MSYS2/WSL gfortran) but those are not yet verified (test-hardening T6). New fixes land here and are recorded in `NEWS.md`. Prebuilt downloads (GitHub Releases) are planned in `plans/releases.md`, not started.
@@ -74,7 +74,7 @@ selparameters.f90 (global parameters, depends on seltools.f90)
     ↓
 selroutines.f90 (mathematical routines, depends on both above)
     ↓
-seldiscrete.f90, selovlp.f90, selinbreeding.f90 (depend on all above)
+seldiscrete.f90, selovlp.f90 (depend on all above; fortran_orig/ also has selinbreeding.f90 here)
     ↓
 Main programs (fortran: selaction.f90; fortran_orig: mssel.f90, msseld.f90, msselo.f90)
 ```
@@ -87,7 +87,7 @@ Main programs (fortran: selaction.f90; fortran_orig: mssel.f90, msseld.f90, msse
 - `msselo.f90` (`fortran_orig/` only) — overlapping generations only
 - `seldiscrete.f90` — core discrete-generation selection calculations (`sel1s`, `sel2s`, `sel3s`)
 - `selovlp.f90` — overlapping generation calculations
-- `selinbreeding.f90` — `MODULE Inbreeding`, an unused duplicate of `dFmtblup` (never `USE`d; the live rate-of-inbreeding code is in `selroutines.f90`). Scheduled for removal from `fortran/` (test-hardening T0)
+- `selinbreeding.f90` (`fortran_orig/` only) — `MODULE Inbreeding`, an unused duplicate of `dFmtblup` (never `USE`d; the live rate-of-inbreeding code is in `selroutines.f90`). Removed from `fortran/` on 2026-10-05 (test-hardening T0); don't bring it back
 - `selparameters.f90` — global parameters and shared variables
 - `selroutines.f90` — selection index, information-source input, covariance updates, matrix utilities (e.g. `invrt`, `trunc`), and the live `dFmtblup` (rate of inbreeding)
 - `seltools.f90` — statistical/distribution functions (`gcef`, `sabf`, `sintvi`, `rawl3`, `dutt*`)
@@ -102,7 +102,7 @@ Main programs (fortran: selaction.f90; fortran_orig: mssel.f90, msseld.f90, msse
 - Keep one source tree. Don't create per-platform copies (`fortran_linux/`, `fortran_windows/`, ...); platform differences belong in build commands or CI, not in forked sources.
 - **Never modify the original PDFs in `manual_orig/`** (`SelAction_Manual.pdf`, `SelAction_Program_Description.pdf`). The Markdown/HTML transcriptions next to them (`*.md`, `*_OCR.*`, `.css`, `build_html.sh`) are Austin's modern versions of those PDFs; leave them to him unless asked.
 - **Never edit anything under `fortran_orig/`.** If a fix is needed, make it in `fortran/` and record it in `NEWS.md`.
-- `fortran/selinbreeding.f90` restricts its `USE selroutines` to `USE selroutines, ONLY: trunc`. Both `selroutines.f90` and `selinbreeding.f90` (in `fortran_orig/` too) contain a full copy of `dFmtblup` and its helpers (`create_C`, `Poissoncorr`, `hyper_correct`). **The live copy is the one in `selroutines.f90`**: `sel1s` gets it via `use selroutines`, and `MODULE Inbreeding` in `selinbreeding.f90` is never `USE`d anywhere — it is compiled into `mssel`/`msseld` but dead (and has its own defects, see the technical report's known issues). A blanket `USE selroutines` inside `selinbreeding.f90` would import a second `dFmtblup` and collide with that module's own definition, so the `ONLY: trunc` restriction is what lets the dead module compile; it has no effect on numerics.
+- `fortran_orig/selinbreeding.f90` holds a second, dead copy of `dFmtblup` and its helpers (`create_C`, `Poissoncorr`, `hyper_correct`), with its own defects (see the technical report's known issues). **The live copy is the one in `selroutines.f90`**: `sel1s` gets it via `use selroutines`. Its unrestricted `USE selroutines` imports a second `dFmtblup`, which is why the original `mssel`/`msseld` don't build. `fortran/` worked around that with `USE selroutines, ONLY: trunc` until the file was deleted from `fortran/` (2026-10-05, test-hardening T0).
 
 ### Testing
 
@@ -120,7 +120,7 @@ Main programs (fortran: selaction.f90; fortran_orig: mssel.f90, msseld.f90, msse
 ## Plans and current status
 
 - **Order (agreed 2026-10-05):** `plans/implementation-sequence.md` is the single numbered list of steps from both plans below, with dependencies and status; update its status column when a step is done, and add a summary of the finished step to `plans/progress.md` (template inside; also update its "Current position" section). `plans/progress.md` is where Austin checks where things stand. In short: test-hardening T0–T2 (+ T6 CI if wanted) → I/O Phases 1–3 → test-hardening T3–T5, T7 (alongside I/O Phases 4–5) → model changes from Jack/Piter's answers → R port.
-- `plans/test-hardening.md` — **approved (rev 3), next up, not started** (except the first error tests in `tests/errors/`). T0 delete `selinbreeding.f90` from `fortran/`; T1 tooling (`strict.sh`, `coverage.sh`, `compare_out.R`, `run_all.sh`); T2 coverage fixtures; T3 unit tests; T4/T5 correctness and property tests (drafted by Claude, *provisional* until verified by Austin/Jack/Piter); T6/T7 CI and coverage gate.
+- `plans/test-hardening.md` — **approved (rev 3), in progress.** T0 delete `selinbreeding.f90` from `fortran/` (done 2026-10-05); T1 tooling (`strict.sh`, `coverage.sh`, `compare_out.R`, `run_all.sh`); T2 coverage fixtures; T3 unit tests; T4/T5 correctness and property tests (drafted by Claude, *provisional* until verified by Austin/Jack/Piter); T6/T7 CI and coverage gate.
 - `plans/modernize-inputs-and-outputs.md` — **approved (rev 12), starts after test-hardening T0–T2.** Long trait names are handled by driver-generated short labels, not by widening the Fortran. R driver reading YAML scenario folders → legacy answer stream → `selaction --batch`; Fortran writes `results.csv`; no equation changes.
 - `plans/releases.md` — **not started; after test-hardening T6.** Tested prebuilt binaries (macOS Intel/Apple Silicon, Linux, Windows) on GitHub Releases, so non-programmers (e.g. Jack) can run SelAction without compiling.
 - `plans/document.md` — docs-site idea, not started; written before the code was consolidated into `fortran/`, so its "current state" is out of date.

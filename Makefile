@@ -28,8 +28,8 @@ endif
 # Order matters: gfortran compiles left to right, and each module must be
 # compiled before anything that USEs it. The main program comes last.
 # Add new modules here, in dependency order.
-SOURCES := seltools.f90 selparameters.f90 selroutines.f90 selinbreeding.f90 \
-           selovlp.f90 seldiscrete.f90 selaction.f90
+SOURCES := seltools.f90 selparameters.f90 selroutines.f90 selovlp.f90 \
+           seldiscrete.f90 selaction.f90
 
 BIN := $(BUILD)/selaction$(EXE)
 

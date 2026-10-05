@@ -138,7 +138,6 @@ Line counts below are for `fortran/`.
 | `selroutines.f90` | Index and utility routines | 3,538 | Selection index, information sources, covariance updates, matrix routines, and the live rate-of-inbreeding code (`dFmtblup`) |
 | `seltools.f90` | Statistical functions | 1,412 | Normal distribution, truncation, finite-population correction of intensity (`rawl3`), multivariate normal integrals |
 | `selparameters.f90` | Global parameters | 120 | Shared variable declarations |
-| `selinbreeding.f90` | Unused duplicate | 368 | `MODULE Inbreeding`, an older copy of `dFmtblup`. It is compiled but never used; the live copy is in `selroutines.f90`. Scheduled for removal from `fortran/` |
 
 ## Installation and Compilation
 
@@ -243,8 +242,7 @@ Run the same command by hand from the top of the repository. `gfortran` compiles
 mkdir -p build
 gfortran -g -O2 -Wall -J build -o build/selaction \
          fortran/seltools.f90 fortran/selparameters.f90 fortran/selroutines.f90 \
-         fortran/selinbreeding.f90 fortran/selovlp.f90 fortran/seldiscrete.f90 \
-         fortran/selaction.f90
+         fortran/selovlp.f90 fortran/seldiscrete.f90 fortran/selaction.f90
 ```
 
 Verified with GNU Fortran 14.2.0 on macOS (x86_64): `selaction` builds without errors and passes every test (`make test`).
@@ -398,7 +396,7 @@ An excerpt from `tests/fixtures/test1.out`:
 
 ## Mathematical Background
 
-This is a short summary. `docs/SelAction_Technical_Report.pdf` gives the full equations as implemented, with the routine that computes each one. The module reports (`docs/seldiscrete_report.pdf`, `docs/selovlp_report.pdf`, `docs/selinbreeding_report.pdf`) go into more detail.
+This is a short summary. `docs/SelAction_Technical_Report.pdf` gives the full equations as implemented, with the routine that computes each one. The module reports (`docs/seldiscrete_report.pdf`, `docs/selovlp_report.pdf`, `docs/selinbreeding_report.pdf`) go into more detail; the last describes the unused inbreeding module, which is now only in `fortran_orig/`.
 
 ### Selection index
 
@@ -515,11 +513,8 @@ make test
   Names are checked: a file or trait name longer than 8 characters, containing a space, or (for traits) used twice now stops the run with `-error-30-` instead of being silently cut.
 
   Stricter checks are planned ([`plans/modernize-inputs-and-outputs.md`](plans/modernize-inputs-and-outputs.md)).
-- **`selinbreeding.f90` is unused.** Both `selroutines.f90` and `selinbreeding.f90` contain a full copy of `dFmtblup` and its helpers (`create_C`, `Poissoncorr`, `hyper_correct`). The live copy is the one in `selroutines.f90`. `MODULE Inbreeding` in `selinbreeding.f90` is compiled but never used.
-  - This is also why the original `mssel`/`msseld` won't build: `selinbreeding.f90` does an unrestricted `USE selroutines`, which imports a second `dFmtblup`.
-  - `fortran/` restricts it to `USE selroutines, ONLY: trunc`.
-  - Removing the file from `fortran/` is planned (`plans/test-hardening.md`, step T0).
-- **Module not found / build order:** `make` handles this. By hand, compile `seltools.f90` → `selparameters.f90` → `selroutines.f90` → `selinbreeding.f90`/`selovlp.f90`/`seldiscrete.f90` → the main program, in that order. The main program must always come last.
+- **`selinbreeding.f90` removed from `fortran/` (2026-10-05).** It held `MODULE Inbreeding`, an unused older copy of `dFmtblup`; the live copy is in `selroutines.f90`, so results did not change. The file is still in `fortran_orig/`, where its unrestricted `USE selroutines` imports a second `dFmtblup` and is why the original `mssel`/`msseld` won't build.
+- **Module not found / build order:** `make` handles this. By hand, compile `seltools.f90` → `selparameters.f90` → `selroutines.f90` → `selovlp.f90`/`seldiscrete.f90` → the main program, in that order. The main program must always come last.
 
 ## Troubleshooting
 
@@ -579,7 +574,7 @@ Error: Line truncated
 ## Roadmap
 
 1. **Test hardening, part 1** ([`plans/test-hardening.md`](plans/test-hardening.md), T0–T2):
-   - remove the unused `selinbreeding.f90`
+   - remove the unused `selinbreeding.f90` (done 2026-10-05)
    - test tooling: a scripted strict debug build, coverage measurement, tolerant output comparison
    - test inputs for every untested feature and input path
    - automated builds on macOS and Linux (and Windows), possibly here already

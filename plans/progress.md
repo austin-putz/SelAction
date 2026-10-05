@@ -6,8 +6,9 @@ finished, newest first.** Read the top entry to see where things stand.
 
 ## Current position
 
-- **Last finished:** groundwork before step 1 (see below).
-- **Next:** step 1, T0: delete the dead `selinbreeding.f90`.
+- **Last finished:** step 1, T0: deleted the dead `selinbreeding.f90`.
+- **Next:** step 2, T1: test tooling (`strict.sh`, `coverage.sh`,
+  `compare_out.R`, `run_all.sh`).
 - **Waiting on others:** answers from Piter Bijma and Jack Dekkers to the
   open modelling questions, and any worked examples
   (`correspondence/2026-10-bijma-dekkers/`).
@@ -29,6 +30,24 @@ finished, newest first.** Read the top entry to see where things stand.
 ---
 
 ## Log
+
+### Step 1: T0, delete the dead `selinbreeding.f90` (done 2026-10-05, commit "Step 1 (T0): remove dead selinbreeding.f90 from fortran/")
+
+- **What changed:** `fortran/selinbreeding.f90` (an unused older copy of
+  the inbreeding routine) is deleted and no longer compiled. The live
+  inbreeding code in `selroutines.f90` is untouched. `Makefile`, README,
+  CLAUDE.md, the technical report (PDF rebuilt), the test-hardening plan
+  and `NEWS.md` updated. The original stays in `fortran_orig/`.
+- **Tests:** `make test`: 7/7 golden byte-identical, 6/6 error cases.
+  Strict debug build: 6/7 identical, `blup1` differs only by the known
+  `-0.000`; 6/6 error cases. The build-by-hand command without `make`
+  also passes 7/7.
+- **Results changed?** No.
+- **Findings:** the `blup1` fixture description said it tested the
+  inbreeding code in `selinbreeding.f90`; it actually tests the live
+  copy in `selroutines.f90`. Description corrected. Nothing for Jack or
+  Piter.
+- **Next:** step 2, T1: test tooling.
 
 ### Groundwork before step 1 (done 2026-10-05)
 

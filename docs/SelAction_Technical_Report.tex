@@ -41,7 +41,7 @@ SelAction was described by Rutten, Bijma, Woolliams and van Arendonk \cite{rutte
 \item \emph{If you are porting or checking the code}, the orange ``Implementation note'' boxes, the source map in Section~\ref{sec:sourcemap}, the list of known issues in Section~\ref{sec:issues} and the appendices give the details needed for exact numerical agreement.
 \end{itemize}
 
-\paragraph{Scope.} {\sloppy The source of record is \src{seldiscrete.f90}, \src{selovlp.f90}, \src{selroutines.f90}, \src{selinbreeding.f90} and \src{seltools.f90} in \src{fortran/} (called \src{fortran\_mac/} before 5 October 2026), as of the date above. Changes to the code are recorded in \src{NEWS.md} at the top of the repository. Input/output formatting is outside scope.\par}
+\paragraph{Scope.} {\sloppy The source of record is \src{seldiscrete.f90}, \src{selovlp.f90}, \src{selroutines.f90} and \src{seltools.f90} in \src{fortran/} (called \src{fortran\_mac/} before 5 October 2026), as of the date above. Changes to the code are recorded in \src{NEWS.md} at the top of the repository. Input/output formatting is outside scope.\par}
 
 %======================================================================
 \section{Key ideas for new readers}\label{sec:background}
@@ -499,7 +499,7 @@ These are places where the code is known or suspected to differ from the intende
 \item \textbf{Symmetric-block assumption.} When filling $\ma P_x$ the source mirrors blocks without transposing trait indices (Appendix~\ref{app:sourceblocks}), which is exact only for symmetric blocks. $\ma S$ and $\ma D$ start non-symmetric when heritabilities differ, but the asymmetry decays to rounding level well before round 25 and has no effect on printed output.
 \item \textbf{Hard switch at 20 sires.} At $M_s=20$ the selected-fraction adjustment in \src{Poissoncorr} is switched off and the $\beta$ terms of Eq.~\eqref{eq:hyperextra} are switched on, so predicted $\Delta F$ jumps (4.590\% to 4.682\% from 19 to 20 sires in one example). The $1/M_s$ floor itself follows Bijma and Woolliams \cite{bijmawoolliams2000}, Eq.~13.
 \item \textbf{Per-sex lag between age classes.} The class means in the threshold search (Eq.~\eqref{eq:agecount}) and the lags in the covariance mixture (Eq.~\eqref{eq:agemixture}) use each sex's own path response per year rather than the population gain. The effect was below 1\% of response in our examples.
-\item \textbf{Unused duplicate of the inbreeding code.} \src{sel1s} calls the \src{dFmtblup} in \src{selroutines.f90}. A second copy in \src{selinbreeding.f90} is compiled but never called. It contains two defects: its first two \src{trunc} calls use positional arguments, so the intensity receives the normal ordinate $z$, $k$ receives the intensity, and $k$ itself is never computed; and a 0 entry in a source list stops the program. It should not be switched in without fixing these.
+\item \textbf{Unused duplicate of the inbreeding code.} \src{sel1s} calls the \src{dFmtblup} in \src{selroutines.f90}. A second copy in \src{selinbreeding.f90} was compiled but never called; it was removed from \src{fortran/} on 5 October 2026 and remains only in \src{fortran\_orig/}. It contains two defects: its first two \src{trunc} calls use positional arguments, so the intensity receives the normal ordinate $z$, $k$ receives the intensity, and $k$ itself is never computed; and a 0 entry in a source list stops the program. It should not be switched in without fixing these.
 \end{enumerate}
 
 \subsection{Questions for the original authors}\label{sec:questions}
@@ -639,5 +639,5 @@ The final predicted rate, printed as a percentage, is
 \begin{equation}\label{eq:hyperfinal}
 \Delta F=\Delta F_0+\tfrac18(M_s\delta_s+M_d\delta_d).
 \end{equation}
-The \src{dFmtblup} that is called is the copy in \src{selroutines.f90}; its \src{trunc} calls use named arguments for intensity and $k$. The copy in \src{selinbreeding.f90} is never called (Section~\ref{sec:issues}).
+The \src{dFmtblup} that is called is the copy in \src{selroutines.f90}; its \src{trunc} calls use named arguments for intensity and $k$. The copy in \src{selinbreeding.f90} was never called and is now only in \src{fortran\_orig/} (Section~\ref{sec:issues}).
 \end{document}

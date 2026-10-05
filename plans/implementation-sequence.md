@@ -52,8 +52,8 @@ of every finished step.
 
 | # | Step | Plan section | Depends on | Size | Status |
 |---|---|---|---|---|---|
-| 1 | **T0:** delete the dead `selinbreeding.f90` | test-hardening T0 | — | small | next |
-| 2 | **T1:** test tooling: `strict.sh`, `coverage.sh`, `compare_out.R`, `run_all.sh` (`make check`) | test-hardening T1 | 1 | medium | |
+| 1 | **T0:** delete the dead `selinbreeding.f90` | test-hardening T0 | — | small | done 2026-10-05 |
+| 2 | **T1:** test tooling: `strict.sh`, `coverage.sh`, `compare_out.R`, `run_all.sh` (`make check`) | test-hardening T1 | 1 | medium | next |
 | 3 | **T6:** CI on GitHub Actions (Linux + macOS), golden byte-exact on macOS, tolerant on Linux | test-hardening T6 | 2 | small–medium | optional here; otherwise after step 8 |
 | 4a | **T2a:** branch map: every conditional `read *`, and which fixture covers it | test-hardening T2 | 2 | medium | |
 | 4b | **T2b:** new discrete-generation fixtures: `sxd1`–`sxd3`, `matrat1`, `nophen`, `noce1`, `goalonly`, `onetrait`, `fivetr`, `multigrp`, `prog2s`, `prog3s`, `sires19`/`sires20` | test-hardening T2 | 4a | large | `matrat1` (Q6) and `sires19`/`sires20` (Q7) marked *pending answer* |
