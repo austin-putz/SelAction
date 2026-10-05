@@ -125,27 +125,81 @@ Line counts below are for `fortran/`.
 
 ### Prerequisites
 
-- **Fortran compiler:** gfortran (GNU Fortran). Verified with 14.2.0.
-- **make:** already present on macOS once the Xcode command-line tools are installed (`xcode-select --install`) and on most Linux systems. You can also build without it (see below).
-- **Operating system:** any with gfortran (macOS, Linux; Windows via MSYS2 or WSL, not yet tested)
+You need two tools, both free:
 
-### Installing gfortran
+- **gfortran** (GNU Fortran), a recent version. Verified with 14.2.0.
+- **make**, which runs the build commands in the top-level `Makefile`.
+
+The same source and the same `Makefile` are used on every operating system. Only the way you install the two tools differs. If you can't install `make`, you can still build with one gfortran command (see [Building without make](#building-without-make)).
+
+**Tested so far:** macOS (Intel). Linux, Apple Silicon Macs and Windows use the same commands but have not been verified yet; automated checks on all of them are planned (`plans/test-hardening.md`, step T6).
+
+### Installing the tools
+
+#### macOS (Intel and Apple Silicon)
 
 ```bash
-# macOS (Homebrew)
-brew install gcc
-
-# Ubuntu/Debian
-sudo apt-get install gfortran
-
-# CentOS/RHEL
-sudo yum install gcc-gfortran
-
-# Windows (MSYS2, UCRT64 shell)
-pacman -S mingw-w64-ucrt-x86_64-gcc-fortran make
+xcode-select --install     # Apple's command-line tools: provides make and git
+brew install gcc           # provides gfortran (needs Homebrew: https://brew.sh)
 ```
 
-On macOS, gfortran ships inside Homebrew's `gcc` formula. Apple's own `gcc` is clang and has no Fortran compiler.
+gfortran ships inside Homebrew's `gcc` formula. Apple's own `gcc` is clang and has no Fortran compiler.
+
+#### Linux
+
+Use your distribution's package manager:
+
+```bash
+# Ubuntu, Debian, Linux Mint, Pop!_OS
+sudo apt update && sudo apt install gfortran make
+
+# Fedora, RHEL 8+, Rocky Linux, AlmaLinux, CentOS Stream
+sudo dnf install gcc-gfortran make
+
+# CentOS 7 / RHEL 7 (older)
+sudo yum install gcc-gfortran make
+
+# Arch Linux, Manjaro
+sudo pacman -S gcc-fortran make
+
+# openSUSE
+sudo zypper install gcc-fortran make
+```
+
+#### Windows
+
+The `Makefile` uses Unix shell commands, so on Windows build inside one of these, not in Command Prompt or PowerShell:
+
+- **MSYS2 (recommended, gives a native `selaction.exe`):**
+  1. Install MSYS2 from <https://www.msys2.org>.
+  2. Open the **MSYS2 UCRT64** terminal from the Start menu.
+  3. Install the tools:
+     ```bash
+     pacman -S --needed mingw-w64-ucrt-x86_64-gcc-fortran make
+     ```
+  4. Go to the folder holding SelAction. Windows drives appear under `/c/`, `/d/` and so on, e.g. `cd /c/Users/<you>/SelAction`.
+  5. Build with `make` as below. The program is `build/selaction.exe`. Run it from the same MSYS2 terminal. Running it from Command Prompt or PowerShell also works if `C:\msys64\ucrt64\bin` is on your `PATH`, since the program uses gfortran's runtime libraries from there. The planned ready-made downloads won't need this.
+- **WSL (Windows Subsystem for Linux):** install Ubuntu with `wsl --install` in PowerShell, open the Ubuntu terminal, and follow the Linux (Ubuntu) instructions above. The result is a Linux program that runs inside WSL.
+
+#### Check the tools
+
+In the terminal you'll build from:
+
+```bash
+gfortran --version
+make --version
+```
+
+Both should print a version. If `gfortran` is not found on macOS, open a new terminal after installing Homebrew's `gcc`.
+
+#### Getting the code
+
+```bash
+git clone https://github.com/austin-putz/SelAction.git
+cd SelAction
+```
+
+Or download the ZIP from GitHub (Code → Download ZIP), unpack it, and `cd` into the folder.
 
 ### Building `selaction` (recommended)
 
@@ -162,7 +216,9 @@ make clean    # removes build/
 - **`-Wall` prints many warnings** on the legacy code. They are expected.
 - **Overrides:** e.g. `make FC=gfortran-14` for a specific compiler, or `make BUILD=build/debug FFLAGS="-g -O0 -fcheck=all"` for a second build next to the normal one.
 
-**Without make**, run the same command by hand from the top of the repository. `gfortran` compiles left to right and needs each module built before anything that `USE`s it, so **the main program must come last**:
+#### Building without make
+
+Run the same command by hand from the top of the repository. `gfortran` compiles left to right and needs each module built before anything that `USE`s it, so **the main program must come last**:
 
 ```bash
 mkdir -p build
