@@ -81,7 +81,7 @@ SelAction is being brought up to date at Iowa State University (Austin Putz and 
 - **Technical report:** `docs/SelAction_Technical_Report.pdf` ties every equation to the routine that computes it.
 - **Open modelling questions** for the original authors are written up with evidence in [`correspondence/2026-10-bijma-dekkers/SelAction_open_questions.pdf`](correspondence/2026-10-bijma-dekkers/SelAction_open_questions.pdf). The model itself has **not** been changed while these are open.
 
-**Next:** strengthen the tests ([`plans/test-hardening.md`](plans/test-hardening.md)), then add scenario-based YAML input and CSV output ([`plans/modernize-inputs-and-outputs.md`](plans/modernize-inputs-and-outputs.md)). See [Roadmap](#roadmap).
+**Next:** the first part of test hardening ([`plans/test-hardening.md`](plans/test-hardening.md)), then scenario-based YAML input and CSV output ([`plans/modernize-inputs-and-outputs.md`](plans/modernize-inputs-and-outputs.md)), then the correctness tests. See [Roadmap](#roadmap).
 
 ## Overview
 
@@ -578,19 +578,23 @@ Error: Line truncated
 
 ## Roadmap
 
-1. **Test hardening** ([`plans/test-hardening.md`](plans/test-hardening.md)):
-   - test inputs for every untested feature
+1. **Test hardening, part 1** ([`plans/test-hardening.md`](plans/test-hardening.md), T0–T2):
+   - remove the unused `selinbreeding.f90`
+   - test tooling: a scripted strict debug build, coverage measurement, tolerant output comparison
+   - test inputs for every untested feature and input path
+   - automated builds on macOS and Linux (and Windows), possibly here already
+2. **Scenario input and structured output** ([`plans/modernize-inputs-and-outputs.md`](plans/modernize-inputs-and-outputs.md), Phases 1–3 first). This changes no equations, and every stored report must stay byte-identical:
+   - YAML scenario folders, including sweeps over inputs
+   - full validation before running, and clear errors with exit codes
+   - full-precision CSV results
+3. **Test hardening, part 2** (T3–T5, T7), built on the CSV results and sweeps:
    - unit tests of the maths routines
    - correctness tests against independently computed answers
    - property tests
-   - automated builds on macOS and Linux (and Windows)
-2. **Answers to the open modelling questions** from the original authors, then any model changes they lead to. Each change will be documented with before-and-after results.
-3. **Scenario input and structured output** ([`plans/modernize-inputs-and-outputs.md`](plans/modernize-inputs-and-outputs.md)):
-   - YAML scenario folders, including sweeps over inputs
-   - full validation before running
-   - full-precision CSV results
-4. **Ready-made downloads** ([`plans/releases.md`](plans/releases.md)): tested binaries for macOS (Intel and Apple Silicon), Linux and Windows on GitHub Releases, so people can run SelAction without compiling it.
-5. **An R implementation** (`SelActionR`), validated against this code.
+   - a coverage gate
+4. **Answers to the open modelling questions** from the original authors, then any model changes they lead to. Each change will be documented with before-and-after results.
+5. **Ready-made downloads** ([`plans/releases.md`](plans/releases.md)): tested binaries for macOS (Intel and Apple Silicon), Linux and Windows on GitHub Releases, so people can run SelAction without compiling it.
+6. **An R implementation** (`SelActionR`), validated against this code.
 
 ## Related Project: SelActionR
 

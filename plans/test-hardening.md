@@ -2,15 +2,32 @@
 
 ## Status
 
-**Approved, revision 2 (2026-10-05).** Austin's answers to the four
-questions are recorded under "Decisions" below. Nothing is implemented yet. Directory names updated 2026-10-05:
-`fortran_mac/` is now `fortran/`, and `fortran_linux/` was removed, so
-there is one source tree to test on every platform.
+**Approved, revision 3 (2026-10-05).** Austin's answers to the four
+questions are recorded under "Decisions" below. Nothing is implemented
+yet, apart from the first error tests (`tests/errors/`, bad file and
+trait names). Directory names updated 2026-10-05: `fortran_mac/` is now
+`fortran/`, and `fortran_linux/` was removed, so there is one source tree
+to test on every platform.
 
-This plan comes **before** `plans/modernize-inputs-and-outputs.md`. Austin's
-rule is that SelAction must be "bullet proof" in accuracy and quality
-before bigger changes, and before the later port to R. The measurements
-below show that today's tests can't support that yet.
+**Revision 3 splits this plan around `plans/modernize-inputs-and-outputs.md`**
+(agreed with Austin 2026-10-05; see "Order and hand-off" at the end):
+
+1. **First: T0, T1, T2** (and T6 CI, optional this early). These protect
+   the I/O work: T1's strict build and T2's input-path fixtures make the
+   "every `.out` stays byte-identical" rule cover the code the I/O plan
+   edits.
+2. **Then I/O Phases 1–3** (translator, batch mode and input guards,
+   `results.csv`).
+3. **Then T3, T4, T5, T7** (unit, correctness and property tests, coverage
+   gate). They are easier on top of full-precision `results.csv` and
+   sweeps, and T4/T5 wait on review by Austin, Jack and Piter anyway.
+
+Austin's rule still holds: SelAction must be "bullet proof" in accuracy
+and quality before **model changes and the later port to R**. The I/O work
+changes no equations, so it can go first once T0–T2 guard it; proof of
+correctness (T3–T5) still comes before anything that depends on the
+numbers. The measurements below show that today's tests can't support
+that yet.
 
 All numbers in this report were measured on 2026-10-02 against commit
 `006d3ac`: GNU Fortran 14.2.0, macOS x86_64, R 4.5.3. The commands to
@@ -475,20 +492,23 @@ status as the T4 cases.
 - CI fails if live-line coverage drops below the level reached in T2
   (target ≥ 95%), so new code can't land untested.
 
-### Order and hand-off to the I/O plan
+### Order and hand-off to the I/O plan (revision 3)
 
-1. T0 (remove dead code), then T1 (tooling), then T2 (coverage
-   fixtures), with T3 (unit tests) alongside.
-2. T4 and T5 (correctness and properties): Claude drafts all cases;
-   Austin, Jack and Piter verify them later.
-3. T6 and T7 (CI and coverage gate).
-4. **Then** start the I/O plan at Phase 1. Its round-trip acceptance test
-   then runs over every T2 fixture, not just the original 7. Error tests
-   come with I/O Phase 2.
-
-The two plans meet in one place: I/O Phase 3 adds the full-precision
-`results.csv`. Once that exists, T4/T5 comparisons switch from parsing
-3-decimal `.out` text to the CSV, and their tolerances tighten.
+1. **T0** (remove dead code), **T1** (tooling), **T2** (coverage fixtures
+   and the branch map). **T6** (CI) may come here too; it is cheap and
+   guards every later commit.
+2. **I/O plan Phases 1–3.** Phase 1's round-trip test runs over every T2
+   fixture, not just the original 7. Phase 2 adds its error tests to
+   `tests/errors/` and its negative inputs to T1's strict build.
+3. **T3** (unit tests), **T4** and **T5** (correctness and properties:
+   Claude drafts all cases; Austin, Jack and Piter verify them later),
+   and **T7** (coverage gate). They compare against the full-precision
+   `results.csv` from I/O Phase 3 rather than the 3-decimal `.out` text,
+   so tolerances can be tight, and T5's paired inputs can be written as
+   I/O sweeps once Phase 4 exists. I/O Phases 4–5 (full driver, docs) can
+   run alongside.
+4. **Then** model changes from Jack and Piter's answers, and later the
+   R port. Both wait until T3–T5 pass.
 
 ---
 

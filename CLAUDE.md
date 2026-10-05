@@ -119,8 +119,9 @@ Main programs (fortran: selaction.f90; fortran_orig: mssel.f90, msseld.f90, msse
 
 ## Plans and current status
 
-- `plans/test-hardening.md` — **approved, next up, not started.** T0 delete `selinbreeding.f90` from `fortran/`; T1 tooling (`strict.sh`, `coverage.sh`, `compare_out.R`, `run_all.sh`); T2 coverage fixtures; T3 unit tests; T4/T5 correctness and property tests (drafted by Claude, *provisional* until verified by Austin/Jack/Piter); T6/T7 CI and coverage gate.
-- `plans/modernize-inputs-and-outputs.md` — **approved (rev 12), waits on test-hardening.** Long trait names are handled by driver-generated short labels, not by widening the Fortran. R driver reading YAML scenario folders → legacy answer stream → `selaction --batch`; Fortran writes `results.csv`; no equation changes.
+- **Order (agreed 2026-10-05):** test-hardening T0–T2 (+ T6 CI if wanted) → I/O Phases 1–3 → test-hardening T3–T5, T7 (alongside I/O Phases 4–5) → model changes from Jack/Piter's answers → R port.
+- `plans/test-hardening.md` — **approved (rev 3), next up, not started** (except the first error tests in `tests/errors/`). T0 delete `selinbreeding.f90` from `fortran/`; T1 tooling (`strict.sh`, `coverage.sh`, `compare_out.R`, `run_all.sh`); T2 coverage fixtures; T3 unit tests; T4/T5 correctness and property tests (drafted by Claude, *provisional* until verified by Austin/Jack/Piter); T6/T7 CI and coverage gate.
+- `plans/modernize-inputs-and-outputs.md` — **approved (rev 12), starts after test-hardening T0–T2.** Long trait names are handled by driver-generated short labels, not by widening the Fortran. R driver reading YAML scenario folders → legacy answer stream → `selaction --batch`; Fortran writes `results.csv`; no equation changes.
 - `plans/releases.md` — **not started; after test-hardening T6.** Tested prebuilt binaries (macOS Intel/Apple Silicon, Linux, Windows) on GitHub Releases, so non-programmers (e.g. Jack) can run SelAction without compiling.
 - `plans/document.md` — docs-site idea, not started; written before the code was consolidated into `fortran/`, so its "current state" is out of date.
 - The other files in `plans/` are implemented fixes kept for their reasoning.

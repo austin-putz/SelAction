@@ -7,10 +7,14 @@ are answered, and multiple sweeps per folder are confirmed. Nothing is
 implemented yet. The defaults listed in the last section stand unless
 Austin changes them.
 
-**This plan waits on `plans/test-hardening.md`.** That plan runs first
-(Austin's rule: the Fortran must be "bullet proof" before bigger changes).
-Two of its steps also do work this plan needs, so they are not repeated
-here:
+**This plan starts after test-hardening T0, T1 and T2** (agreed with
+Austin 2026-10-05; see the order in `plans/test-hardening.md`, revision 3).
+This plan changes no equations, so it only needs the tests that guard the
+code it edits; the rest of test-hardening (T3–T5, T7: unit, correctness
+and property tests) follows Phases 1–3 and builds on `results.csv` and
+sweeps. Model changes and the R port still wait until those pass. Two
+test-hardening steps also do work this plan needs, so they are not
+repeated here:
 
 - **T1's `tests/tools/strict.sh`** is the strict debug build. Phase 2
   reuses it.
