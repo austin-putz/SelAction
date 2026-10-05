@@ -7,6 +7,10 @@
 this file only fixes the **order**, the **dependencies** and the
 **status**. Update the status column here when a step is done.
 
+**Where are we?** See [`progress.md`](progress.md): its top section says
+what was finished last and what comes next, and it has a short summary
+of every finished step.
+
 ## Rules for every step
 
 - **Before starting:** show Austin the exact steps in plan mode, and wait
@@ -20,7 +24,10 @@ this file only fixes the **order**, the **dependencies** and the
 - **When done:**
   - a `NEWS.md` entry
   - one commit per step (or sub-step), pushed to `main`
-  - the status here updated
+  - the status column here updated
+  - **a summary added to [`progress.md`](progress.md)**, using its
+    template (what changed, tests, whether results changed, findings,
+    next step), and its "Current position" section updated
 
 ## Why this order
 
