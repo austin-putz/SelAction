@@ -142,7 +142,7 @@ scripted**: so far it has only been run by hand while fixing bugs.
 | Correctness (validation against independent answers) | "Is the output *right*?" | none | **F** |
 | Unit tests of maths routines | "Does each routine work on its own?" | none | **F** |
 | Property (metamorphic) tests | "Do results change the way theory says they must?" | none | **F** |
-| Error / invalid-input tests | "Does bad input fail cleanly?" | none (planned in the I/O plan, Phase 2) | **F** |
+| Error / invalid-input tests | "Does bad input fail cleanly?" | none (planned in the I/O plan, Phase 2). *Update 2026-10-05: the first 6 error cases (bad file and trait names) now exist in `tests/errors/`.* | **F** |
 | Strict-build checks | "Any hidden memory or uninitialised-value bugs?" | clean, but manual and only on covered code | **C** |
 | Coverage measurement | "What do the tests miss?" | measured once, for this report | **D** |
 | Automation (CI) | "Do the tests run on every change?" | none | **F** |

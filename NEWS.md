@@ -1,5 +1,28 @@
 # SelAction (development version)
 
+## Input checks
+
+* 2026-10-05: **bad file and trait names now stop the run instead of being
+  silently cut.** Both are limited to 8 characters (`character(len=8)`).
+  Before, a longer name was cut without warning: runs named `scenario_A`
+  and `scenario_B` both wrote, and the second overwrote, `scenario.out`,
+  with exit code 0; a trait `eADG_purebred` was printed as `eADG_pur`; a
+  name with a space was cut at the space.
+  * New `read_name` (`selroutines.f90`) reads the file name (`sel1s`,
+    `sel2s`, `sel3s`, `ovlp`) and each trait name (`traitinfo`,
+    `traitinfoovlp`). It stops with `-error-30-` and exit code 2 if a name
+    is longer than 8 characters, empty, or contains a space or comma.
+    Text after `!` is still a comment, and quoted names still work.
+  * `check_trait_unique` stops the run if two traits have the same name,
+    ignoring case.
+  * The message is printed on screen and, if the report was already
+    started, at the end of the `.out` with "run stopped; this report is
+    incomplete". A bad file name stops the run before any file is created.
+  * New error tests: 6 cases in `tests/errors/`, run by
+    `tests/run_error_tests.sh` and `make test`.
+  * Valid input behaves exactly as before: all 7 fixtures byte-identical,
+    and clean under the strict debug build.
+
 ## Build
 
 * 2026-10-05: `manual/` renamed `manual_orig/`, matching `fortran_orig/`.

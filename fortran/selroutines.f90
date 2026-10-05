@@ -8,6 +8,108 @@
 
         contains
 
+        subroutine read_name(what, maxlen, name)
+        ! Reads one name (the file name or a trait name) from the input line.
+        ! Anything after "!" is a comment, as in the .in files. Stops the run
+        ! with exit code 2 if the name is empty, contains a blank or comma, or
+        ! is longer than maxlen, instead of silently cutting it (2026-10-05).
+        character(len=*), intent(in) :: what
+        integer, intent(in) :: maxlen
+        character(len=*), intent(out) :: name
+        character(len=256) :: buf, tmp
+        character(len=400) :: msg
+        integer :: ios, k, n
+
+        read(*,'(a)',iostat=ios) buf
+        if (ios.ne.0) then
+          call name_error("unexpected end of input while reading the "//what, " ")
+        end if
+        k=index(buf,"!")
+        if (k.gt.0) buf(k:)=" "
+        do k=1,len(buf)
+          if (iachar(buf(k:k)).eq.9) buf(k:k)=" "
+        end do
+        buf=adjustl(buf)
+        n=len_trim(buf)
+        if (n.ge.2) then
+          if ((buf(1:1).eq."'" .and. buf(n:n).eq."'") .or. &
+              (buf(1:1).eq.'"' .and. buf(n:n).eq.'"')) then
+            tmp=buf(2:n-1)
+            buf=adjustl(tmp)
+            n=len_trim(buf)
+          end if
+        end if
+
+        if (n.eq.0) then
+          call name_error("the "//what//" is empty", " ")
+        end if
+        if (index(buf(1:n)," ").gt.0 .or. index(buf(1:n),",").gt.0) then
+          write(msg,'(a,a,a,a)') what," '",buf(1:n),"' contains a space or comma"
+          call name_error(trim(msg), "use a single word, e.g. with _ instead of spaces")
+        end if
+        if (n.gt.maxlen) then
+          write(msg,'(a,a,a,a,i0,a,i0)') what," '",buf(1:n),"' is ",n, &
+            " characters; the maximum is ",maxlen
+          if (what.eq."filename") then
+            call name_error(trim(msg), "use a shorter name: it would be cut to '"// &
+              buf(1:maxlen)//"', and runs whose names share those characters "// &
+              "would overwrite each other's .in and .out files")
+          else
+            call name_error(trim(msg), "use a shorter name: it would be cut to '"// &
+              buf(1:maxlen)//"', and traits whose names share those characters "// &
+              "would get the same label in the report")
+          end if
+        end if
+        name=buf(1:n)
+        end subroutine read_name
+
+        subroutine check_trait_unique(i)
+        ! Stops the run with exit code 2 if trait i has the same name as an
+        ! earlier trait (ignoring case), which would make every table ambiguous.
+        integer, intent(in) :: i
+        integer :: j
+        character(len=400) :: msg
+
+        do j=1,i-1
+          if (lower_name(xtraits(j)).eq.lower_name(xtraits(i))) then
+            write(msg,'(a,a,a,i0,a,i0,a)') "trait name '",trim(xtraits(i)), &
+              "' is used twice (traits ",j," and ",i,")"
+            call name_error(trim(msg), "give every trait a different name")
+          end if
+        end do
+        end subroutine check_trait_unique
+
+        function lower_name(s) result(t)
+        character(len=*), intent(in) :: s
+        character(len=len(s)) :: t
+        integer :: k, c
+
+        t=s
+        do k=1,len(s)
+          c=iachar(s(k:k))
+          if (c.ge.65 .and. c.le.90) t(k:k)=achar(c+32)
+        end do
+        end function lower_name
+
+        subroutine name_error(line1, line2)
+        ! Prints an input error on screen and, if the report is already open,
+        ! at the end of the .out file, then stops with exit code 2.
+        character(len=*), intent(in) :: line1, line2
+        logical :: isopen
+
+        print *," "
+        print *,"-error-30- input error: ",line1
+        if (len_trim(line2).gt.0) print *,"           ",line2
+        inquire(unit=20, opened=isopen)
+        if (isopen) then
+          write(unit=20, fmt=*) " "
+          write(unit=20, fmt=*) "-error-30- input error: ",line1
+          if (len_trim(line2).gt.0) write(unit=20, fmt=*) "           ",line2
+          write(unit=20, fmt=*) "run stopped; this report is incomplete"
+        end if
+        error stop 2
+        end subroutine name_error
+
 subroutine invrt(a,ia,n)
 !
 !     purpose : invert a non-symmetric matrix of order n
@@ -1086,7 +1188,8 @@ subroutine invrt(a,ia,n)
 	do i=1,ntraits
 	  print *,"name of trait ",i," ? (max 8 characters)"
           print *," "
-	  read *,xtraits(i)
+	  call read_name("trait name", 8, xtraits(i))
+          call check_trait_unique(i)
           write(unit=10, fmt=14000) xtraits(i),i
 700       if (ntraits.eq.1) then
             sdesttraits(1)="b"
@@ -1158,7 +1261,8 @@ subroutine invrt(a,ia,n)
 	do i=1,ntraits
 	  print *,"name of trait ",i," ? (max 8 characters)"
           print *," "
-	  read *,xtraits(i)
+	  call read_name("trait name", 8, xtraits(i))
+          call check_trait_unique(i)
           write(unit=10, fmt=14000) xtraits(i),i
 700       if (ntraits.eq.1) then
             desttraits(1)="b"

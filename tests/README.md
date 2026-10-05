@@ -20,7 +20,11 @@ tests/
     manifest.txt   maps each fixture to the binaries it's valid input for
     <name>.in       input fed to the program via stdin redirection
     <name>.out      expected output, byte-for-byte
+  errors/
+    manifest.txt   expected exit code, files and message for each error case
+    <name>.in       input that must make the program stop with an error
   run_tests.sh
+  run_error_tests.sh
 ```
 
 ## Running
@@ -28,7 +32,7 @@ tests/
 From the top of the repository:
 
 ```bash
-make test                         # builds build/selaction if needed, then runs every fixture
+make test                         # builds build/selaction if needed, then runs every fixture and error case
 tests/run_tests.sh                # against build/ (default); run `make` first
 tests/run_tests.sh <dir>          # against a binary in another directory (relative or absolute)
 ```
@@ -63,11 +67,39 @@ against `tests/fixtures/test1.out`.
 
 **Fixture base names must be 8 characters or fewer.** The "filenames" field
 inside a `.in` file is read into `fnam`, declared `character (len=8)` in
-`selparameters.f90`. A longer name is silently truncated by the Fortran
-list-directed read, so the program ends up trying to open a file that
-doesn't match the fixture's actual filename - the run fails to find its own
-input. Keep both the fixture's file stem and the "filenames" line *inside*
-the `.in` file itself under 8 characters and identical to each other.
+`selparameters.f90`. Keep both the fixture's file stem and the "filenames"
+line *inside* the `.in` file itself at 8 characters or fewer and identical
+to each other, because the runner looks for `<stem>.out`.
+
+Until 2026-10-05 a longer name was silently cut to 8 characters (so runs
+named `scenario_A` and `scenario_B` both wrote, and overwrote,
+`scenario.out`). Now `read_name` in `selroutines.f90` reads the file name
+and every trait name, and stops the run with `-error-30-` and exit code 2
+if a name is longer than 8 characters, empty or contains a space or comma,
+or if two traits share a name (ignoring case). Text after `!` on the line
+is a comment, as before.
+
+## Error cases (`tests/errors/`)
+
+Inputs that must make `selaction` stop, run by `tests/run_error_tests.sh`
+(also part of `make test`). Each line of `tests/errors/manifest.txt` gives
+the case name, the required exit code, which files may exist afterwards
+(`none`: the error comes before any file is opened; `report`: the `.out`
+must end with the error and "run stopped"), and a piece of the expected
+message. A case that finishes normally, exits with another code, prints
+the wrong message or leaves the wrong files is a FAIL.
+
+| Case | Checks |
+|---|---|
+| `longfile` | discrete run, 10-character filename |
+| `longovlp` | overlapping-generations run, 10-character filename |
+| `longtrt` | discrete run, 13-character trait name |
+| `ovlptrt` | overlapping-generations run, 14-character trait name |
+| `spacetrt` | trait name with a space |
+| `duptrt` | two trait names that differ only in case |
+
+Each is a copy of `test1.in` or `ovlp2.in` with one line changed. To add a
+case, make the `.in`, add a manifest line, and run `make test`.
 
 ## manifest.txt
 

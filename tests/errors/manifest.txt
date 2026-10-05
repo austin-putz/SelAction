@@ -1,0 +1,19 @@
+# Error-case manifest: inputs that must make selaction stop with an error.
+#
+# Format (colon-separated, 5 fields):
+#   <name>:<exit_code>:<files>:<expected text>:<description>
+#
+# name          - stem of <name>.in in this directory
+# exit_code     - the exit code selaction must return (2 = input error)
+# files         - "none": no .out file may be created (the error comes
+#                 before any file is opened); "report": a .out file exists
+#                 and must end with the same error and "run stopped"
+# expected text - text that must appear in the screen output (no colons)
+# description   - what the case checks
+
+longfile:2:none:filename 'scenario_A' is 10 characters; the maximum is 8:discrete run whose filename is longer than 8 characters (read in sel1s; sel2s/sel3s use the same call)
+longovlp:2:none:filename 'ovlp_run_A' is 10 characters; the maximum is 8:overlapping-generations run whose filename is longer than 8 characters (read in ovlp)
+longtrt:2:report:trait name 'eADG_purebred' is 13 characters; the maximum is 8:discrete run with a trait name longer than 8 characters (traitinfo)
+ovlptrt:2:report:trait name 'weight_at_150d' is 14 characters; the maximum is 8:overlapping-generations run with a trait name longer than 8 characters (traitinfoovlp)
+spacetrt:2:report:trait name 'eADG pb' contains a space or comma:trait name with a space, which list-directed input used to cut at the space
+duptrt:2:report:trait name 'adg' is used twice (traits 2 and 3):two traits whose names differ only in case

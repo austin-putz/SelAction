@@ -79,7 +79,8 @@ This work supports that goal rather than competing with it:
 - **Two output files, both limited.** `<fnam>.in` echoes the answers with
   `! comment` labels. `<fnam>.out` is a fixed-format report: `f10.3`, so
   only 3 decimals, with different layouts per scheme. `fnam` is
-  `character(len=8)`, so names are silently cut to 8 characters.
+  `character(len=8)`. Names used to be silently cut to 8 characters; since
+  2026-10-05 a longer name stops the run (`-error-30-`, exit code 2).
 - **Errors and warnings have no consistent form.** Errors are `print *` +
   `stop` (`-error-10-` singular matrix, `-error-20-` P-value out of bounds,
   `dFmtblup` inconsistency). Warnings are ad hoc (`selovlp.f90:1139–1183`,
@@ -362,7 +363,7 @@ The other stages follow the same pattern.
 | Info-source codes | **none** | 3, 44–63, 99 or a code for an unconfigured group are accepted silently |
 | Proportions selected | **none at input**; `trunc` later stops with `-error-20-` only if p is outside [0, 1] | p = 0 or p = 1 gets through to the math |
 | Sires, dams, candidates per dam | **none** | zero, negative, sires > dams, or too few candidates for the requested proportion all reach the math |
-| Trait names | **none** | silently cut to 8 characters; **a name with a space is read only up to the space**; duplicates aren't detected |
+| Trait names and file name | **done 2026-10-05**: `read_name` stops the run (`-error-30-`, exit 2) on names longer than 8 characters, empty, or with a space or comma; duplicate trait names (ignoring case) also stop it. Error cases in `tests/errors/` | the 8-character limit itself stays until Phase 2 widens `fnam`/`xtraits`; the R validator keeps its 1–8 character rule until then |
 | Number of traits, age classes | **none** | 0 or a negative count reaches `allocate` |
 | Type (text where a number is expected) | the gfortran runtime aborts (`Bad real number in item 1 of list input`) | a crash with a compiler message, not a SelAction message |
 

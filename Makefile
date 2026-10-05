@@ -1,7 +1,7 @@
 # Build SelAction from fortran/ into build/.
 #
 #   make          build build/selaction
-#   make test     build, then run the regression fixtures
+#   make test     build, then run the regression fixtures and error cases
 #   make clean    remove build/
 #
 # Every variable can be overridden on the command line, e.g.
@@ -44,11 +44,12 @@ $(BIN): $(addprefix $(SRC)/,$(SOURCES)) Makefile
 
 test: all
 	tests/run_tests.sh $(BUILD)
+	tests/run_error_tests.sh $(BUILD)
 
 clean:
 	rm -rf $(BUILD)
 
 help:
 	@echo "make         build $(BIN)"
-	@echo "make test    build, then run tests/run_tests.sh $(BUILD)"
+	@echo "make test    build, then run the regression tests and error cases"
 	@echo "make clean   remove $(BUILD)/"

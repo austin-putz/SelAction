@@ -13,7 +13,7 @@
 	implicit none
         print *," filename? (max = 8 characters)"
         print *," "
-        read *,fnam
+        call read_name("filename", 8, fnam)
 
         fnamein=trim(fnam)//".in "
         fnameout=trim(fnam)//".out"
@@ -1160,7 +1160,7 @@
 	implicit none
         print *,"filename? (max = 8 characters)"
         print *," "
-        read *,fnam
+        call read_name("filename", 8, fnam)
 
         fnamein=trim(fnam)//".in "
         fnameout=trim(fnam)//".out"
@@ -2797,7 +2797,7 @@
 	implicit none
         print *,"filename? (max = 8 characters)"
         print *," "
-        read *,fnam
+        call read_name("filename", 8, fnam)
 
         fnamein=trim(fnam)//".in "
         fnameout=trim(fnam)//".out"

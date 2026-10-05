@@ -226,7 +226,7 @@ From the top of the repository:
 
 ```bash
 make          # builds build/selaction
-make test     # builds if needed, then runs the regression tests
+make test     # builds if needed, then runs the regression tests and error cases
 make clean    # removes build/
 ```
 
@@ -301,9 +301,9 @@ The program asks for its input one prompt at a time; which prompt comes next dep
 | Input | Description | Allowed values |
 |-------|-------------|----------------|
 | scheme | Selection scheme | `1`, `2`, `3` (stages) or `o` (overlapping generations) |
-| filename | Base name for the `.in`/`.out` files | at most 8 characters (longer names are cut) |
+| filename | Base name for the `.in`/`.out` files | at most 8 characters, no spaces; anything else stops the run with an error (exit code 2) |
 | number of traits | Number of traits | 1–20 |
-| trait name | Name of each trait | at most 8 characters, no spaces |
+| trait name | Name of each trait | at most 8 characters, no spaces, each different (ignoring case); anything else stops the run with an error (exit code 2) |
 | use of trait | Role of each trait | `i` index only, `h` breeding goal only, `b` both, `n` not used |
 | different indices for sires and dams | Separate information sources per sex | `y`/`n` |
 | common environment | Include common-environment (c²) effects | `y`/`n` |
@@ -485,9 +485,10 @@ cp ../tests/fixtures/test1.in .
 make test
 ```
 
-`make test` builds `build/selaction` if needed and runs `tests/run_tests.sh build`. To test another build directory, run `tests/run_tests.sh <dir>`.
+`make test` builds `build/selaction` if needed and runs `tests/run_tests.sh build` and `tests/run_error_tests.sh build`. To test another build directory, run either script with `<dir>`.
 
 - **What the tests check:** each of the 7 test inputs in `tests/fixtures/` is run and its report compared byte for byte with a stored copy. Together they cover 1-, 2- and 3-stage selection, BLUP, the group information sources, and overlapping generations with and without groups.
+- **Error cases:** the 6 inputs in `tests/errors/` must make the program stop with exit code 2 and the right message (over-long, spaced or duplicate names).
 - **More detail:** see [`tests/README.md`](tests/README.md) for the format and how to add a test.
 - **Limitation:** these tests detect *changes* in results, not whether results are *correct*. Every stored output was produced by SelAction itself. [`plans/test-hardening.md`](plans/test-hardening.md) adds:
   - checks against independently computed answers
@@ -509,8 +510,9 @@ make test
 - **Some mistakes in the input are not caught:**
   - An inconsistent (non-positive-definite) set of correlations is reported only at the end of the report (`** incoherent genetic parameters detected`), and the results are still printed.
   - More than 20 groups of one type, or an invalid information-source code, are not rejected.
-  - Names longer than 8 characters are silently cut.
-  - The exit code is always 0.
+  - The exit code is 0 for these. Only a bad name (see below) stops the run with exit code 2.
+
+  Names are checked: a file or trait name longer than 8 characters, containing a space, or (for traits) used twice now stops the run with `-error-30-` instead of being silently cut.
 
   Stricter checks are planned ([`plans/modernize-inputs-and-outputs.md`](plans/modernize-inputs-and-outputs.md)).
 - **`selinbreeding.f90` is unused.** Both `selroutines.f90` and `selinbreeding.f90` contain a full copy of `dFmtblup` and its helpers (`create_C`, `Poissoncorr`, `hyper_correct`). The live copy is the one in `selroutines.f90`. `MODULE Inbreeding` in `selinbreeding.f90` is compiled but never used.
@@ -554,6 +556,12 @@ Error: Line truncated
  wrong input, heritability must be higher than 0!
 ```
 **Solution:** Enter a heritability strictly between 0 and 1. The program asks again.
+
+**Bad file or trait name:**
+```
+ -error-30- input error: filename 'scenario_A' is 10 characters; the maximum is 8
+```
+**Solution:** Use a name of at most 8 characters with no spaces, and give every trait a different name. The run stops with exit code 2; if the report was already started, it ends with this message and "run stopped; this report is incomplete".
 
 **Proportion selected out of range:**
 ```
