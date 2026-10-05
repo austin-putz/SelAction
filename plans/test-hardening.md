@@ -324,6 +324,13 @@ property tests in T5 then cross-check several of them.
 | `prog2s`, `prog3s` | progeny groups in 2- and 3-stage selection |
 | `ovlpfix` | overlapping generations, **fixed numbers** selected per age class |
 | `ovlp3ac` | overlapping generations, 3 age classes per sex, with an age class excluded from selection if the input supports it |
+| `sires19`, `sires20` | the same 1-stage scheme with 19 and with 20 sires, either side of the switch in the inbreeding correction (open Question 7) |
+
+**Fixtures in areas under open questions** (`matrat1`: Q6; `sires19`/`sires20`:
+Q7; `ovlp3ac`: Q2, Q4) are built now and marked `[pending Qn]` at the start
+of their manifest description. They record today's behaviour, and are
+regenerated if Jack and Piter's answers change the model. See
+`implementation-sequence.md`, "Where Jack and Piter's input is needed".
 
 - Before writing fixtures, walk every conditional `read *` and list which
   fixture covers it. This is the same map Phase 1 of the I/O plan needs
