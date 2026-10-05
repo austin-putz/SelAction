@@ -18,7 +18,10 @@ History: `fortran/` was called `fortran_mac/` until 2026-10-05. It started on 20
 
 ```bash
 make          # -> build/selaction (plus build/*.mod, and build/selaction.dSYM on macOS)
-make test     # build if needed, then tests/run_tests.sh build
+make test     # build if needed, then golden fixtures + error cases (no R needed)
+make check    # every test layer, one summary (needs R)
+make strict   # strict debug build in build/strict + all tests (needs R)
+make coverage # coverage build in build/coverage, line/branch table
 make clean    # rm -rf build
 ```
 
@@ -121,7 +124,7 @@ Main programs (fortran: selaction.f90; fortran_orig: mssel.f90, msseld.f90, msse
 ## Plans and current status
 
 - **Order (agreed 2026-10-05):** `plans/implementation-sequence.md` is the single numbered list of steps from both plans below, with dependencies and status; update its status column when a step is done, and add a summary of the finished step to `plans/progress.md` (template inside; also update its "Current position" section). `plans/progress.md` is where Austin checks where things stand. In short: test-hardening T0–T2 (+ T6 CI if wanted) → I/O Phases 1–3 → test-hardening T3–T5, T7 (alongside I/O Phases 4–5) → model changes from Jack/Piter's answers → R port.
-- `plans/test-hardening.md` — **approved (rev 3), in progress.** T0 delete `selinbreeding.f90` from `fortran/` (done 2026-10-05); T1 tooling (`strict.sh`, `coverage.sh`, `compare_out.R`, `run_all.sh`); T2 coverage fixtures; T3 unit tests; T4/T5 correctness and property tests (drafted by Claude, *provisional* until verified by Austin/Jack/Piter); T6/T7 CI and coverage gate.
+- `plans/test-hardening.md` — **approved (rev 3), in progress.** T0 delete `selinbreeding.f90` from `fortran/` (done 2026-10-05); T1 tooling (done 2026-10-05: `make check`/`strict`/`coverage`); T2 coverage fixtures; T3 unit tests; T4/T5 correctness and property tests (drafted by Claude, *provisional* until verified by Austin/Jack/Piter); T6/T7 CI and coverage gate.
 - `plans/modernize-inputs-and-outputs.md` — **approved (rev 12), starts after test-hardening T0–T2.** Long trait names are handled by driver-generated short labels, not by widening the Fortran. R driver reading YAML scenario folders → legacy answer stream → `selaction --batch`; Fortran writes `results.csv`; no equation changes.
 - `plans/releases.md` — **not started; after test-hardening T6.** Tested prebuilt binaries (macOS Intel/Apple Silicon, Linux, Windows) on GitHub Releases, so non-programmers (e.g. Jack) can run SelAction without compiling.
 - `plans/document.md` — docs-site idea, not started; written before the code was consolidated into `fortran/`, so its "current state" is out of date.
