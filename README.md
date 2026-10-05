@@ -7,9 +7,9 @@
 [![License: GPL v3](https://img.shields.io/badge/license-GPLv3-blue.svg)](LICENSE)
 [![Repo Status: Active](https://www.repostatus.org/badges/latest/active.svg)](https://www.repostatus.org/#active)
 [![Language: Fortran](https://img.shields.io/badge/language-Fortran-734f96.svg)](https://fortran-lang.org/)
-[![gfortran](https://img.shields.io/badge/gfortran-4.6%2B-orange.svg)](https://gcc.gnu.org/fortran/)
+[![gfortran](https://img.shields.io/badge/tested%20with-gfortran%2014.2-orange.svg)](https://gcc.gnu.org/fortran/)
 
-A comprehensive multi-trait selection index program for animal breeding applications, calculating genetic response and inbreeding effects for various selection schemes.
+A multi-trait selection index program for animal breeding, predicting genetic response and rate of inbreeding for a range of selection schemes.
 
 ## Citation
 
@@ -17,7 +17,7 @@ Please cite the original paper from Rutten *et al.* using the following:
 
 **Rutten, M.J.M., Bijma, P., Woolliams, J.A., & Van Arendonk, J.A.M. (2002)**. SelAction: Software to predict selection response and rate of inbreeding in livestock breeding programs. Journal of Heredity, 93(6), 456-458. [https://doi.org/10.1093/jhered/93.6.456](https://doi.org/10.1093/jhered/93.6.456)
 
-When the full software package is up and running, we'll provide a citation for that as well. 
+When the full software package is up and running, we'll provide a citation for that as well.
 
 ## Bug Reports
 
@@ -25,6 +25,7 @@ Email :e-mail: putz.austin@gmail.com with a full report
 
 ## Table of Contents
 
+- [Project Status](#project-status)
 - [Overview](#overview)
 - [Program Structure](#program-structure)
 - [Installation and Compilation](#installation-and-compilation)
@@ -33,30 +34,53 @@ Email :e-mail: putz.austin@gmail.com with a full report
 - [Output Files](#output-files)
 - [Mathematical Background](#mathematical-background)
 - [Usage Examples](#usage-examples)
+- [Testing](#testing)
 - [Known Issues](#known-issues)
 - [Troubleshooting](#troubleshooting)
+- [Roadmap](#roadmap)
 - [Related Project: SelActionR](#related-project-selactionr)
 - [License](#license)
 - [References](#references)
 
+## Project Status
+
+*Updated 5 October 2026.*
+
+SelAction is being brought up to date at Iowa State University (Austin Putz and Jack Dekkers), starting from the original Fortran code by Marc Rutten and Piter Bijma. The current version is **1.2**, in `fortran_mac/`.
+
+**Done so far** (details in [`NEWS.md`](NEWS.md)):
+
+- The code builds with a current gfortran, as one program, `selaction`, for every selection scheme.
+- **Crashes and uninitialised-value bugs fixed**, mostly inherited from the original code. These include:
+  - overlapping generations crashing outright
+  - variables read before they were set
+  - divisions by zero for group types that are not configured
+- **Fixes that change predictions:**
+  - **Overlapping generations:** the truncation-point search selected the wrong number of parents (e.g. 67.5 sires when 10 were requested). The generation interval is also corrected.
+  - **Multistage selection:** the normal-integral tables were too short, giving grossly wrong responses for small selected fractions.
+- **Regression tests:** 7 test inputs with stored outputs, run by `tests/run_tests.sh`.
+- **Technical report:** `docs/SelAction_Technical_Report.pdf` ties every equation to the routine that computes it.
+- **Open modelling questions** for the original authors are written up with evidence in [`correspondence/2026-10-bijma-dekkers/SelAction_open_questions.pdf`](correspondence/2026-10-bijma-dekkers/SelAction_open_questions.pdf). The model itself has **not** been changed while these are open.
+
+**Next:** strengthen the tests ([`plans/test-hardening.md`](plans/test-hardening.md)), then add scenario-based YAML input and CSV output ([`plans/modernize-inputs-and-outputs.md`](plans/modernize-inputs-and-outputs.md)). See [Roadmap](#roadmap).
+
 ## Overview
 
-SelAction is a Fortran-based program developed by Marc J.M. Rutten and Piter Bijma at Wageningen University (2000) for calculating selection responses and inbreeding rates in animal breeding programs. The program supports:
+SelAction is a Fortran program developed by Marc J.M. Rutten and Piter Bijma at Wageningen University (2000). It predicts selection response and rates of inbreeding in animal breeding programs. It supports:
 
 - **Single, two, and three-stage selection** in discrete generations
-- **Overlapping generations** with multiple age classes
-- **Multi-trait selection indices** with various information sources
-- **Inbreeding calculations** using BLUP-EBV methods
-- **Complex breeding structures** including full-sib and half-sib families
+- **Overlapping generations** with multiple age classes per sex
+- **Multi-trait selection indices** combining many information sources (own performance, BLUP breeding values, full-sib, half-sib and progeny groups)
+- **The Bulmer effect:** reduction of genetic variance by selection, iterated to equilibrium
+- **Rate of inbreeding:** predicted with the method of Bijma and Woolliams (2000), including for selection on BLUP breeding values
 
 ### Key Features
 
-- Multi-trait genetic response predictions
-- Selection index weight optimization
-- Breeding value accuracy calculations
-- Rate of inbreeding estimation
-- Flexible information source handling
-- Support for complex mating designs
+- Multi-trait genetic response predictions, per sex and in total
+- Optimal selection index weights
+- Index accuracy and equilibrium genetic parameters
+- Rate of inbreeding per generation
+- Flexible information sources, including separate indices for sires and dams
 
 ## Program Structure
 
@@ -64,42 +88,43 @@ SelAction is a Fortran-based program developed by Marc J.M. Rutten and Piter Bij
 
 | Directory | Description | Status |
 |-----------|-------------|--------|
-| `fortran_orig/` | Original Fortran code from Piter Bijma | Reference only — never modified |
-| `fortran_linux/` | Linux-compatible fork of the original code | Working — recommended for use |
-| `fortran_mac/` | macOS fork, started from `fortran_linux/` | Working — verified on macOS (Intel, gfortran 14.2), see [macOS](#macos) below |
-| `manual/` | User manual and program description (Markdown + original PDF) | Complete |
-| `docs/` | LaTeX technical reports on the underlying methods | Complete |
-| `examples/` | Sample input files and a worked GUI-based example | Complete |
+| `fortran_mac/` | Current code (version 1.2); builds one program, `selaction` | **Active development: use this.** Verified on macOS (Intel, gfortran 14.2) |
+| `fortran_linux/` | Earlier Linux fork of the original code | Frozen. Builds, but **lacks the fixes in `NEWS.md`** (including the overlapping-generation errors). Will be brought up to date in one pass later |
+| `fortran_orig/` | Original Fortran code from Piter Bijma | Reference only, never modified. Does not build with a current gfortran |
+| `tests/` | Regression test inputs/outputs and runner, shared by all builds | Working, 7 test inputs |
+| `docs/` | LaTeX technical reports on the methods as implemented | Complete; updated October 2026 |
+| `manual/` | Original user manual and program description (Markdown + PDF) | Reference; describes the original Windows GUI |
+| `examples/` | Sample input files and a worked GUI-based example | Reference |
+| `correspondence/` | Write-ups sent to collaborators (e.g. open questions for the original authors) | — |
+| `plans/` | Design plans for larger changes, with their status | — |
 
-`fortran_linux/` is **not** a rewrite — it's `fortran_orig/` with the minimum changes needed to satisfy a modern gfortran compiler (array-constructor syntax, line-continuation formatting, a couple of local-variable renames, one added `USE` statement). There is no separate "2.0" or "modernized" codebase; earlier drafts of this documentation referenced one, but it was never built and has been removed from these docs. `fortran_mac/` follows the same approach: it's a copy of `fortran_linux/` plus only the fixes made since (see `NEWS.md`).
+`fortran_linux/` is **not** a rewrite. It is `fortran_orig/` with the minimum changes needed to satisfy a modern gfortran compiler: array-constructor syntax, line-continuation formatting, a few local-variable renames and one restricted `USE` statement. `fortran_mac/` started as a copy of `fortran_linux/` and adds only the fixes listed in [`NEWS.md`](NEWS.md). There is no separate "2.0" codebase.
 
 ### Files
 
-`fortran_mac/` has a single main program, `selaction.f90`, which builds the
-single `selaction` binary. `fortran_orig/` and `fortran_linux/` still have
-the original three main programs (`mssel.f90`, `msseld.f90`, `msselo.f90`).
-`fortran_linux/` will be brought in line when it is next updated.
+`fortran_mac/` has a single main program, `selaction.f90`, which builds the single `selaction` binary. `fortran_orig/` and `fortran_linux/` still have the original three main programs (`mssel.f90`, `msseld.f90`, `msselo.f90`).
+
+Line counts below are for `fortran_mac/`.
 
 | File | Description | Lines | Purpose |
 |------|-------------|-------|---------|
-| `selaction.f90` (`fortran_mac/`) | Main program | 45 | Entry point supporting all selection types (1/2/3 stages, overlapping generations) |
-| `mssel.f90` (`fortran_orig/`, `fortran_linux/`) | Main program (full version) | 45 | Entry point supporting all selection types; `fortran_mac/selaction.f90` is this file renamed |
+| `selaction.f90` (`fortran_mac/`) | Main program | 45 | Entry point for every selection type (1/2/3 stages, overlapping generations) |
+| `mssel.f90` (`fortran_orig/`, `fortran_linux/`) | Main program (full version) | 45 | Entry point for every selection type; `selaction.f90` is this file renamed |
 | `msseld.f90` (`fortran_orig/`, `fortran_linux/`) | Discrete generations main | 46 | Entry point for discrete generations only |
 | `msselo.f90` (`fortran_orig/`, `fortran_linux/`) | Overlapping generations main | 46 | Entry point for overlapping generations only |
-| `seldiscrete.f90` | Discrete selection routines | 4,794 | Core calculations for 1-, 2-, 3-stage selection |
-| `selovlp.f90` | Overlapping generations | ~1,000 | Overlapping generation calculations |
-| `selinbreeding.f90` | Inbreeding calculations | 368 | BLUP-based inbreeding rate calculations |
-| `selparameters.f90` | Global parameters | 120 | Variable definitions and declarations |
-| `selroutines.f90` | Mathematical routines | ~3,400 | Matrix operations and utility functions |
-| `seltools.f90` | Statistical functions | ~1,100 | Normal distribution and selection functions |
+| `seldiscrete.f90` | Discrete selection | 4,919 | `sel1s`, `sel2s`, `sel3s`: 1-, 2- and 3-stage selection |
+| `selovlp.f90` | Overlapping generations | 1,499 | `ovlp`: age classes, truncation across classes, generation interval |
+| `selroutines.f90` | Index and utility routines | 3,538 | Selection index, information sources, covariance updates, matrix routines, and the live rate-of-inbreeding code (`dFmtblup`) |
+| `seltools.f90` | Statistical functions | 1,412 | Normal distribution, truncation, finite-population correction of intensity (`rawl3`), multivariate normal integrals |
+| `selparameters.f90` | Global parameters | 120 | Shared variable declarations |
+| `selinbreeding.f90` | Unused duplicate | 368 | `MODULE Inbreeding`, an older copy of `dFmtblup`. It is compiled but never used; the live copy is in `selroutines.f90`. Scheduled for removal from `fortran_mac/` |
 
 ## Installation and Compilation
 
 ### Prerequisites
 
-- **Fortran Compiler**: gfortran (GNU Fortran) 4.6 or later
-- **Operating System**: Linux or macOS
-- **Memory**: Minimum 512 MB RAM (depends on problem size)
+- **Fortran compiler:** gfortran (GNU Fortran). Verified with 14.2.0.
+- **Operating system:** macOS or Linux
 
 ### Installing gfortran
 
@@ -114,31 +139,11 @@ sudo apt-get install gfortran
 sudo yum install gcc-gfortran
 ```
 
-### Linux (recommended, verified working)
+On macOS, gfortran ships inside Homebrew's `gcc` formula. Apple's own `gcc` is clang and has no Fortran compiler.
 
-`gfortran` compiles left to right and needs each module already built before compiling anything that `USE`s it, so **the main program must come last**, after every module it depends on:
+### Building `selaction` (recommended)
 
-```bash
-cd fortran_linux/
-
-# Full version
-gfortran -o mssel seltools.f90 selparameters.f90 selroutines.f90 \
-         selinbreeding.f90 selovlp.f90 seldiscrete.f90 mssel.f90
-
-# Discrete generations only
-gfortran -o msseld seltools.f90 selparameters.f90 selroutines.f90 \
-         selinbreeding.f90 seldiscrete.f90 msseld.f90
-
-# Overlapping generations only
-gfortran -o msselo seltools.f90 selparameters.f90 selroutines.f90 \
-         selovlp.f90 msselo.f90
-```
-
-All three binaries build with this exact sequence and are covered by regression fixtures in `tests/fixtures/` — run `tests/run_tests.sh` to check (see `tests/README.md`). `mssel`/`msseld` validate against five discrete-generation fixtures; `msselo` validates against `ovlp2`, an overlapping-generations fixture.
-
-### macOS
-
-Install gfortran with Homebrew (`brew install gcc` - gfortran ships inside Homebrew's `gcc` formula; Apple's own `gcc` is clang and has no Fortran compiler). `fortran_mac/` builds **one program, `selaction`**, which handles every selection scheme (1, 2 or 3 stages, or overlapping generations). Use the same file order, with the main program last:
+`gfortran` compiles left to right and needs each module already built before compiling anything that `USE`s it, so **the main program must come last**:
 
 ```bash
 cd fortran_mac/
@@ -147,205 +152,215 @@ gfortran -g -O2 -Wall -o selaction seltools.f90 selparameters.f90 selroutines.f9
          selinbreeding.f90 selovlp.f90 seldiscrete.f90 selaction.f90
 ```
 
-Use the flags shown. Without them, the `blup1` fixture differs in the sign of one near-zero value (`-0.000` vs `0.000`). That difference is a compiler floating-point effect, not a bug; see `tests/README.md`, "Numerical precision and the reference toolchain". `-Wall` prints many warnings on the legacy code; they are expected.
+- **Use the flags shown.** Without them, the `blup1` test differs in the sign of one near-zero value (`-0.000` vs `0.000`). That is a compiler floating-point effect, not a bug; see `tests/README.md`, "Numerical precision and the reference toolchain".
+- **`-Wall` prints many warnings** on the legacy code. They are expected.
 
-Verified with GNU Fortran 14.2.0 on macOS (x86_64): `selaction` builds without errors and passes every fixture (`tests/run_tests.sh fortran_mac`). No macOS-specific source changes were needed; `fortran_mac/` differs from `fortran_linux/` only by bug fixes listed in `NEWS.md`.
+Verified with GNU Fortran 14.2.0 on macOS (x86_64): `selaction` builds without errors and passes every test (`tests/run_tests.sh fortran_mac`).
+
+The code is plain gfortran with nothing macOS-specific, so the same command should work on Linux. Linux has not yet been verified for `fortran_mac/`; automated macOS and Linux builds are planned (`plans/test-hardening.md`, step T6).
+
+### Building `fortran_linux/` (frozen, older code)
+
+`fortran_linux/` builds the three original programs. It does **not** include the fixes in `NEWS.md`, so use it only for comparison:
+
+```bash
+cd fortran_linux/
+
+gfortran -o mssel seltools.f90 selparameters.f90 selroutines.f90 \
+         selinbreeding.f90 selovlp.f90 seldiscrete.f90 mssel.f90
+gfortran -o msseld seltools.f90 selparameters.f90 selroutines.f90 \
+         selinbreeding.f90 seldiscrete.f90 msseld.f90
+gfortran -o msselo seltools.f90 selparameters.f90 selroutines.f90 \
+         selovlp.f90 msselo.f90
+```
 
 ### Original version (reference only)
 
-```bash
-cd fortran_orig/
-# Same compilation order as the Linux version above. mssel and msseld
-# will still fail with a modern gfortran even with correct ordering
-# (see Known Issues — this is a pre-existing bug in the original code,
-# unrelated to file order). msselo builds and runs fine. This directory
-# exists for comparison against Rutten & Bijma's original source, not
-# as a build target — use fortran_linux/ if you need a working binary.
-```
+`fortran_orig/` exists for comparison against Rutten and Bijma's original source, not as a build target. None of its three programs builds with a current gfortran (checked with 14.2.0):
 
-### Compilation Flags
-
-- `-O2`: Optimization level 2
-- `-g`: Include debugging information
-- `-Wall`: Enable warnings
-- `-ffixed-line-length-none`: Needed if you hit "line truncated" errors against `fortran_orig/`
+- **`mssel` and `msseld`** fail because `selinbreeding.f90` imports a second copy of `dFmtblup` from `selroutines.f90` (see Known Issues).
+- **All three** fail in `selovlp.f90`, where `genint` is used without being declared under `implicit none`.
 
 ## Program Descriptions
 
-### Main Executables
+### selaction (`fortran_mac/`)
 
-#### selaction (`fortran_mac/`)
-The single program users run. It is the former `mssel` renamed, and it
-supports every selection scheme (the features listed under `mssel` below).
-Its banner (on screen and at the top of every `.out` report) reads
-"SelAction … version 1.2". It credits the original authors (Rutten and
-Bijma, Wageningen University, 2000) and the current update (Austin Putz and
-Jack Dekkers, Iowa State University, 2026).
+The program to run. It is the former `mssel`, renamed, and supports every selection scheme:
+
+- 1-, 2- and 3-stage selection in discrete generations
+- Overlapping generations with several age classes per sex
+
+Its banner (on screen and at the top of every `.out` report) reads "SelAction … version 1.2". It credits the original authors (Rutten and Bijma, Wageningen University, 2000) and the current update (Austin Putz and Jack Dekkers, Iowa State University, 2026).
 
 ```bash
 ./selaction
+# Answer the prompts. The first one chooses the scheme:
+# 1 = single stage, 2 = two stage, 3 = three stage, o = overlapping generations
 ```
 
-The three programs below are built from `fortran_orig/` and
-`fortran_linux/`.
+### Legacy programs (`fortran_orig/`, `fortran_linux/`)
 
-#### mssel (Full Version)
-The complete program supporting all selection schemes:
+- **`mssel`:** the same program as `selaction`.
+- **`msseld`:** discrete generations only (refuses `o`).
+- **`msselo`:** overlapping generations only.
 
-**Features:**
-- 1-, 2-, 3-stage selection in discrete generations
-- Overlapping generations with multiple age classes
-- Interactive menu system for selection type choice
-
-**Usage:**
-```bash
-./mssel
-# Follow interactive prompts to select:
-# 1 = Single stage
-# 2 = Two stage
-# 3 = Three stage
-# o = Overlapping generations
-```
-
-#### msseld (Discrete Generations)
-Specialized for discrete generation breeding schemes — single, two, and three-stage selection, optimized for traditional breeding programs.
-
-#### msselo (Overlapping Generations)
-Specialized for overlapping generation schemes — multiple age classes per sex, age-specific selection intensities, generation interval optimization, complex family structures.
+All three call the same routines.
 
 ### Core Modules
 
-#### Selection Calculations (`seldiscrete.f90`)
-Three main subroutines: `sel1s` (single-stage), `sel2s` (two-stage), `sel3s` (three-stage). Each handles trait parameter input, information source configuration, genetic correlation matrices, selection index calculation, and response prediction.
-
-#### Overlapping Generations (`selovlp.f90`)
-Age class definition, selection across age groups, generation interval calculation, genetic lag computation.
-
-#### Inbreeding Module (`selinbreeding.f90`)
-Calculates inbreeding rates using BLUP breeding values, multi-trait selection indices, finite population corrections, and Poisson variance corrections.
+- **`seldiscrete.f90`:** `sel1s`, `sel2s`, `sel3s`. Each reads the traits, parameters, population and information sources for its scheme, iterates the Bulmer equilibrium (25 rounds), and writes the report.
+- **`selovlp.f90`:** `ovlp`. Age classes per sex, a common truncation point across classes (or fixed numbers per class), generation interval, and genetic lag between classes.
+- **`selroutines.f90`:** the selection index itself (`selection_index`), information-source input, covariance updates, matrix inversion, and the rate-of-inbreeding calculation (`dFmtblup` with `Poissoncorr` and `hyper_correct`).
+- **`seltools.f90`:** normal quantiles and tails, the finite-population correction of intensity (`rawl3`), and bi-/trivariate normal integrals used in multistage selection.
 
 ## Input Parameters
 
-See [`README_Inputs.md`](README_Inputs.md) for a full field-by-field mapping guide, and `examples/input_selaction.txt` / `examples/output_discrete_1_stage/` for worked examples.
+The program asks for its input one prompt at a time; which prompt comes next depends on earlier answers. Each answer is echoed, with a label, to `<filename>.in`, which can be replayed later. [`tests/fixtures/test1.in`](tests/fixtures/test1.in) is a complete, labelled example.
 
-### General Parameters
+[`README_Inputs.md`](README_Inputs.md) describes the input file saved by the original Windows GUI (`examples/output_discrete_1_stage/`), which is a different format.
 
-| Parameter | Description | Range | Default |
-|-----------|-------------|--------|---------|
-| `ntraits` | Number of traits | 1-20 | - |
-| `filename` | Base filename (max 8 chars) | - | "test" |
-| `indexdiff` | Different indices for sires/dams | y/n | n |
-| `initc` | Common environment effects | y/n | n |
+### General
 
-### Population Structure
+| Input | Description | Allowed values |
+|-------|-------------|----------------|
+| scheme | Selection scheme | `1`, `2`, `3` (stages) or `o` (overlapping generations) |
+| filename | Base name for the `.in`/`.out` files | at most 8 characters (longer names are cut) |
+| number of traits | Number of traits | 1–20 |
+| trait name | Name of each trait | at most 8 characters, no spaces |
+| use of trait | Role of each trait | `i` index only, `h` breeding goal only, `b` both, `n` not used |
+| different indices for sires and dams | Separate information sources per sex | `y`/`n` |
+| common environment | Include common-environment (c²) effects | `y`/`n` |
 
-| Parameter | Description | Units |
-|-----------|-------------|--------|
-| `nsires` | Number of selected sires | count |
-| `ndams` | Number of selected dams | count |
-| `noffs` | Male offspring per dam | count |
-| `noffd` | Female offspring per dam | count |
+### Population structure (discrete generations)
 
-### Genetic Parameters
+| Input | Description |
+|-------|-------------|
+| number of selected sires / dams | Parents selected per generation |
+| male / female selection candidates per dam | Offspring per dam available for selection |
+| selected proportion sires / dams | Fraction selected (per stage for multistage selection) |
 
-| Parameter | Description | Range |
-|-----------|-------------|--------|
-| `h²` | Heritability | 0.01-0.99 |
-| `c²` | Common environment ratio | 0.0-0.5 |
-| `rG` | Genetic correlations | -1.0 to 1.0 |
-| `rP` | Phenotypic correlations | -1.0 to 1.0 |
+### Genetic parameters
 
-### Information Sources
+| Parameter | Description | Rule checked by the program |
+|-----------|-------------|-----------------------------|
+| σ²P | Phenotypic variance | — |
+| h² | Heritability | 0 < h² < 1 |
+| c² | Common-environment effect | 0 ≤ c² < 1 and h² + c² < 1 |
+| rP, rG, rC | Phenotypic, genetic and common-environment correlations | −1 < r < 1 |
 
-The program supports 84 different information source types:
+The correlation matrices must also be positive definite. The program only checks this after computing the results (see Known Issues).
 
-1. **Own performance** (source 1)
-2. **EBV of dam** (source 2)
-3. **EBV of sire** (source 3)
-4. **Full-sib information** (sources 4-23)
-5. **Half-sib information** (sources 24-43)
-6. **Dam half-sib EBV** (sources 44-63)
-7. **Progeny information** (sources 64-83)
+### Information sources
 
-### Selection Intensities
+Information sources are entered per trait as a list of codes ending with `-1`:
 
-Input as either **proportions selected** (0.01 to 1.0) or **number of animals selected** (truncation selection).
+| Code | Source |
+|------|--------|
+| 1 | Own performance |
+| 2 | BLUP breeding values |
+| 4–23 | Full-sib group 1–20 |
+| 24–43 | Half-sib group 1–20 |
+| 64–83 | Progeny group 1–20 |
+
+Codes 3 and 44–63 are never entered. They appear in the output as the expansion of code 2: the dam's EBV (shown under code 2), the sire's EBV (code 3), and the mean EBV of the dams of half-sib group k (codes 44–63). That is why `test1` enters `1 2 4 24` but its report lists six sources per trait.
+
+### Selection
+
+- **Discrete generations:** the proportion selected per sex (and per stage), strictly between 0 and 1.
+- **Overlapping generations:** truncation across age classes with a common threshold per sex, or a fixed number selected per age class.
 
 ## Output Files
 
-#### Input File (`.in`)
-Contains all input parameters in structured format, e.g.:
-```
-        1 ! stage selection
- test ! filenames
-        2 ! number of traits
-        n ! different indices for sires and dams
-        y ! common environmental effects
-```
+### Input echo (`<filename>.in`)
 
-#### Output File (`.out`)
-Contains the header (program identification, input parameter summary, date/time stamp) and results (selection index weights, genetic responses per trait, accuracies and correlations, inbreeding rates if calculated).
-
-### Example Output Interpretation
+Every answer, one per line, with a `!` label:
 
 ```
-Selection Index Weights:
-Trait 1 (Sires):   0.45
-Trait 2 (Sires):   0.32
+         1 ! stage selection
+  test1    ! filenames
+         3 ! number of traits
+         n ! different indices for sires and dams
+  eADG     ! name of trait  1
+         i ! use of eADG
+```
 
-Genetic Response per Generation:
-Trait 1: 0.85 genetic standard deviations
-Trait 2: 0.62 genetic standard deviations
+### Report (`<filename>.out`)
 
-Index Accuracy: 0.78
-Rate of Inbreeding: 0.0125 per generation
+The report has these parts:
+
+- **Inputs:** trait parameters, correlation matrices, breeding goal, population size and groups.
+- **Index weights:** one per information source and trait.
+- **Results:**
+  - equilibrium parameters after the Bulmer effect
+  - response per trait, by sex and in total, in trait and economic units
+  - correlated response for index-only traits
+  - total response
+  - index variance, breeding-goal variance and accuracy
+  - rate of inbreeding
+
+An excerpt from `tests/fixtures/test1.out`:
+
+```
+  RESPONSE
+                            sires           dams          total
+ ADG
+         trait units :      3.455          1.859          5.314
+      economic units :     17.273          9.295         26.568
+ % of total response :     62.024         33.378         95.403
+
+  TOTAL RESPONSE
+                            sires           dams          total
+      economic units :     18.105          9.743         27.849
+
+        index variance :       203.380
+ breeding goal variance :       612.380
+     accuracy of index :         0.576
+
+ increase of inbreeding :  4.046% per generation
 ```
 
 ## Mathematical Background
 
-### Selection Index Theory
+This is a short summary. `docs/SelAction_Technical_Report.pdf` gives the full equations as implemented, with the routine that computes each one. The module reports (`docs/seldiscrete_report.pdf`, `docs/selovlp_report.pdf`, `docs/selinbreeding_report.pdf`) go into more detail.
 
-The program implements Smith-Hazel selection indices:
+### Selection index
 
-**Index:** I = b'P
+The program uses Smith–Hazel selection indices. With **x** the vector of information sources, **P** their covariance matrix, **G** the covariance between the sources and the breeding values of the goal traits, and **v** the economic values:
 
-Where:
-- b = vector of index weights
-- P = vector of phenotypic values
+- **Index:** I = **b**′**x**
+- **Optimal weights:** **b** = **P**⁻¹**G****v**
+- **Accuracy:** r_IH = σ_I / σ_H = √(**b**′**P****b** / **v**′**C****v**), where **C** is the genetic covariance matrix of the goal traits
 
-**Optimal weights:** b = P⁻¹Gv
+### Bulmer effect
 
-Where:
-- P⁻¹ = inverse of phenotypic covariance matrix
-- G = genetic covariance matrix
-- v = vector of economic weights
+Selection reduces the genetic variance among the selected parents, and with it the variance in their offspring. The program iterates this for 25 rounds to an equilibrium (Bulmer 1971). The "equilibrium parameters" in the report are the result.
 
-### Multi-stage Selection
+### Multistage selection
 
-For k-stage selection, the program calculates stage-specific responses, correlated responses between stages, and combined selection response.
+Each stage has its own index, using the information available up to that stage. Candidates must pass every stage. Response follows from the moments of the truncated multivariate normal distribution (Tallis 1961), using bi- and trivariate normal integrals.
 
-### Inbreeding Calculations
+### Overlapping generations
 
-Uses the formula from Bijma and Woolliams (2000):
+A common truncation point per sex is applied across age classes, each with its own index. Older classes start from a lower genetic mean (genetic lag). Annual response follows Rendel and Robertson (1950): the sum of the selection differentials of both sexes, divided by the sum of their generation intervals.
 
-ΔF = (1/8) × (m×σ²ₛ + f×σ²ᵈ)
+### Rate of inbreeding
 
-Where m, f = number of sires and dams; σ²ₛ, σ²ᵈ = variance in family size for sires and dams.
+Predicted with the method of Bijma and Woolliams (2000):
 
-### Accuracy Calculations
+- **Expected long-term genetic contributions** are calculated from the selective advantage of the parents.
+- **A correction for finite family sizes** is added, using co-selection probabilities of sibs (Wray, Woolliams and Thompson 1990).
 
-Index accuracy: rᵢₕ = √(b'Pb)/(h²σ²ₐ)
+The method covers selection on BLUP breeding values.
 
-Where b'Pb = variance of index; h²σ²ₐ = genetic variance.
+### Intensity in small populations
 
-See `docs/SelAction_Technical_Report.pdf` and the individual module reports (`docs/seldiscrete_report.pdf`, `docs/selovlp_report.pdf`, `docs/selinbreeding_report.pdf`) for the full derivations.
+The selection intensity is corrected for the finite number of candidates and the correlation between the index values of sibs (Rawlings 1976; Meuwissen 1991).
 
 ## Usage Examples
 
-All examples use `selaction` from `fortran_mac/`. With `fortran_linux/`,
-use `./mssel` or `./msselo` instead.
+All examples use `selaction` from `fortran_mac/`.
 
-### Example 1: Single Trait, Single Stage
+### Example 1: Single trait, single stage
 
 ```bash
 ./selaction
@@ -353,18 +368,18 @@ use `./mssel` or `./msselo` instead.
 # Input: filename example1, 1 trait, h² 0.3, 10 sires, 100 dams, own performance
 ```
 
-### Example 2: Two Traits, Two Stages
+### Example 2: Two traits, two stages
 
 ```bash
 ./selaction
 # Select: 2 (two stage)
-# Trait 1: h² = 0.4, economic weight = 1.0
-# Trait 2: h² = 0.2, economic weight = 0.5
+# Trait 1: h² = 0.4, economic value = 1.0
+# Trait 2: h² = 0.2, economic value = 0.5
 # Genetic correlation: 0.3
-# Stage 1: own performance; Stage 2: progeny test
+# Stage 1: own performance; stage 2: progeny group
 ```
 
-### Example 3: Overlapping Generations
+### Example 3: Overlapping generations
 
 ```bash
 ./selaction
@@ -372,83 +387,143 @@ use `./mssel` or `./msselo` instead.
 # filename overlap1, 1 trait, 3 age classes
 ```
 
-### Example 4: Worked example from the GUI version
+### Example 4: Re-running a saved input
 
-See `examples/output_discrete_1_stage/` for a complete 3-trait, single-stage worked example including the original Windows GUI screenshots, the input file, and the output file — useful as a template for building your own `.in` files, and as a reference `README_Inputs.md` explains field-by-field.
+A saved `.in` file can be replayed. The program also opens `<filename>.in` by name, so run it in a directory holding the file under the name given on its "filenames" line:
+
+```bash
+mkdir run && cd run
+cp ../tests/fixtures/test1.in .
+../fortran_mac/selaction < test1.in      # writes test1.out here
+```
+
+### Example 5: Worked example from the GUI version
+
+`examples/output_discrete_1_stage/` has a complete 3-trait, single-stage worked example from the original Windows GUI: screenshots, the input file and the output file.
+
+## Testing
+
+```bash
+# from the repository root, after building fortran_mac/selaction (see above)
+tests/run_tests.sh fortran_mac
+```
+
+- **What the tests check:** each of the 7 test inputs in `tests/fixtures/` is run and its report compared byte for byte with a stored copy. Together they cover 1-, 2- and 3-stage selection, BLUP, the group information sources, and overlapping generations with and without groups.
+- **More detail:** see [`tests/README.md`](tests/README.md) for the format and how to add a test.
+- **Limitation:** these tests detect *changes* in results, not whether results are *correct*. Every stored output was produced by SelAction itself. [`plans/test-hardening.md`](plans/test-hardening.md) adds:
+  - checks against independently computed answers
+  - unit tests of the maths routines
+  - property tests
+  - automated builds
 
 ## Known Issues
 
-- **Overlapping generations: use `selaction` from `fortran_mac/`.** `msselo` in `fortran_orig/`/`fortran_linux/` often selects the wrong number of sires (e.g. 67.5 instead of 10) because of a too-narrow threshold search; fixed in `fortran_mac/` only so far (the code is plain gfortran and builds on Linux too). See `NEWS.md`.
-- **`selroutines.f90` contains dead, duplicated code.** Somewhere in its history, the entire `dFmtblup` inbreeding function (and its helpers `create_C`, `Poissoncorr`, `hyper_correct`) got copy-pasted into `selroutines.f90` in addition to living in `selinbreeding.f90`/`MODULE Inbreeding` where it's actually used. This is present in `fortran_orig/` too — it's not something introduced by the Linux fork. It only becomes a build error because `selinbreeding.f90` does `USE selroutines` unrestricted, which collides with its own `dFmtblup`. `fortran_linux/selinbreeding.f90` fixes this with `USE selroutines, ONLY: trunc` (the one symbol it actually needs); `fortran_orig/` is untouched by that fix, so `mssel`/`msseld` from `fortran_orig/` still won't build even with correct file order. `fortran_mac/` carries the same fix.
-- **Singular matrix errors**: usually caused by inconsistent genetic parameters (correlation matrices that aren't positive definite) — check inputs before assuming a code bug.
-- **Module not found / build order**: always compile `seltools.f90` → `selparameters.f90` → `selroutines.f90` → `selinbreeding.f90`/`selovlp.f90`/`seldiscrete.f90` → the main program, in that order (see [Installation and Compilation](#installation-and-compilation)). The main program must always come last.
+- **Open modelling questions.** Several points of the model are under review with the original authors. They are written up with evidence in [`correspondence/2026-10-bijma-dekkers/SelAction_open_questions.pdf`](correspondence/2026-10-bijma-dekkers/SelAction_open_questions.pdf):
+  - the genetic lag between age classes
+  - the family-structure correction under overlapping generations
+  - the 0.93 cap on stage correlations and r₁₃|₂ in three-stage selection
+  - half-sib information when each sire has one dam
+  - the switch in the inbreeding correction at 20 sires
+
+  The code still follows the original model on these points until they are answered.
+- **Use `fortran_mac/` for overlapping generations.** `msselo`/`mssel` in `fortran_linux/` can select the wrong number of parents (e.g. 67.5 sires instead of 10) and use a wrong generation interval. Both are fixed in `fortran_mac/` only.
+- **Some mistakes in the input are not caught:**
+  - An inconsistent (non-positive-definite) set of correlations is reported only at the end of the report (`** incoherent genetic parameters detected`), and the results are still printed.
+  - More than 20 groups of one type, or an invalid information-source code, are not rejected.
+  - Names longer than 8 characters are silently cut.
+  - The exit code is always 0.
+
+  Stricter checks are planned ([`plans/modernize-inputs-and-outputs.md`](plans/modernize-inputs-and-outputs.md)).
+- **`selinbreeding.f90` is unused.** Both `selroutines.f90` and `selinbreeding.f90` contain a full copy of `dFmtblup` and its helpers (`create_C`, `Poissoncorr`, `hyper_correct`). The live copy is the one in `selroutines.f90`. `MODULE Inbreeding` in `selinbreeding.f90` is compiled but never used.
+  - This is also why the original `mssel`/`msseld` won't build: `selinbreeding.f90` does an unrestricted `USE selroutines`, which imports a second `dFmtblup`.
+  - The forks restrict it to `USE selroutines, ONLY: trunc`.
+  - Removing the file from `fortran_mac/` is planned (`plans/test-hardening.md`, step T0).
+- **Module not found / build order:** compile `seltools.f90` → `selparameters.f90` → `selroutines.f90` → `selinbreeding.f90`/`selovlp.f90`/`seldiscrete.f90` → the main program, in that order. The main program must always come last.
 
 ## Troubleshooting
 
-### Common Issues
-
-#### Compilation Errors
+### Compilation errors
 
 **Module not found:**
 ```
 Fatal Error: Cannot open module file 'seltools.mod'
 ```
-**Solution:** Compile modules in dependency order (see [Installation and Compilation](#installation-and-compilation)).
+**Solution:** Compile in dependency order (see [Installation and Compilation](#installation-and-compilation)).
 
 **Long line errors (only against `fortran_orig/`):**
 ```
 Error: Line truncated
 ```
-**Solution:** Add `-ffixed-line-length-none`, or use `fortran_linux/` instead, which already fixes this.
+**Solution:** Add `-ffixed-line-length-none`, or use `fortran_mac/`.
 
-#### Runtime Errors
+### Runtime errors and messages
 
 **Singular matrix:**
 ```
-ERROR: Matrix is singular - cannot invert
+ -error-10- : matrix is singular
 ```
-**Solution:** Check genetic parameters for logical consistency (correlation matrices must be positive definite).
+**Solution:** Check the genetic parameters for consistency. Correlation matrices must be positive definite, and no two information sources may carry the same information.
 
-**Negative heritability:**
+**Incoherent parameters (printed at the end of the report):**
 ```
-Wrong input, heritability must be higher than 0!
+ ** incoherent genetic parameters detected
 ```
-**Solution:** Enter heritability between 0.01 and 0.99.
+**Solution:** The correlation matrices are not positive definite. Treat the results above it as invalid and correct the correlations.
 
-#### Input Validation
-
-**Invalid selection proportion:**
+**Heritability out of range:**
 ```
-P-value out of bounds
+ wrong input, heritability must be higher than 0!
 ```
-**Solution:** Enter proportions between 0.01 and 1.0.
+**Solution:** Enter a heritability strictly between 0 and 1. The program asks again.
 
-### Getting Help
+**Proportion selected out of range:**
+```
+ -error-20- : P-value out of bounds
+```
+**Solution:** Proportions selected must lie between 0 and 1.
 
-1. Check input files for parameter validation (see `README_Inputs.md`)
-2. Review output files for error messages
-3. Verify genetic parameters are biologically reasonable
-4. Test with simple examples (`examples/`) before complex scenarios
+### Getting help
+
+1. Compare your input with a working one (`tests/fixtures/*.in`).
+2. Read the `.out` report to the end for warnings.
+3. Check that the genetic parameters are biologically reasonable.
+4. Start from a small example before building a complex scenario.
+
+## Roadmap
+
+1. **Test hardening** ([`plans/test-hardening.md`](plans/test-hardening.md)):
+   - test inputs for every untested feature
+   - unit tests of the maths routines
+   - correctness tests against independently computed answers
+   - property tests
+   - automated builds on macOS and Linux
+2. **Answers to the open modelling questions** from the original authors, then any model changes they lead to. Each change will be documented with before-and-after results.
+3. **Scenario input and structured output** ([`plans/modernize-inputs-and-outputs.md`](plans/modernize-inputs-and-outputs.md)):
+   - YAML scenario folders, including sweeps over inputs
+   - full validation before running
+   - full-precision CSV results
+4. **Bring `fortran_linux/` up to date** in one pass.
+5. **An R implementation** (`SelActionR`), validated against this code.
 
 ## Related Project: SelActionR
 
-An R package reimplementation, `SelActionR`, is being developed as a separate project (not included in this repository) to provide a modern, scriptable interface to the same selection index theory, targeting eventual CRAN release. This repository remains the canonical reference implementation and validation source for that work.
+An R package reimplementation, `SelActionR`, is being developed as a separate project (not included in this repository). It will provide a modern, scriptable interface to the same selection index theory, with an eventual CRAN release as the goal. This repository is the reference implementation and validation source for that work.
 
 ## License
 
-This project is licensed under the **GNU General Public License v3.0 (GPLv3)** — see [`LICENSE`](LICENSE) for the full text.
+This project is licensed under the **GNU General Public License v3.0 (GPLv3)**. See [`LICENSE`](LICENSE) for the full text.
 
-The original Fortran code was authored by Marc J.M. Rutten and Piter Bijma at Wageningen University. Piter Bijma gave direct permission (via email) to release this repository, including the original code, under GPLv3.
+The original Fortran code was written by Marc J.M. Rutten and Piter Bijma at Wageningen University. Piter Bijma gave direct permission (by email) to release this repository, including the original code, under GPLv3.
 
 > [!CAUTION]
-> **NO WARRANTY** — This software is provided **as-is**, without warranty of any kind, express or
+> **NO WARRANTY.** This software is provided **as-is**, without warranty of any kind, express or
 > implied. The authors accept **no liability** for any damages or losses arising from its use.
 
 ## References
 
 ### Primary References
 
-1. **Rutten, M.J.M. and Bijma, P. (2000)**. SelAction: Multi-trait Selection Index Software. Animal Breeding and Genetics Group, Wageningen University. *(Internal technical documentation — no stable public link found; see the [Citation](#citation) section above for the peer-reviewed companion paper.)*
+1. **Rutten, M.J.M. and Bijma, P. (2000)**. SelAction: Multi-trait Selection Index Software. Animal Breeding and Genetics Group, Wageningen University. *(Internal technical documentation; no stable public link found. See the [Citation](#citation) section above for the peer-reviewed companion paper.)*
 2. **Smith, H.F. (1936)**. A discriminant function for plant selection. Annals of Eugenics, 7, 240-250. [https://doi.org/10.1111/j.1469-1809.1936.tb02143.x](https://doi.org/10.1111/j.1469-1809.1936.tb02143.x)
 3. **Hazel, L.N. (1943)**. The genetic basis for constructing selection indexes. Genetics, 28, 476-490. [https://doi.org/10.1093/genetics/28.6.476](https://doi.org/10.1093/genetics/28.6.476)
 
@@ -460,14 +535,16 @@ The original Fortran code was authored by Marc J.M. Rutten and Piter Bijma at Wa
 ### Selection Theory
 
 6. **Bulmer, M.G. (1971)**. The effect of selection on genetic variability. American Naturalist, 105, 201-211. [https://doi.org/10.1086/282718](https://doi.org/10.1086/282718)
-7. **Lynch, M. and Walsh, B. (1998)**. Genetics and Analysis of Quantitative Traits. Sinauer Associates, Sunderland, MA. [https://global.oup.com/academic/product/genetics-and-analysis-of-quantitative-traits-9780878934812](https://global.oup.com/academic/product/genetics-and-analysis-of-quantitative-traits-9780878934812)
+7. **Tallis, G.M. (1961)**. The moment generating function of the truncated multi-normal distribution. Journal of the Royal Statistical Society B, 23, 223-229. [https://doi.org/10.1111/j.2517-6161.1961.tb00408.x](https://doi.org/10.1111/j.2517-6161.1961.tb00408.x)
+8. **Rendel, J.M. and Robertson, A. (1950)**. Estimation of genetic gain in milk yield by selection in a closed herd of dairy cattle. Journal of Genetics, 50, 1-8. [https://doi.org/10.1007/BF02986789](https://doi.org/10.1007/BF02986789)
+9. **Rawlings, J.O. (1976)**. Order statistics for a special class of unequally correlated multinormal variates. Biometrics, 32, 875-887. [https://doi.org/10.2307/2529271](https://doi.org/10.2307/2529271)
+10. **Meuwissen, T.H.E. (1991)**. Reduction of selection differentials in finite populations with a nested full-half sib family structure. Biometrics, 47, 195. [https://doi.org/10.2307/2532506](https://doi.org/10.2307/2532506)
+11. **Lynch, M. and Walsh, B. (1998)**. Genetics and Analysis of Quantitative Traits. Sinauer Associates, Sunderland, MA. [https://global.oup.com/academic/product/genetics-and-analysis-of-quantitative-traits-9780878934812](https://global.oup.com/academic/product/genetics-and-analysis-of-quantitative-traits-9780878934812)
 
 ### Implementation Details
 
-8. **Press, W.H., Teukolsky, S.A., Vetterling, W.T. and Flannery, B.P. (1996)**. Numerical Recipes in Fortran 90: The Art of Parallel Scientific Computing (2nd ed., Vol. 2). Cambridge University Press. [https://dl.acm.org/doi/10.5555/232468](https://dl.acm.org/doi/10.5555/232468)
+12. **Press, W.H., Teukolsky, S.A., Vetterling, W.T. and Flannery, B.P. (1996)**. Numerical Recipes in Fortran 90: The Art of Parallel Scientific Computing (2nd ed., Vol. 2). Cambridge University Press. [https://dl.acm.org/doi/10.5555/232468](https://dl.acm.org/doi/10.5555/232468)
 
 ---
 
-**SelAction Version 1.1 (2000)** — original development by Marc J.M. Rutten and Piter Bijma.
-
-For questions about the original software, contact the Animal Breeding and Genetics Group at Wageningen University.
+**SelAction version 1.2 (2026)**: updated by Austin Putz and Jack Dekkers, Iowa State University. Original version 1.1 (2000) by Marc J.M. Rutten and Piter Bijma, Wageningen University.

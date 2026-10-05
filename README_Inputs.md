@@ -2,6 +2,18 @@
 
 This document explains how to map your breeding program parameters into the input format required by the sel1s subroutine in SelAction.
 
+> **Note (2026-10-05).** This guide decodes the input file saved by the
+> original **Windows GUI** (`examples/output_discrete_1_stage/SelAction_Inputs.txt`).
+> That format is not the one the Fortran program reads, and several of its
+> fields are not yet identified (marked below).
+>
+> The command-line program (`fortran_mac/selaction`) reads one answer per
+> prompt. [`tests/fixtures/test1.in`](tests/fixtures/test1.in) is a
+> complete example with every answer labelled. The input codes and rules
+> are summarised under "Input Parameters" in [`README.md`](README.md):
+> trait use `i`/`h`/`b`/`n`, and information sources 1, 2, 4–23, 24–43 and
+> 64–83, ending with `-1`.
+
 ## Example Data Mapping
 
 Based on the file `output_discrete_1_stage/SelAction_Inputs.txt`, here's how the data maps to program inputs:

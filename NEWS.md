@@ -1,5 +1,22 @@
 # SelAction (development version)
 
+## Documentation
+
+* 2026-10-05: brought `README.md`, `CLAUDE.md`, `GEMINI.md`,
+  `tests/README.md` and `README_Inputs.md` up to date with `fortran_mac/`
+  and version 1.2. Highlights:
+  * `README.md` now has a project-status section and a roadmap, and
+    recommends `fortran_mac/selaction`.
+  * Information-source codes, trait-use codes, input rules, error messages
+    and the accuracy formula are corrected. The sample output is now a
+    real excerpt from `test1.out`.
+  * `fortran_orig/` is documented as not building with gfortran 14.2.
+    None of its three programs builds, not even `msselo`, which the README
+    used to say built fine.
+* Added `plans/test-hardening.md`, which comes first, and
+  `plans/modernize-inputs-and-outputs.md`, now revision 9. Neither is
+  started.
+
 ## macOS
 
 * New `fortran_mac/` directory: a fresh copy of `fortran_linux/`, verified to
@@ -305,12 +322,18 @@ fixtures byte-identical.
 * With `nsires == ndams` (mating ratio 1, no paternal half sibs), the
   earlier-stage source lists of `sel2s`/`sel3s` are not filtered for
   half-sib sources; only the final-stage list is. Unchanged from the
-  original; not yet looked into.
+  original; raised as Question 6 in the open-questions report.
 * `fortran_linux/` still has every bug fixed above. `fortran_orig/` has all
   of them except the generation-interval error (change 3), which was
   introduced in the Linux fork.
 
 ## Questions for Piter Bijma / Jack Dekkers
+
+The consolidated write-up, with equations, evidence and recommendations,
+was sent on 2026-10-05:
+`correspondence/2026-10-bijma-dekkers/SelAction_open_questions.pdf`. It
+also asks for worked examples with known answers, for the test suite. The
+list below is the working list it was built from.
 
 1. Was the ±1.5 SD search bracket in `selovlp.f90` deliberate, or just a
    starting range? It is now ±8 SD.

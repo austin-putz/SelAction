@@ -10,7 +10,7 @@ There is no "modernized 2.0" codebase in this repository — earlier drafts of t
 
 ## Build Commands
 
-### Linux (recommended, known working)
+### Linux (`fortran_linux/`: frozen, lacks the fixes in `NEWS.md`)
 
 ```bash
 cd fortran_linux/
@@ -39,9 +39,11 @@ The flags matter: without them, `blup1` flips `-0.000` to `0.000` for one near-z
 
 ```bash
 cd fortran_orig/
-# Same compilation commands as Linux, but may need -ffixed-line-length-none
-# or fail outright on modern gfortran. This directory is a byte-for-byte
-# copy of Piter Bijma's original code and exists for comparison only.
+# Same compilation commands as Linux. None of the three programs builds
+# with gfortran 14.2 (checked 2026-10-05 in a scratch copy): mssel/msseld hit
+# the dFmtblup name clash, and all three fail on the undeclared `genint` in
+# selovlp.f90. This directory is a byte-for-byte copy of Piter Bijma's
+# original code and exists for comparison only.
 ```
 
 There is no top-level Makefile in this repository. Each platform directory is compiled directly with the `gfortran` invocations above.
@@ -55,12 +57,14 @@ There is no top-level Makefile in this repository. Each platform directory is co
 | Directory | Description | Status |
 |-----------|-------------|--------|
 | `fortran_orig/` | Original Fortran code from Piter Bijma | **Never modify — treat as read-only reference** |
-| `fortran_linux/` | Linux-compatible fork | Working, recommended |
-| `fortran_mac/` | macOS fork of `fortran_linux/` | Working — active development directory, see "macOS" above |
+| `fortran_linux/` | Linux-compatible fork | Builds; frozen, lacks the fixes in `NEWS.md` until a one-pass sync at the end |
+| `fortran_mac/` | macOS fork of `fortran_linux/` | Working — active development directory and the recommended build, see "macOS" above |
 | `manual/` | User manual + program description (Markdown + PDF) | Reference documentation |
 | `docs/` | LaTeX technical reports on the underlying methods | Reference documentation |
 | `examples/` | Sample input files and a worked GUI example | Reference/test fixtures |
 | `tests/` | Canonical `.in`/`.out` regression fixtures + `run_tests.sh`, shared across all platform builds and the R port | Working |
+| `plans/` | Design plans for major changes, each with a Status section | See "Plans and current status" below |
+| `correspondence/` | Write-ups sent to collaborators; `2026-10-bijma-dekkers/` holds the open modelling questions sent to Piter Bijma and Jack Dekkers on 2026-10-05 | Reference |
 
 ### Module Dependencies (same in fortran_orig/fortran_linux/fortran_mac)
 
@@ -84,9 +88,9 @@ Main programs (fortran_mac: selaction.f90; fortran_orig/fortran_linux: mssel.f90
 - `msselo.f90` (`fortran_orig/`, `fortran_linux/`) — overlapping generations only
 - `seldiscrete.f90` — core discrete-generation selection calculations (`sel1s`, `sel2s`, `sel3s`)
 - `selovlp.f90` — overlapping generation calculations
-- `selinbreeding.f90` — BLUP-based inbreeding calculations
+- `selinbreeding.f90` — `MODULE Inbreeding`, an unused duplicate of `dFmtblup` (never `USE`d; the live rate-of-inbreeding code is in `selroutines.f90`). Scheduled for removal from `fortran_mac/` (test-hardening T0)
 - `selparameters.f90` — global parameters and shared variables
-- `selroutines.f90` — matrix operations and mathematical utilities (e.g. `invrt`, `trunc`)
+- `selroutines.f90` — selection index, information-source input, covariance updates, matrix utilities (e.g. `invrt`, `trunc`), and the live `dFmtblup` (rate of inbreeding)
 - `seltools.f90` — statistical/distribution functions (`gcef`, `sabf`, `sintvi`, `rawl3`, `dutt*`)
 
 ## Development Guidelines
@@ -102,13 +106,22 @@ Main programs (fortran_mac: selaction.f90; fortran_orig/fortran_linux: mssel.f90
 ### Testing
 
 - Canonical regression fixtures live in `tests/fixtures/` (not inside any platform directory), so `fortran_linux`, `fortran_mac`, a future `fortran_windows`, and an eventual C++ port all validate against the same `.in`/`.out` pairs instead of drifting copies. Run `tests/run_tests.sh [platform_dir]` (defaults to `fortran_linux`); see `tests/README.md` for the fixture format, the manifest that maps fixtures to valid binaries, and — important if adding fixtures — the 8-character filename constraint imposed by `character (len=8) :: fnam` in `selparameters.f90`.
-- Fixtures: `test1` (3-trait discrete 1-stage, ported from the original distribution's smoke test), `test2s` (discrete 2-stage, `sel2s`), `test3s` (discrete 3-stage, `sel3s`), `blup1` (discrete 1-stage isolating the BLUP-specific branch of the inbreeding calculation), `advgrp` (discrete 1-stage isolating the unconfigured/partially-configured group-type matrix-block guards, including a progeny-groups path no other fixture exercises), `ovlp2` (overlapping generations, 2-trait, 2-age-class-per-sex, `msselo` only, own performance as the only info source), and `ovlpgrp` (overlapping generations, all three group types — full-sib/half-sib/progeny — configured and selected as info sources alongside own performance). The first five validate against both `mssel` and `msseld`. Overlapping generations (`ovlp` in `selovlp.f90`) previously had no fixture; the crash that made it unusable is fixed: `pheninfo` and `posgcorr` (both `allocatable` in `selparameters.f90`) were assigned to before being allocated — `pheninfo` was allocated ~150 lines later than its first use, and `posgcorr` wasn't allocated anywhere in this file at all (unlike its correctly-allocated counterpart in `seldiscrete.f90`). Both allocations were moved to immediately before first use, right after `ntraits`/`nclass` are read. This bug was inherited unchanged from `fortran_orig/selovlp.f90` (confirmed present there too, untouched, since `fortran_orig/` is never modified) and predates the Linux fork. Building the `ovlp2` fixture then surfaced a second, distinct bug in the same file: `ccprog` (progeny-test common-environmental effect) is only conditionally read (`initprog.eq."y" .and. initc.eq."y"`) but used unconditionally a few hundred lines later — same uninitialized-read shape as the group-array bug below, just in `selovlp.f90`. Fixed by zero-initializing `ccprog` alongside the group arrays. Building `ovlpgrp` then surfaced a third, unrelated uninitialized-read bug present in **four** subroutines (`info_sources`/`info_sourcesovlp`/`info_sources2`/`info_sources3`, all in `selroutines.f90`, so it affected discrete generations too, not just `ovlp`): a local `initblup` flag was read in a comparison on the very first call to each subroutine within a program run before ever being assigned, its value undefined until a BLUP (code 2) info source was actually seen. Fixed by explicitly initializing `initblup="n"` in all four. See `tests/README.md` for all three in full detail. `ovlpgrp` deliberately does **not** combine BLUP breeding values with a group as an info source — see the coverage-gap note below for why.
+- Fixtures: `test1` (3-trait discrete 1-stage, ported from the original distribution's smoke test), `test2s` (discrete 2-stage, `sel2s`), `test3s` (discrete 3-stage, `sel3s`), `blup1` (discrete 1-stage isolating the BLUP-specific branch of the inbreeding calculation), `advgrp` (discrete 1-stage isolating the unconfigured/partially-configured group-type matrix-block guards, including a progeny-groups path no other fixture exercises), `ovlp2` (overlapping generations, 2-trait, 2-age-class-per-sex, own performance as the only info source; runs under `selaction`, or `msselo` in `fortran_linux/`), and `ovlpgrp` (overlapping generations, all three group types — full-sib/half-sib/progeny — configured and selected as info sources alongside own performance). The first five validate against both `mssel` and `msseld`. Overlapping generations (`ovlp` in `selovlp.f90`) previously had no fixture; the crash that made it unusable is fixed: `pheninfo` and `posgcorr` (both `allocatable` in `selparameters.f90`) were assigned to before being allocated — `pheninfo` was allocated ~150 lines later than its first use, and `posgcorr` wasn't allocated anywhere in this file at all (unlike its correctly-allocated counterpart in `seldiscrete.f90`). Both allocations were moved to immediately before first use, right after `ntraits`/`nclass` are read. This bug was inherited unchanged from `fortran_orig/selovlp.f90` (confirmed present there too, untouched, since `fortran_orig/` is never modified) and predates the Linux fork. Building the `ovlp2` fixture then surfaced a second, distinct bug in the same file: `ccprog` (progeny-test common-environmental effect) is only conditionally read (`initprog.eq."y" .and. initc.eq."y"`) but used unconditionally a few hundred lines later — same uninitialized-read shape as the group-array bug below, just in `selovlp.f90`. Fixed by zero-initializing `ccprog` alongside the group arrays. Building `ovlpgrp` then surfaced a third, unrelated uninitialized-read bug present in **four** subroutines (`info_sources`/`info_sourcesovlp`/`info_sources2`/`info_sources3`, all in `selroutines.f90`, so it affected discrete generations too, not just `ovlp`): a local `initblup` flag was read in a comparison on the very first call to each subroutine within a program run before ever being assigned, its value undefined until a BLUP (code 2) info source was actually seen. Fixed by explicitly initializing `initblup="n"` in all four. See `tests/README.md` for all three in full detail. `ovlpgrp` deliberately does **not** combine BLUP breeding values with a group as an info source — see the coverage-gap note below for why.
 - `fsgroupsoff`/`hsgroupsoff`/`hsgroupsdams`/`proggroupsdams`/`proggroupsoffs`/`proggroupsoffd` (fixed `real, dimension(20)` in `selparameters.f90`) are only populated for the actually-configured number of groups, but `selection_index`/`intra_sd` in `selroutines.f90` unconditionally summed/indexed all 20 slots — a real uninitialized-read bug (confirmed via a `-finit-real=snan -ffpe-trap=...` debug build that segfaulted at `selroutines.f90:1539`), first fixed by zero-initializing all six arrays in `sel1s`/`sel2s`/`sel3s` (`seldiscrete.f90`) and `ovlp` (`selovlp.f90`) before use. That closed the uninitialized-read but left every division by those arrays running unconditionally even for unconfigured/partially-configured group types — mathematically undefined (`x/0.0` or `0.0/0.0`) and still trapped under strict FPE flags. Both subroutines now take `fsgroups`/`hsgroups`/`proggroups` as arguments (matching the existing `info_sources` pattern) and guard each division to only run when that specific group index is actually configured. See `tests/README.md` ("Resolved: unconfigured group-type matrix blocks") for the full detail, and its "Resolved: negative `sigmai`" section for a separate trap (`sqrt` of a negative `sigmai`) this fix exposed, since fixed.
 - **`ovlp` truncation threshold search (fixed, fortran_mac only)**: `riddr_root`'s bracket in `selovlp.f90` was ±1.5 SD (so ≥6.7% of young sires were always selected; `ovlpgrp` selected 67.5 sires instead of 10), and `trunc_delta`'s side-effect writes to `pvalcl`/`nselec` were left at the bracket midpoint on one exit path. Fixed with a wider bracket (now ±8 SD) and a re-evaluation at the root; later `sdutt1` was switched to the exact `erfc` tail and `trunc_delta`'s ±3 SD clamp (which forced ≥0.135% of every age class to be selected) removed; `ovlp2`/`ovlpgrp` expected outputs regenerated (and again after the generation-interval accumulation fix in `ovlp`). The earlier-reported "BLUP + group under `ovlp` collapses to zero" could not be reproduced before or after this fix. See `tests/README.md` and the open questions for the original authors in `NEWS.md`.
 - **Triage rule for `ovlp`-specific findings in general**: a crash/FPE-trap/bounds-violation traceable to an uninitialized variable, a missing zero-init, or a division unguarded for an unconfigured case is a plain programming bug — fix it directly, same pattern as `ccprog`/`initblup`/the group-array guards below, no equation review needed. Numerically *plausible-but-wrong* output (a response, accuracy, or covariance term whose value looks off but doesn't crash) is different — treat it like the BLUP+group issue above: don't guess, document precisely what looks wrong and where, and get the original theory (Bijma/Dekkers, or the original manual/technical report) before touching the equations.
 - `tests/README.md` also documents why `blup1.out` was regenerated: its BLUP index weight for a non-breeding-goal trait is genuinely near zero after 25 rounds of iterative equilibrium, right at the display-rounding boundary — sensitive to compiler-version-level floating-point differences, not a functional bug. The reference toolchain is recorded there.
 - `make test` / `make docs` referenced in older versions of this file do not exist — there is no build system beyond the direct `gfortran` commands above and `tests/run_tests.sh`.
-- **TODO**: wire `tests/run_tests.sh` into a GitHub Actions workflow and add a real build/test-status badge to `README.md`. Until then, don't add a CI/build-status badge — there'd be nothing behind it but the compile step, which isn't the same as correctness.
+- **TODO**: wire `tests/run_tests.sh` into a GitHub Actions workflow and add a real build/test-status badge to `README.md` (planned as test-hardening T6). Until then, don't add a CI/build-status badge — there'd be nothing behind it but the compile step, which isn't the same as correctness.
+- The reference toolchain for byte-exact fixtures is macOS x86_64, GNU Fortran 14.2.0, `-g -O2 -Wall` (all `.out` files were regenerated there for the version 1.2 banner).
+
+## Plans and current status
+
+- `plans/test-hardening.md` — **approved, next up, not started.** T0 delete `selinbreeding.f90` from `fortran_mac/`; T1 tooling (`strict.sh`, `coverage.sh`, `compare_out.R`, `run_all.sh`); T2 coverage fixtures; T3 unit tests; T4/T5 correctness and property tests (drafted by Claude, *provisional* until verified by Austin/Jack/Piter); T6/T7 CI and coverage gate.
+- `plans/modernize-inputs-and-outputs.md` — **approved (rev 9), waits on test-hardening.** R driver reading YAML scenario folders → legacy answer stream → `selaction --batch`; Fortran writes `results.csv`; no equation changes.
+- `plans/document.md` — docs-site idea, not started; written before `fortran_mac/` existed, so its "current state" is out of date.
+- The other files in `plans/` are implemented fixes kept for their reasoning.
+- Open modelling questions (genetic lag between age classes, family-structure correction under `ovlp`, the 0.93 stage-correlation cap and r13|2, half-sib sources when `nsires == ndams`, the 20-sire inbreeding switch) were sent to Piter Bijma and Jack Dekkers on 2026-10-05 (`correspondence/2026-10-bijma-dekkers/`). Don't change the model on these points until they answer.
 
 ## Common Issues
 

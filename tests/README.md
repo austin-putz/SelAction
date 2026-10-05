@@ -1,8 +1,8 @@
 # Regression tests
 
 Canonical, platform-agnostic input/output fixtures for validating every
-implementation of SelAction against each other: `fortran_linux` today, and a
-future `fortran_mac`, `fortran_windows`, and an eventual C++ port. Fixtures live here, not
+implementation of SelAction against each other: `fortran_mac` (the active
+code) and `fortran_linux` today, and a future `fortran_windows` and R port. Fixtures live here, not
 inside a platform directory, so there is exactly one source of truth for
 "what should this input produce" - every platform's runner points back at
 this same directory instead of carrying its own copy that can drift out of
@@ -27,7 +27,7 @@ tests/
 
 ```bash
 tests/run_tests.sh                # against fortran_linux (default)
-tests/run_tests.sh fortran_mac    # once that directory exists, run against it instead
+tests/run_tests.sh fortran_mac    # the active code; build fortran_mac/selaction first
 ```
 
 Binaries listed in `manifest.txt` that aren't built in the target platform
@@ -95,12 +95,15 @@ so no result values moved.
 
 These fixtures are captured by actually running a real binary and diffing
 byte-for-byte, so they're sensitive to the exact `gfortran` build that
-produced them. The canonical reference toolchain used to capture the
-current fixtures is:
+produced them. The reference toolchain for the current fixtures (all
+regenerated there for the version 1.2 banner) is:
 
 ```
-GNU Fortran (Ubuntu 15.2.0-16ubuntu1) 15.2.0
+GNU Fortran (GCC) 14.2.0 (Homebrew gcc), macOS x86_64
+fortran_mac/selaction built with -g -O2 -Wall
 ```
+
+Earlier fixtures were first captured with GNU Fortran 15.2.0 on Ubuntu.
 
 For most fixtures this doesn't matter - the underlying computation is well
 away from any rounding boundary. But a fixture can legitimately contain a
@@ -460,14 +463,15 @@ group-type matrix-block guards, including progeny groups), `ovlp2`
 fixtures must come from actually running a real binary with a valid,
 non-singular parameter set - do not hand-write expected output.
 
-1. Build the binaries in `fortran_linux/` (see root `README.md`).
+1. Build `fortran_mac/selaction` (see root `README.md`).
 2. Prepare a `.in` file (an existing one is the easiest starting template),
    keeping the base name ≤ 8 characters and matching the "filenames" line
    inside it.
-3. Run it for real: `cd` into a scratch dir, `./mssel < name.in`, confirm it
+3. Run it for real: `cd` into a scratch dir, `selaction < name.in`, confirm it
    completes without error (a singular/non-positive-definite correlation
    matrix will fail here - that's expected feedback, not a bug).
 4. Copy the resulting `name.in`/`name.out` pair into `tests/fixtures/`.
 5. Add a line to `manifest.txt` naming which binaries it's valid for and
-   what it exercises.
+   what it exercises. New fixtures list `selaction` only; the legacy names
+   are added when `fortran_linux/` is synced.
 6. Run `tests/run_tests.sh` and confirm it passes.

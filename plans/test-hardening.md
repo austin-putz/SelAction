@@ -100,7 +100,7 @@ in the two main driver files have never been taken by any test.
 | Separate indices for sires and dams | all 7 use `n` |
 | Equal numbers of sires and dams | never |
 | Common environment **off** in discrete generations | only off in `ovlp2` |
-| Goal-only traits (`use = g`) | never; traits are only `b` or `i` |
+| Goal-only traits (`use = h`) | never; traits are only `b` or `i` |
 | A single trait | never; only 2 or 3 traits |
 | More than 3 traits | never |
 | More than one group of the same type | never |
@@ -297,7 +297,7 @@ property tests in T5 then cross-check several of them.
 | `matrat1` | `nsires = ndams` (`note_matrat`) |
 | `nophen` | a trait with no phenotypic source, correlated with one that has one. Covers `note_pheninfo` and the correction-prompt path, with the answers scripted in the `.in` |
 | `noce1` | discrete 1-stage, common environment off |
-| `goalonly` | a goal-only trait (`use = g`) |
+| `goalonly` | a goal-only trait (`use = h`) |
 | `onetrait` | a single trait |
 | `fivetr` | 5 traits (larger matrices, more correlations) |
 | `multigrp` | 2+ groups of the same type (e.g. 2 FS groups, 2 HS groups recorded for different traits) |

@@ -1,5 +1,10 @@
 # Plan: Online Documentation System for SelAction
 
+> **Status (2026-10-05): not started.** Written 2026-08-18, before
+> `fortran_mac/` worked and before it became the single `selaction`
+> program. The "Current State" details below are out of date; see
+> `README.md` and `NEWS.md` for the current layout.
+
 ## 1. Goal
 
 Stand up a proper online documentation site (something in the spirit of `pkgdown` for R, or `docs.rs`/ReadTheDocs for other ecosystems) that hosts **two distinct manuals**:

@@ -7,7 +7,8 @@ sent, and the figure sources.
 
 * `2026-10-bijma-dekkers/` - open modelling questions for Piter Bijma and
   Jack Dekkers: background, equations, numerical evidence and
-  recommendations (`SelAction_open_questions.pdf`).
+  recommendations (`SelAction_open_questions.pdf`), sent 2026-10-05. It
+  also asks for worked examples with known answers.
 
 ## Building
 
