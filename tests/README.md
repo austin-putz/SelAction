@@ -1,9 +1,9 @@
 # Regression tests
 
 Canonical, platform-agnostic input/output fixtures for validating every
-implementation of SelAction against each other: `fortran_mac` (the active
-code) and `fortran_linux` today, and a future `fortran_windows` and R port. Fixtures live here, not
-inside a platform directory, so there is exactly one source of truth for
+implementation of SelAction against each other: `fortran/` (the single
+Fortran source tree, built on any platform) today, and the R port later.
+Fixtures live here, not inside a source directory, so there is exactly one source of truth for
 "what should this input produce" - every platform's runner points back at
 this same directory instead of carrying its own copy that can drift out of
 sync.
@@ -26,29 +26,28 @@ tests/
 ## Running
 
 ```bash
-tests/run_tests.sh                # against fortran_linux (default)
-tests/run_tests.sh fortran_mac    # the active code; build fortran_mac/selaction first
+tests/run_tests.sh                # against fortran/ (default); build fortran/selaction first
+tests/run_tests.sh <dir>          # against binaries built in another directory
 ```
 
 Binaries listed in `manifest.txt` that aren't built in the target platform
 directory are skipped (not failed) **as long as at least one of that
 fixture's binaries ran**. A fixture with none of its binaries built, or
 with a missing `.in`/`.out`, is a FAIL, so a broken or forgotten build can't
-pass silently. The SKIP rule exists because platforms build different
-binaries: `fortran_mac/` builds only `selaction`, and `fortran_linux/`
-builds `mssel`/`msseld`/`msselo`.
+pass silently. Every fixture currently lists only `selaction`, so a normal
+run shows no SKIPs. The rule remains for a future port that builds a
+differently named binary.
 
 ## How a fixture is invoked
 
-`selaction` (`fortran_mac/`) and `mssel`/`msseld`/`msselo` (`fortran_linux/`)
-are interactive programs: they read prompts from
+`selaction` (`fortran/`) is an interactive program: it reads prompts from
 stdin, and separately re-open a file by name (derived from the "filenames"
 prompt answer) to read the bulk of the input and to write output. So a
 fixture named `test1` is run as:
 
 ```bash
 cp tests/fixtures/test1.in ./          # must be present under this exact name
-./selaction < test1.in                  # produces ./test1.out (./mssel for fortran_linux)
+./selaction < test1.in                  # produces ./test1.out
 ```
 
 `run_tests.sh` does this in a scratch temp dir per run and diffs the result
@@ -68,14 +67,15 @@ the `.in` file itself under 8 characters and identical to each other.
 
 Each fixture must declare which binaries it's valid for.
 
-`fortran_mac/` builds **one binary, `selaction`** (the former `mssel`,
-renamed). It accepts every mode, so it is listed for **every** fixture.
-`fortran_linux/` still builds the original three programs, and their
-entries stay until that directory is updated. `run_tests.sh` skips any
-listed binary that isn't built, so each platform runs only its own. The
-three legacy programs have different interactive prompt sequences:
+`fortran/` builds **one binary, `selaction`** (the former `mssel`,
+renamed). It accepts every mode, so it is the only binary listed, for
+**every** fixture. The legacy programs (`mssel`/`msseld`/`msselo`) survive
+only in `fortran_orig/`, which doesn't build; their entries were removed
+from the manifest on 2026-10-05, when the older `fortran_linux/` copy that
+built them was removed. Older sections below that mention them describe
+how a bug was found at the time. For reference, the prompt sequences were:
 
-- `selaction` (`fortran_mac/`) — identical to `mssel`; accepts `1/2/3/o`
+- `selaction` (`fortran/`) — identical to `mssel`; accepts `1/2/3/o`
 - `mssel` — asks `1/2/3 stage selection, or overlapping generations? (1/2/3/o)`
 - `msseld` — asks the same `1/2/3` question but rejects `o`
 - `msselo` — only accepts `o`; feeding it a `1/2/3` fixture makes it
@@ -100,7 +100,7 @@ regenerated there for the version 1.2 banner) is:
 
 ```
 GNU Fortran (GCC) 14.2.0 (Homebrew gcc), macOS x86_64
-fortran_mac/selaction built with -g -O2 -Wall
+fortran/selaction built with -g -O2 -Wall
 ```
 
 Earlier fixtures were first captured with GNU Fortran 15.2.0 on Ubuntu.
@@ -374,7 +374,7 @@ and the strict SNaN/FPE/`-fcheck=all` build is trap-free. Varying `nsires`
 on `ovlpgrp` shows old and new code agree wherever the old bracket contained
 the root (>= 67.5 sires); below that, the old code returned identical output
 for 5/10/20/40 sires. `ovlp2.out`/`ovlpgrp.out` were regenerated with GNU
-Fortran 14.2.0 on macOS x86_64 (`fortran_mac/msselo`). Open questions for the
+Fortran 14.2.0 on macOS x86_64 (`msselo` in `fortran_mac/`, now `fortran/`). Open questions for the
 original authors are listed in `NEWS.md`.
 
 ## Changed: exact normal tail in `sdutt1`; `trunc_delta` clamp removed (`ovlp2`/`ovlpgrp` regenerated again)
@@ -407,7 +407,8 @@ The new intervals were checked by hand against the printed class counts.
 All discrete-generation fixtures byte-identical. Details in `NEWS.md`.
 This error came in with the `fortran_linux` fork (a rename to `genints_local`
 when making the code compile); `fortran_orig/selovlp.f90` accumulates
-correctly. `fortran_linux/` still has it.
+correctly. The `fortran_linux/` copy that still had it was removed on
+2026-10-05.
 
 ## Previously reported: BLUP breeding values + groups under overlapping generations
 
@@ -463,7 +464,7 @@ group-type matrix-block guards, including progeny groups), `ovlp2`
 fixtures must come from actually running a real binary with a valid,
 non-singular parameter set - do not hand-write expected output.
 
-1. Build `fortran_mac/selaction` (see root `README.md`).
+1. Build `fortran/selaction` (see root `README.md`).
 2. Prepare a `.in` file (an existing one is the easiest starting template),
    keeping the base name ≤ 8 characters and matching the "filenames" line
    inside it.
@@ -472,6 +473,5 @@ non-singular parameter set - do not hand-write expected output.
    matrix will fail here - that's expected feedback, not a bug).
 4. Copy the resulting `name.in`/`name.out` pair into `tests/fixtures/`.
 5. Add a line to `manifest.txt` naming which binaries it's valid for and
-   what it exercises. New fixtures list `selaction` only; the legacy names
-   are added when `fortran_linux/` is synced.
+   what it exercises. List `selaction`.
 6. Run `tests/run_tests.sh` and confirm it passes.

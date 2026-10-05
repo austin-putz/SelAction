@@ -46,7 +46,7 @@ Email :e-mail: putz.austin@gmail.com with a full report
 
 *Updated 5 October 2026.*
 
-SelAction is being brought up to date at Iowa State University (Austin Putz and Jack Dekkers), starting from the original Fortran code by Marc Rutten and Piter Bijma. The current version is **1.2**, in `fortran_mac/`.
+SelAction is being brought up to date at Iowa State University (Austin Putz and Jack Dekkers), starting from the original Fortran code by Marc Rutten and Piter Bijma. The current version is **1.2**, in `fortran/`.
 
 **Done so far** (details in [`NEWS.md`](NEWS.md)):
 
@@ -88,8 +88,7 @@ SelAction is a Fortran program developed by Marc J.M. Rutten and Piter Bijma at 
 
 | Directory | Description | Status |
 |-----------|-------------|--------|
-| `fortran_mac/` | Current code (version 1.2); builds one program, `selaction` | **Active development: use this.** Verified on macOS (Intel, gfortran 14.2) |
-| `fortran_linux/` | Earlier Linux fork of the original code | Frozen. Builds, but **lacks the fixes in `NEWS.md`** (including the overlapping-generation errors). Will be brought up to date in one pass later |
+| `fortran/` | Current code (version 1.2); builds one program, `selaction`, on any OS | **Active development: use this.** Verified on macOS (Intel, gfortran 14.2) |
 | `fortran_orig/` | Original Fortran code from Piter Bijma | Reference only, never modified. Does not build with a current gfortran |
 | `tests/` | Regression test inputs/outputs and runner, shared by all builds | Working, 7 test inputs |
 | `docs/` | LaTeX technical reports on the methods as implemented | Complete; updated October 2026 |
@@ -98,33 +97,33 @@ SelAction is a Fortran program developed by Marc J.M. Rutten and Piter Bijma at 
 | `correspondence/` | Write-ups sent to collaborators (e.g. open questions for the original authors) | — |
 | `plans/` | Design plans for larger changes, with their status | — |
 
-`fortran_linux/` is **not** a rewrite. It is `fortran_orig/` with the minimum changes needed to satisfy a modern gfortran compiler: array-constructor syntax, line-continuation formatting, a few local-variable renames and one restricted `USE` statement. `fortran_mac/` started as a copy of `fortran_linux/` and adds only the fixes listed in [`NEWS.md`](NEWS.md). There is no separate "2.0" codebase.
+`fortran/` is **not** a rewrite. It is `fortran_orig/` with the minimum changes needed to satisfy a modern gfortran compiler (array-constructor syntax, line-continuation formatting, a few local-variable renames and one restricted `USE` statement), plus the fixes listed in [`NEWS.md`](NEWS.md). It contains nothing specific to any operating system, so there is one source tree for every platform. Until October 2026 it was called `fortran_mac/`, and an older, unfixed copy lived in `fortran_linux/`; that copy was removed (it remains in the git history).
 
 ### Files
 
-`fortran_mac/` has a single main program, `selaction.f90`, which builds the single `selaction` binary. `fortran_orig/` and `fortran_linux/` still have the original three main programs (`mssel.f90`, `msseld.f90`, `msselo.f90`).
+`fortran/` has a single main program, `selaction.f90`, which builds the single `selaction` binary. `fortran_orig/` still has the original three main programs (`mssel.f90`, `msseld.f90`, `msselo.f90`).
 
-Line counts below are for `fortran_mac/`.
+Line counts below are for `fortran/`.
 
 | File | Description | Lines | Purpose |
 |------|-------------|-------|---------|
-| `selaction.f90` (`fortran_mac/`) | Main program | 45 | Entry point for every selection type (1/2/3 stages, overlapping generations) |
-| `mssel.f90` (`fortran_orig/`, `fortran_linux/`) | Main program (full version) | 45 | Entry point for every selection type; `selaction.f90` is this file renamed |
-| `msseld.f90` (`fortran_orig/`, `fortran_linux/`) | Discrete generations main | 46 | Entry point for discrete generations only |
-| `msselo.f90` (`fortran_orig/`, `fortran_linux/`) | Overlapping generations main | 46 | Entry point for overlapping generations only |
+| `selaction.f90` (`fortran/`) | Main program | 45 | Entry point for every selection type (1/2/3 stages, overlapping generations) |
+| `mssel.f90` (`fortran_orig/`) | Main program (full version) | 45 | Entry point for every selection type; `selaction.f90` is this file renamed |
+| `msseld.f90` (`fortran_orig/`) | Discrete generations main | 46 | Entry point for discrete generations only |
+| `msselo.f90` (`fortran_orig/`) | Overlapping generations main | 46 | Entry point for overlapping generations only |
 | `seldiscrete.f90` | Discrete selection | 4,919 | `sel1s`, `sel2s`, `sel3s`: 1-, 2- and 3-stage selection |
 | `selovlp.f90` | Overlapping generations | 1,499 | `ovlp`: age classes, truncation across classes, generation interval |
 | `selroutines.f90` | Index and utility routines | 3,538 | Selection index, information sources, covariance updates, matrix routines, and the live rate-of-inbreeding code (`dFmtblup`) |
 | `seltools.f90` | Statistical functions | 1,412 | Normal distribution, truncation, finite-population correction of intensity (`rawl3`), multivariate normal integrals |
 | `selparameters.f90` | Global parameters | 120 | Shared variable declarations |
-| `selinbreeding.f90` | Unused duplicate | 368 | `MODULE Inbreeding`, an older copy of `dFmtblup`. It is compiled but never used; the live copy is in `selroutines.f90`. Scheduled for removal from `fortran_mac/` |
+| `selinbreeding.f90` | Unused duplicate | 368 | `MODULE Inbreeding`, an older copy of `dFmtblup`. It is compiled but never used; the live copy is in `selroutines.f90`. Scheduled for removal from `fortran/` |
 
 ## Installation and Compilation
 
 ### Prerequisites
 
 - **Fortran compiler:** gfortran (GNU Fortran). Verified with 14.2.0.
-- **Operating system:** macOS or Linux
+- **Operating system:** any with gfortran (macOS, Linux; Windows via MSYS2 or WSL, not yet tested)
 
 ### Installing gfortran
 
@@ -146,7 +145,7 @@ On macOS, gfortran ships inside Homebrew's `gcc` formula. Apple's own `gcc` is c
 `gfortran` compiles left to right and needs each module already built before compiling anything that `USE`s it, so **the main program must come last**:
 
 ```bash
-cd fortran_mac/
+cd fortran/
 
 gfortran -g -O2 -Wall -o selaction seltools.f90 selparameters.f90 selroutines.f90 \
          selinbreeding.f90 selovlp.f90 seldiscrete.f90 selaction.f90
@@ -155,24 +154,9 @@ gfortran -g -O2 -Wall -o selaction seltools.f90 selparameters.f90 selroutines.f9
 - **Use the flags shown.** Without them, the `blup1` test differs in the sign of one near-zero value (`-0.000` vs `0.000`). That is a compiler floating-point effect, not a bug; see `tests/README.md`, "Numerical precision and the reference toolchain".
 - **`-Wall` prints many warnings** on the legacy code. They are expected.
 
-Verified with GNU Fortran 14.2.0 on macOS (x86_64): `selaction` builds without errors and passes every test (`tests/run_tests.sh fortran_mac`).
+Verified with GNU Fortran 14.2.0 on macOS (x86_64): `selaction` builds without errors and passes every test (`tests/run_tests.sh`).
 
-The code is plain gfortran with nothing macOS-specific, so the same command should work on Linux. Linux has not yet been verified for `fortran_mac/`; automated macOS and Linux builds are planned (`plans/test-hardening.md`, step T6).
-
-### Building `fortran_linux/` (frozen, older code)
-
-`fortran_linux/` builds the three original programs. It does **not** include the fixes in `NEWS.md`, so use it only for comparison:
-
-```bash
-cd fortran_linux/
-
-gfortran -o mssel seltools.f90 selparameters.f90 selroutines.f90 \
-         selinbreeding.f90 selovlp.f90 seldiscrete.f90 mssel.f90
-gfortran -o msseld seltools.f90 selparameters.f90 selroutines.f90 \
-         selinbreeding.f90 seldiscrete.f90 msseld.f90
-gfortran -o msselo seltools.f90 selparameters.f90 selroutines.f90 \
-         selovlp.f90 msselo.f90
-```
+The code is plain standard Fortran with nothing specific to any operating system, so the same command builds it on Linux, macOS (Intel or Apple Silicon) and Windows (gfortran via MSYS2 or WSL). Only the macOS Intel build has been verified so far; automated builds on other platforms are planned (`plans/test-hardening.md`, step T6). Results on other platforms or compilers can differ in the last printed digit, which is why the stored test outputs are tied to one reference toolchain (see `tests/README.md`).
 
 ### Original version (reference only)
 
@@ -183,7 +167,7 @@ gfortran -o msselo seltools.f90 selparameters.f90 selroutines.f90 \
 
 ## Program Descriptions
 
-### selaction (`fortran_mac/`)
+### selaction (`fortran/`)
 
 The program to run. It is the former `mssel`, renamed, and supports every selection scheme:
 
@@ -198,7 +182,7 @@ Its banner (on screen and at the top of every `.out` report) reads "SelAction �
 # 1 = single stage, 2 = two stage, 3 = three stage, o = overlapping generations
 ```
 
-### Legacy programs (`fortran_orig/`, `fortran_linux/`)
+### Legacy programs (`fortran_orig/`)
 
 - **`mssel`:** the same program as `selaction`.
 - **`msseld`:** discrete generations only (refuses `o`).
@@ -358,7 +342,7 @@ The selection intensity is corrected for the finite number of candidates and the
 
 ## Usage Examples
 
-All examples use `selaction` from `fortran_mac/`.
+All examples use `selaction` from `fortran/`.
 
 ### Example 1: Single trait, single stage
 
@@ -394,7 +378,7 @@ A saved `.in` file can be replayed. The program also opens `<filename>.in` by na
 ```bash
 mkdir run && cd run
 cp ../tests/fixtures/test1.in .
-../fortran_mac/selaction < test1.in      # writes test1.out here
+../fortran/selaction < test1.in      # writes test1.out here
 ```
 
 ### Example 5: Worked example from the GUI version
@@ -404,8 +388,8 @@ cp ../tests/fixtures/test1.in .
 ## Testing
 
 ```bash
-# from the repository root, after building fortran_mac/selaction (see above)
-tests/run_tests.sh fortran_mac
+# from the repository root, after building fortran/selaction (see above)
+tests/run_tests.sh
 ```
 
 - **What the tests check:** each of the 7 test inputs in `tests/fixtures/` is run and its report compared byte for byte with a stored copy. Together they cover 1-, 2- and 3-stage selection, BLUP, the group information sources, and overlapping generations with and without groups.
@@ -426,7 +410,7 @@ tests/run_tests.sh fortran_mac
   - the switch in the inbreeding correction at 20 sires
 
   The code still follows the original model on these points until they are answered.
-- **Use `fortran_mac/` for overlapping generations.** `msselo`/`mssel` in `fortran_linux/` can select the wrong number of parents (e.g. 67.5 sires instead of 10) and use a wrong generation interval. Both are fixed in `fortran_mac/` only.
+- **Older copies give wrong overlapping-generation results.** The earlier Linux fork (removed from this repository, still in the git history) can select the wrong number of parents (e.g. 67.5 sires instead of 10) and uses a wrong generation interval. Both are fixed in `fortran/`; use only that.
 - **Some mistakes in the input are not caught:**
   - An inconsistent (non-positive-definite) set of correlations is reported only at the end of the report (`** incoherent genetic parameters detected`), and the results are still printed.
   - More than 20 groups of one type, or an invalid information-source code, are not rejected.
@@ -436,8 +420,8 @@ tests/run_tests.sh fortran_mac
   Stricter checks are planned ([`plans/modernize-inputs-and-outputs.md`](plans/modernize-inputs-and-outputs.md)).
 - **`selinbreeding.f90` is unused.** Both `selroutines.f90` and `selinbreeding.f90` contain a full copy of `dFmtblup` and its helpers (`create_C`, `Poissoncorr`, `hyper_correct`). The live copy is the one in `selroutines.f90`. `MODULE Inbreeding` in `selinbreeding.f90` is compiled but never used.
   - This is also why the original `mssel`/`msseld` won't build: `selinbreeding.f90` does an unrestricted `USE selroutines`, which imports a second `dFmtblup`.
-  - The forks restrict it to `USE selroutines, ONLY: trunc`.
-  - Removing the file from `fortran_mac/` is planned (`plans/test-hardening.md`, step T0).
+  - `fortran/` restricts it to `USE selroutines, ONLY: trunc`.
+  - Removing the file from `fortran/` is planned (`plans/test-hardening.md`, step T0).
 - **Module not found / build order:** compile `seltools.f90` → `selparameters.f90` → `selroutines.f90` → `selinbreeding.f90`/`selovlp.f90`/`seldiscrete.f90` → the main program, in that order. The main program must always come last.
 
 ## Troubleshooting
@@ -454,7 +438,7 @@ Fatal Error: Cannot open module file 'seltools.mod'
 ```
 Error: Line truncated
 ```
-**Solution:** Add `-ffixed-line-length-none`, or use `fortran_mac/`.
+**Solution:** Add `-ffixed-line-length-none`, or use `fortran/`.
 
 ### Runtime errors and messages
 
@@ -496,14 +480,13 @@ Error: Line truncated
    - unit tests of the maths routines
    - correctness tests against independently computed answers
    - property tests
-   - automated builds on macOS and Linux
+   - automated builds on macOS and Linux (and Windows)
 2. **Answers to the open modelling questions** from the original authors, then any model changes they lead to. Each change will be documented with before-and-after results.
 3. **Scenario input and structured output** ([`plans/modernize-inputs-and-outputs.md`](plans/modernize-inputs-and-outputs.md)):
    - YAML scenario folders, including sweeps over inputs
    - full validation before running
    - full-precision CSV results
-4. **Bring `fortran_linux/` up to date** in one pass.
-5. **An R implementation** (`SelActionR`), validated against this code.
+4. **An R implementation** (`SelActionR`), validated against this code.
 
 ## Related Project: SelActionR
 

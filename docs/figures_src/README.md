@@ -10,7 +10,7 @@
 
 `test1_rounds.txt` holds the per-round values plotted in the Bulmer figure
 (round, sire index variance, dam index variance, sire accuracy, dam accuracy,
-total response). They were logged from `fortran_mac` running
+total response). They were logged from `fortran_mac` (now `fortran/`) running
 `tests/fixtures/test1.in` through `msseld`, with one temporary `write` added
 after `call covariance_update` in `sel1s`. The final values match the program
 output (index variance 203.380, accuracy 0.576, total response 27.849).

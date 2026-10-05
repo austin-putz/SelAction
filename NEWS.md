@@ -1,5 +1,23 @@
 # SelAction (development version)
 
+## Layout
+
+* 2026-10-05: **one source tree, `fortran/`.** `fortran_mac/` was renamed
+  `fortran/` (git history kept), and `fortran_linux/` was removed. The code
+  never had anything OS-specific; `fortran_linux/` was an older copy that
+  lacked every fix below, including the overlapping-generation errors. It
+  remains in the git history (last present in commit `4c3b29b`). The same
+  `fortran/` source is built on every platform; other platforms are to be
+  checked in CI (test-hardening T6).
+  * `tests/run_tests.sh` now defaults to `fortran`, and
+    `tests/fixtures/manifest.txt` lists only `selaction` for every fixture.
+  * `README.md`, `CLAUDE.md`, `tests/README.md`, `README_Inputs.md`, the
+    technical report and the active plans now refer to `fortran/`.
+    `AGENTS.md` (new) and `GEMINI.md` point to `CLAUDE.md`.
+  * No source or result changes: all 7 fixtures pass byte-for-byte.
+* Entries below this point use the directory names of the time:
+  `fortran_mac/` is today's `fortran/`.
+
 ## Documentation
 
 * 2026-10-05: brought `README.md`, `CLAUDE.md`, `GEMINI.md`,

@@ -1,8 +1,8 @@
-# Plan: modern scenario inputs and structured outputs for `fortran_mac/`
+# Plan: modern scenario inputs and structured outputs for `fortran/`
 
 ## Status
 
-**Design approved, revision 9 (2026-10-05).** All of Austin's questions
+**Design approved, revision 10 (2026-10-05).** All of Austin's questions
 are answered, and multiple sweeps per folder are confirmed. Nothing is
 implemented yet. The defaults listed in the last section stand unless
 Austin changes them.
@@ -18,8 +18,13 @@ here:
   fixtures Phase 1 needs for the translator. Phase 1 only adds fixtures
   for branches T2 leaves uncovered.
 
-Revision 9 changes no design. It updates binary names to `selaction`,
+Revision 9 changed no design. It updated binary names to `selaction`,
 line references, fixture counts and the overlaps above.
+
+Revision 10 changes no design. `fortran_mac/` was renamed `fortran/` and
+`fortran_linux/` was removed, so there is one source tree for every
+platform. Decision 6 is updated and the old Phase 6 (port to
+`fortran_linux/`) is replaced by checking other platforms in CI.
 
 This plan does not touch any selection-index, response or inbreeding
 equations. Every Fortran change is I/O or control flow. The existing `.out`
@@ -35,7 +40,7 @@ keep passing at every step.
 | 3 | Summary table contents | No choice needed (see below). `summary_wide.csv` holds **every** scalar result, one row per scenario, next to the inputs that differ from base. |
 | 4 | YAML reader | **The R `yaml` package (CRAN, wraps libyaml).** Nothing is hand-built, and Fortran never parses YAML. The former "Phase 6: native Fortran input" is dropped. |
 | 5 | Keep the legacy `.in` echo | **Yes.** It is kept per scenario as the exact replay record. |
-| 6 | `fortran_linux/` | **Frozen.** All of this work lands in `fortran_mac/` only. Once everything is finished and verified, it is ported to `fortran_linux/` in one pass (see Phase 6). |
+| 6 | Platform copies | **One source tree, `fortran/`, for every platform** (revision 10; `fortran_linux/` was removed). All of this work lands there. Other platforms are checked in CI, not ported (see Phase 6). |
 | 7 | Does base run as a scenario? | **No.** `base.yaml` is only the defaults. Only explicitly named scenarios run and appear in outputs. |
 | 8 | One file controlling many scenarios | **Yes.** One file can hold a `scenarios:` list (named, hand-written changes) and `sweeps:`. A sweep varies one or more inputs, crossed as a grid or paired, with names built from a template. Any input can be varied, including matrices and info-source lists. |
 | 9 | Tracking what changed | **Yes.** `changes.csv` records exactly which input changed, from what to what, per scenario. `inputs_wide.csv` records every input of every scenario. The changed inputs are also the leading columns of `summary_wide.csv`. |
@@ -469,7 +474,7 @@ silently corrupting a result.
 
 ## Architecture
 
-`fortran_mac/` builds a single binary, `selaction`, which accepts every
+`fortran/` builds a single binary, `selaction`, which accepts every
 scheme. The driver always calls `selaction`; it never chooses between
 binaries.
 
@@ -640,8 +645,8 @@ Rscript driver/selaction.R sources  # name ↔ code table
 
 ## Phased implementation
 
-Each phase keeps `tests/run_tests.sh fortran_mac` green, and every change
-gets a `NEWS.md` entry. Work happens in `fortran_mac/` and `driver/` only.
+Each phase keeps `tests/run_tests.sh` green, and every change
+gets a `NEWS.md` entry. Work happens in `fortran/` and `driver/` only.
 
 **Phase 1: spec, translator and importer (R only, no Fortran edits)**
 - `driver/spec.yaml`.
@@ -708,11 +713,11 @@ gets a `NEWS.md` entry. Work happens in `fortran_mac/` and `driver/` only.
   drift from the behaviour.
 - A short "for AI agents" section: use `template`, edit, then `validate`.
 
-**Phase 6: port to `fortran_linux/` (one pass, at the end)**
-- Starts only after Phases 1–5 and the open accuracy work are done and
-  verified.
-- Brings over every `NEWS.md` fix plus this I/O work together, then runs
-  the same tests.
+**Phase 6: other platforms (CI, no port)**
+- No porting: `fortran/` is the only source tree. The driver and the
+  batch tests run in the test-hardening T6 CI on Linux and macOS (and
+  Windows, once added), with the tolerant comparison where last digits
+  differ from the reference toolchain.
 
 ## Testing strategy
 

@@ -1,20 +1,18 @@
 #!/usr/bin/env bash
 #
 # Runs every fixture in tests/fixtures/ (per manifest.txt) against the
-# compiled binaries in a platform directory (default: fortran_linux) and
-# diffs actual output against the canonical expected output.
+# compiled binaries in a source directory (default: fortran) and diffs
+# actual output against the canonical expected output.
 #
 # Usage:
 #   tests/run_tests.sh [platform_dir]
 #
-# platform_dir defaults to fortran_linux. Once a fortran_mac, fortran_windows,
-# or cpp/ build dir exists, pass its name to run the same fixtures against
-# that implementation instead - the fixtures never change.
+# platform_dir defaults to fortran, the single source tree (the same code
+# builds on every OS). The argument is kept so a future port (e.g. a C++
+# build dir) can be checked against the same fixtures.
 #
 # A listed binary that isn't built in platform_dir is skipped (SKIP), as
-# long as at least one of the fixture's binaries ran. fortran_mac builds only
-# `selaction`, so the old mssel/msseld/msselo entries are skipped there;
-# fortran_linux builds the old three and skips `selaction`.
+# long as at least one of the fixture's binaries ran.
 #
 # Nothing is allowed to pass silently: a fixture with NONE of its binaries
 # built (e.g. a failed or forgotten build), or with its .in/.out missing,
@@ -26,7 +24,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 FIXTURES_DIR="$SCRIPT_DIR/fixtures"
 MANIFEST="$FIXTURES_DIR/manifest.txt"
-PLATFORM_DIR="${1:-fortran_linux}"
+PLATFORM_DIR="${1:-fortran}"
 PLATFORM_PATH="$REPO_ROOT/$PLATFORM_DIR"
 
 if [[ ! -d "$PLATFORM_PATH" ]]; then

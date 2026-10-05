@@ -2,6 +2,11 @@
 
 ## Status
 
+> **Note (2026-10-05):** paths below refer to `fortran_linux/` and
+> `fortran_mac/` as they were at the time. `fortran_linux/` has since been
+> removed and `fortran_mac/` renamed `fortran/`; the fixed code is in
+> `fortran/`.
+
 **Implemented.** Root cause confirmed: `sigmai` goes transiently negative
 on round 1 of `sel1s`'s 25-round BLUP-equilibrium loop for fixtures
 without own performance as an info source (`blup1`/`advgrp`) — a

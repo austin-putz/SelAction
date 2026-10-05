@@ -20,8 +20,8 @@
   left=6pt,right=6pt,top=4pt,bottom=4pt,fonttitle=\bfseries,title=Implementation note}
 \setlist{itemsep=2pt,topsep=4pt}
 \title{SelAction: how selection response and inbreeding are predicted\\[4pt]
-\large A guide and mathematical specification of the \src{fortran\_mac/} source}
-\author{Source-based report for \src{fortran\_mac/}}
+\large A guide and mathematical specification of the \src{fortran/} source}
+\author{Source-based report for \src{fortran/}}
 \date{2 October 2026}
 \begin{document}
 \maketitle
@@ -41,7 +41,7 @@ SelAction was described by Rutten, Bijma, Woolliams and van Arendonk \cite{rutte
 \item \emph{If you are porting or checking the code}, the orange ``Implementation note'' boxes, the source map in Section~\ref{sec:sourcemap}, the list of known issues in Section~\ref{sec:issues} and the appendices give the details needed for exact numerical agreement.
 \end{itemize}
 
-\paragraph{Scope.} {\sloppy The source of record is \src{seldiscrete.f90}, \src{selovlp.f90}, \src{selroutines.f90}, \src{selinbreeding.f90} and \src{seltools.f90} in \src{fortran\_mac/}, as of the date above. Changes to the code are recorded in \src{NEWS.md} at the top of the repository. Input/output formatting is outside scope.\par}
+\paragraph{Scope.} {\sloppy The source of record is \src{seldiscrete.f90}, \src{selovlp.f90}, \src{selroutines.f90}, \src{selinbreeding.f90} and \src{seltools.f90} in \src{fortran/} (called \src{fortran\_mac/} before 5 October 2026), as of the date above. Changes to the code are recorded in \src{NEWS.md} at the top of the repository. Input/output formatting is outside scope.\par}
 
 %======================================================================
 \section{Key ideas for new readers}\label{sec:background}
@@ -449,7 +449,7 @@ The ``sires'' and ``dams'' columns of the output show $\tfrac12\Delta A_{g,a}^{\
 \begin{codenote}
 \emph{Intensity.} \src{selection\_index} still evaluates \src{rawl3} for every class, but \src{ovlp} discards that result and recomputes the responses with the ordinary intensity $i_{g,c}$ from \src{trunc}: overlapping-generation responses are not corrected for family structure.
 
-\emph{Generation interval.} When the code was adapted to current compilers (\src{fortran\_linux/}), a renamed variable turned the accumulation in Eq.~\eqref{eq:interval} into an assignment, so the sum was replaced by the last active class's term, added to a stale value of the interval left by \src{trunc\_delta} in threshold mode. The original source (\src{fortran\_orig/selovlp.f90}) accumulates correctly. The error is fixed in \src{fortran\_mac/} but is still present in \src{fortran\_linux/}; before and after values are in \src{NEWS.md}. The printed interval is rounded to two decimals.
+\emph{Generation interval.} When the code was adapted to current compilers (in an earlier fork, \src{fortran\_linux/}, since removed), a renamed variable turned the accumulation in Eq.~\eqref{eq:interval} into an assignment, so the sum was replaced by the last active class's term, added to a stale value of the interval left by \src{trunc\_delta} in threshold mode. The original source (\src{fortran\_orig/selovlp.f90}) accumulates correctly. The error is fixed in \src{fortran/}; before and after values are in \src{NEWS.md}. The printed interval is rounded to two decimals.
 
 \emph{No phenotypic information.} If, in some age class, a trait in the index or goal has no phenotypic source and no genetic correlation with a trait that has one (for example BLUP as the only source), its genetic variance goes to zero. \src{ovlp} then prints a warning naming the trait and classes, and continues; the discrete drivers instead stop and ask for other sources or correlations.
 \end{codenote}

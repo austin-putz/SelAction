@@ -1,9 +1,11 @@
-# Plan: test hardening before further changes to `fortran_mac/`
+# Plan: test hardening before further changes to `fortran/`
 
 ## Status
 
 **Approved, revision 2 (2026-10-05).** Austin's answers to the four
-questions are recorded under "Decisions" below. Nothing is implemented yet.
+questions are recorded under "Decisions" below. Nothing is implemented yet. Directory names updated 2026-10-05:
+`fortran_mac/` is now `fortran/`, and `fortran_linux/` was removed, so
+there is one source tree to test on every platform.
 
 This plan comes **before** `plans/modernize-inputs-and-outputs.md`. Austin's
 rule is that SelAction must be "bullet proof" in accuracy and quality
@@ -18,8 +20,8 @@ reproduce them are in the appendix.
 
 | # | Question | Decision |
 |---|---|---|
-| 1 | Byte-exact or tolerant golden comparison | **Both, by role.** The golden fixtures stay **byte-exact** on the reference toolchain (macOS, gfortran 14.2, `-g -O2 -Wall`), so any change, including layout, is caught. The tolerant comparator (`compare_out.R`: `-0.000` = `0.000`, last-digit numeric tolerance, all text exact) is used only where floating-point details legitimately differ: the strict `-O0` build, other platforms/compilers (Linux CI, later `fortran_linux/`), and the R port. Correctness and property tests always use explicit numeric tolerances. |
-| 2 | Dead `selinbreeding.f90` | **Delete it from `fortran_mac/`** (new step T0). Verified: `MODULE Inbreeding` is never `USE`d. The live ΔF calculation is `dFmtblup` in `selroutines.f90`, called from `seldiscrete.f90:746`, so **inbreeding is still calculated exactly as before**. Users who want ΔF for a scheme still get it in the normal output; dummy traits can be added if needed. The original stays in `fortran_orig/`. |
+| 1 | Byte-exact or tolerant golden comparison | **Both, by role.** The golden fixtures stay **byte-exact** on the reference toolchain (macOS, gfortran 14.2, `-g -O2 -Wall`), so any change, including layout, is caught. The tolerant comparator (`compare_out.R`: `-0.000` = `0.000`, last-digit numeric tolerance, all text exact) is used only where floating-point details legitimately differ: the strict `-O0` build, other platforms/compilers (Linux and other CI runners), and the R port. Correctness and property tests always use explicit numeric tolerances. |
+| 2 | Dead `selinbreeding.f90` | **Delete it from `fortran/`** (new step T0). Verified: `MODULE Inbreeding` is never `USE`d. The live ΔF calculation is `dFmtblup` in `selroutines.f90`, called from `seldiscrete.f90:746`, so **inbreeding is still calculated exactly as before**. Users who want ΔF for a scheme still get it in the normal output; dummy traits can be added if needed. The original stays in `fortran_orig/`. |
 | 3 | Sources of independently known answers | None in hand. **Ask Jack Dekkers and Piter Bijma** whether they have, or can generate, worked examples with known answers. Austin can help produce them. Until then, T4 uses cases derived from published theory. |
 | 4 | Who writes and checks correctness cases and properties | **Claude drafts** each case and property, with its derivation, expected values and the R code that computes them. **Austin, Jack and Piter verify them later.** Until then, each case is marked *provisional* (see "Review status" in T4). |
 
@@ -200,13 +202,12 @@ suite needs checks against answers **not produced by SelAction**.
 
 General rules for every phase:
 
-- Work in `fortran_mac/` and `tests/` only. `fortran_linux/` stays frozen.
+- Work in `fortran/` and `tests/` only.
 - **No equation changes.** If a test exposes a suspected numerical error,
   stop. Document it, report it with evidence, and decide with Austin
   (Piter Bijma / Jack Dekkers if needed) before touching code.
 - New fixture names are ≤ 8 characters (the `fnam` limit). New manifest
-  entries list `selaction` only; old binary names are added when
-  `fortran_linux/` is synced.
+  entries list `selaction` only.
 - Every phase gets a `NEWS.md` entry. The test layout and how to run it go
   in `tests/README.md`.
 - **Fail loudly:** every new check exits non-zero on failure.
@@ -238,7 +239,7 @@ doesn't need extra R packages beyond what generating the references used.
 
 ### T0: Remove dead code (`selinbreeding.f90`)
 
-- Run `git rm fortran_mac/selinbreeding.f90`.
+- Run `git rm fortran/selinbreeding.f90`.
 - Drop it from the build command:
 
   ```bash
@@ -248,12 +249,12 @@ doesn't need extra R packages beyond what generating the references used.
 
 - Update the build command and module notes in `README.md`, `CLAUDE.md`
   and `tests/README.md`. The `USE selroutines, ONLY: trunc` note in
-  `CLAUDE.md` then applies only to `fortran_orig/`/`fortran_linux/`.
+  `CLAUDE.md` then applies only to `fortran_orig/`.
 - **Acceptance:**
   - all 7 fixtures stay byte-identical
   - the strict build stays clean
   - a `grep` confirms no remaining reference to `Inbreeding` or
-    `selinbreeding` in `fortran_mac/`
+    `selinbreeding` in `fortran/`
   - `NEWS.md` entry
 
 ### T1: Test tooling
@@ -452,10 +453,11 @@ status as the T4 cases.
 
 - **Trigger:** every push and pull request.
 - **Platforms:** `ubuntu-latest` and `macos-latest`.
-- **Steps:** install gfortran and R, build `fortran_mac/selaction` with
-  the documented command (the code is plain gfortran and also builds on
-  Linux), then run `tests/run_all.sh`.
-- `fortran_linux/` is not built in CI until it is synced.
+- **Steps:** install gfortran and R, build `fortran/selaction` with
+  the documented command (the same source tree on every platform; there
+  are no per-platform copies), then run `tests/run_all.sh`.
+- A Windows runner (gfortran via MSYS2) can be added once Linux and macOS
+  are green.
 - **Golden outputs are compared byte for byte on macOS,** the reference
   toolchain. On Linux they use `compare_out.R` with tight tolerance, if
   the byte comparison differs only in last digits or `-0.000`; this

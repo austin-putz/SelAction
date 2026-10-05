@@ -1,15 +1,17 @@
 # Plan: Online Documentation System for SelAction
 
-> **Status (2026-10-05): not started.** Written 2026-08-18, before
-> `fortran_mac/` worked and before it became the single `selaction`
-> program. The "Current State" details below are out of date; see
-> `README.md` and `NEWS.md` for the current layout.
+> **Status (2026-10-05): not started.** Written 2026-08-18, before the
+> code became the single `selaction` program in one source tree,
+> `fortran/`, that builds on every platform (`fortran_linux/` was removed
+> and `fortran_mac/` renamed `fortran/` on 2026-10-05). The "Current State"
+> details below are out of date; see `README.md` and `NEWS.md` for the
+> current layout.
 
 ## 1. Goal
 
 Stand up a proper online documentation site (something in the spirit of `pkgdown` for R, or `docs.rs`/ReadTheDocs for other ecosystems) that hosts **two distinct manuals**:
 
-1. **User Manual** — how to install, compile, and run SelAction. Starts with Linux (Ubuntu), with Mac and Windows sections added later once `fortran_mac/` is fixed and a `fortran_windows/` exists.
+1. **User Manual** — how to install, compile, and run SelAction. One build of `fortran/` for every platform; Linux, macOS and Windows sections differ only in how gfortran is installed, and each is added once CI verifies that platform.
 2. **Technical/Methods Manual** — the exact mathematics as *actually implemented* in the Fortran source (not just the general theory from the original 2001 paper/manual), tied to specific modules, subroutines, and — where it matters for correctness — line numbers.
 
 This plan covers tooling choice, information architecture, repo layout, migration of existing content (`manual/`, `docs/`), and a phased rollout. It does not implement anything yet — it's a plan to review before work starts.
@@ -70,7 +72,7 @@ SelAction docs site
 │   ├── Compiling from source
 │   ├── Quick Start (run test1 fixture end-to-end)
 │   ├── Input File Reference     (absorbs/links README_Inputs.md)
-│   ├── Choosing a program (mssel vs msseld vs msselo)
+│   ├── Choosing a scheme (selaction: 1/2/3 stages or overlapping)
 │   ├── Output File Reference
 │   ├── Worked Examples          (from examples/)
 │   ├── Troubleshooting
@@ -108,7 +110,7 @@ Each Technical Reference module page should follow one consistent template: theo
 - Write Installation + Compiling pages directly from CLAUDE.md's verified `gfortran` build commands (already correct and tested — this is a rewrite target, not new research).
 - Quick Start page: walk through `tests/fixtures/test1` end-to-end (input file → compile → run → read output), since it's already a known-good fixture.
 - Input/Output reference pages, pulling from `README_Inputs.md` (link or absorb — decide during implementation whether `README_Inputs.md` becomes a thin pointer to the site or stays the canonical source).
-- Explicit "macOS / Windows: not yet supported" stub, matching CLAUDE.md's current honesty about `fortran_mac/` being broken.
+- macOS and Windows: the same build of `fortran/`; mark each platform "verified" only once CI covers it.
 
 **Phase 2 — Technical Reference (Document 2)**
 - Port `docs/seldiscrete_report.tex`'s existing `sel1s` content into `docsite/technical/seldiscrete.md` as the template/pilot page (proves the LaTeX→MathJax math conversion works before doing the rest).
@@ -123,8 +125,7 @@ Each Technical Reference module page should follow one consistent template: theo
 - Cross-link from `README.md`'s existing sections (Installation, Mathematical Background) to the new site rather than duplicating content in two places.
 
 **Phase 5 — Later (not now)**
-- macOS user guide, once `fortran_mac/` is actually fixed.
-- Windows user guide, once a `fortran_windows/` build exists.
+- Platform notes (installing gfortran on macOS and Windows), once CI verifies those platforms. No separate source directories are needed.
 - Consider `mike` versioning if/when tagged releases start.
 
 ## 7. Open Questions for You

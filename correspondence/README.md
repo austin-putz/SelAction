@@ -9,6 +9,8 @@ sent, and the figure sources.
   Jack Dekkers: background, equations, numerical evidence and
   recommendations (`SelAction_open_questions.pdf`), sent 2026-10-05. It
   also asks for worked examples with known answers.
+  It cites `fortran_mac/` at commit `dbdd69f`; that directory was renamed
+  `fortran/` after it was sent (same code).
 
 ## Building
 

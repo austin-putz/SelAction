@@ -2,6 +2,11 @@
 
 ## Status
 
+> **Note (2026-10-05):** paths below refer to `fortran_linux/` and
+> `fortran_mac/` as they were at the time. `fortran_linux/` has since been
+> removed and `fortran_mac/` renamed `fortran/`; the fixed code is in
+> `fortran/`.
+
 **Implemented.** `selection_index` and `intra_sd` (`fortran_linux/selroutines.f90`)
 now take `fsgroups`/`hsgroups`/`proggroups` as arguments and guard every
 division by the six group arrays with `i.le.locXgroups` (tighter than the

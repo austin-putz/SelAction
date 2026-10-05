@@ -2,6 +2,11 @@
 
 ## Status
 
+> **Note (2026-10-05):** paths below refer to `fortran_linux/` and
+> `fortran_mac/` as they were at the time. `fortran_linux/` has since been
+> removed and `fortran_mac/` renamed `fortran/`; the fixed code is in
+> `fortran/`.
+
 **Implemented.** The title of this document turned out to be wrong on two
 counts, both corrected by direct reproduction (gdb + an instrumented
 scratch build) rather than assumed:

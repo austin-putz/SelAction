@@ -9,18 +9,18 @@
 \newcommand{\src}[1]{\texttt{#1}}
 
 \title{Gemini Review: SelAction Technical Report\\[4pt]
-\large Verification of the Mathematical Specification against \src{fortran\_mac/}}
+\large Verification of the Mathematical Specification against \src{fortran\_mac/} (now \src{fortran/})}
 \author{Gemini Code Assistant}
 \date{\today}
 
 \begin{document}
 \maketitle
 \begin{abstract}
-This document contains a comprehensive review and verification of the \src{docs/SelAction\_Technical\_Report.tex} specification against the active Fortran source code located in \src{fortran\_mac/}. The review covers the covariance model, index assembly, Bulmer updates, multistage equations, inbreeding logic, overlapping generations, and all reported implementation notes and known issues.
+This document contains a comprehensive review and verification of the \src{docs/SelAction\_Technical\_Report.tex} specification against the active Fortran source code located in \src{fortran\_mac/} (now \src{fortran/}). The review covers the covariance model, index assembly, Bulmer updates, multistage equations, inbreeding logic, overlapping generations, and all reported implementation notes and known issues.
 \end{abstract}
 
 \section{Executive Summary}
-The mathematical specification detailed in the original technical report is highly accurate and strictly aligns with the programmatic behavior observed in the \src{fortran\_mac/} codebase. Subtle numerical treatments, iterative approximation choices, and explicit source-code deviations from the pure mathematical theory have been faithfully documented. 
+The mathematical specification detailed in the original technical report is highly accurate and strictly aligns with the programmatic behavior observed in the \src{fortran\_mac/} (now \src{fortran/}) codebase. Subtle numerical treatments, iterative approximation choices, and explicit source-code deviations from the pure mathematical theory have been faithfully documented. 
 
 \section{Section-by-Section Verification}
 
