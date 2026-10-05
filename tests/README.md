@@ -23,8 +23,14 @@ tests/
   errors/
     manifest.txt   expected exit code, files and message for each error case
     <name>.in       input that must make the program stop with an error
-  run_tests.sh
-  run_error_tests.sh
+  run_tests.sh       golden fixtures (byte-exact, or --tolerant)
+  run_error_tests.sh error cases
+  run_all.sh         every layer, one summary (`make check`)
+  tools/
+    compare_out.R    numeric-tolerant .out comparison (base R)
+    selftest.sh      checks compare_out.R catches what it should
+    strict.sh        strict debug build + all tests (`make strict`)
+    coverage.sh      coverage build + line/branch table (`make coverage`)
 ```
 
 ## Running
@@ -35,9 +41,16 @@ From the top of the repository:
 make test                         # builds build/selaction if needed, then runs every fixture and error case
 tests/run_tests.sh                # against build/ (default); run `make` first
 tests/run_tests.sh <dir>          # against a binary in another directory (relative or absolute)
+tests/run_tests.sh --tolerant <dir>   # compare with compare_out.R instead of byte for byte (needs R)
+make check                        # every layer: build, tool self-test, golden, errors, strict (needs R)
+make strict                       # strict debug build in build/strict, all tests on it (needs R)
+make coverage                     # coverage build in build/coverage, prints the table below
 ```
 
 On Windows the runner also accepts `selaction.exe`.
+
+Every run must exit 0: a fixture whose program stops with an error or a
+trap is a FAIL even if its report looks complete.
 
 Binaries listed in `manifest.txt` that aren't built in the target
 directory are skipped (not failed) **as long as at least one of that
@@ -46,6 +59,51 @@ with a missing `.in`/`.out`, is a FAIL, so a broken or forgotten build can't
 pass silently. Every fixture currently lists only `selaction`, so a normal
 run shows no SKIPs. The rule remains for a future port that builds a
 differently named binary.
+
+## Test tools (`tests/tools/`, `run_all.sh`)
+
+R is the language for test tooling (test-hardening plan). Only base R is
+used, so any R installation works. `make test` itself needs no R.
+
+- **`compare_out.R expected actual [--abs X] [--rel Y]`** compares two
+  reports line by line. Text must match, with runs of blanks counted as
+  one. Numbers with a decimal point must agree within one unit in the last
+  printed digit (`0.001` for `12.345`), or within `--abs`/`--rel` if given;
+  `-0.000` equals `0.000`. Integers must match exactly. Exit 0 match,
+  1 mismatch, 2 usage error. Used by `run_tests.sh --tolerant`: the strict
+  build, the coverage build, and later other platforms and the R port.
+- **`selftest.sh`** feeds `compare_out.R` small made-up reports: a
+  last-digit change and `-0.000`/`0.000` must pass; a bigger change, a
+  changed integer or word, or a missing line must fail.
+- **`strict.sh`** builds into `build/strict` with
+  `-O0 -g -fcheck=all -finit-real=snan -finit-integer=-999999999
+  -ffpe-trap=invalid,zero,overflow -fbacktrace`, then runs every fixture
+  (`--tolerant`, because `-O0` prints `blup1`'s near-zero weight as
+  `0.000`) and every error case. Any trap or runtime error fails.
+- **`coverage.sh [--min-lines N]`** builds into `build/coverage` with
+  `--coverage`, runs every fixture and error case, and prints the share of
+  lines and branches reached per file (also saved to
+  `build/coverage/summary.txt`). With `--min-lines N` it fails below N%.
+  It needs **GCC's** `gcov`, matching `gfortran`: it looks next to the
+  real `gfortran` binary, then for `gcov-<major version>`. Apple's
+  `/usr/bin/gcov` is LLVM's and can't read GCC's data; the script stops
+  with a message if that's all it finds.
+- **`run_all.sh`** (`make check`) runs `make`, then the layers in order
+  (tools, golden, errors, strict, then unit / validation / properties once
+  test-hardening T3–T5 add `tests/unit/run.sh` etc.) and prints one
+  summary. A layer not written yet shows "not yet present". If R is
+  missing, the R layers FAIL rather than being skipped.
+
+Coverage on 2026-10-05 (7 fixtures + 6 error cases):
+
+| File | Lines executed | Branches taken |
+|---|---|---|
+| `selaction.f90` | 90.5% of 21 | 91.7% of 12 |
+| `seldiscrete.f90` | 73.3% of 3,200 | 49.9% of 7,722 |
+| `selovlp.f90` | 85.7% of 934 | 57.1% of 2,144 |
+| `selroutines.f90` | 80.8% of 1,928 | 80.5% of 1,618 |
+| `seltools.f90` | 88.1% of 915 | 66.5% of 158 |
+| **Total** | **79.0% of 6,998** | **55.7% of 11,654** |
 
 ## How a fixture is invoked
 
@@ -137,9 +195,14 @@ produced them. The reference toolchain for the current fixtures (all
 regenerated there for the version 1.2 banner) is:
 
 ```
-GNU Fortran (GCC) 14.2.0 (Homebrew gcc), macOS x86_64
+GNU Fortran (GCC) 14.2.0, macOS x86_64 (the standalone installer in /usr/local/gfortran)
 build/selaction built by `make` (-g -O2 -Wall)
 ```
+
+Earlier notes called this Homebrew's `gcc`; the `gfortran` on the
+reference machine is actually the standalone installer. Homebrew's
+`gcc` (GNU Fortran 16.2.0 on 2026-10-05) also passes all 7 fixtures
+byte for byte.
 
 Earlier fixtures were first captured with GNU Fortran 15.2.0 on Ubuntu.
 

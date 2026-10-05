@@ -277,6 +277,11 @@ doesn't need extra R packages beyond what generating the references used.
 
 ### T1: Test tooling
 
+**Done 2026-10-05** (see `plans/progress.md` and `tests/README.md`,
+"Test tools"). `make check`, `make strict` and `make coverage` exist;
+`run_tests.sh` gained `--tolerant` and now also fails a non-zero exit.
+
+
 - **Builds go through the `Makefile`.** Each tool builds its own copy
   side by side with `make BUILD=build/<name> FFLAGS="…"` (e.g.
   `build/strict`, `build/coverage`) instead of its own gfortran command,

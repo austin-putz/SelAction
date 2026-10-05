@@ -1,5 +1,28 @@
 # SelAction (development version)
 
+## Testing
+
+* 2026-10-05: **test tooling** (test-hardening T1, step 2 of
+  `plans/implementation-sequence.md`). No program changes; no outputs
+  changed.
+  * `make check` (`tests/run_all.sh`) runs every test layer with one
+    summary: build, tool self-test, golden fixtures, error cases, strict
+    debug build (later also unit, validation and property tests).
+  * `make strict` (`tests/tools/strict.sh`): the strict debug build
+    (bounds checks, unset values, floating-point traps), now scripted;
+    all 7 fixtures and 6 error cases pass on it.
+  * `make coverage` (`tests/tools/coverage.sh`): line and branch coverage
+    per file with GCC's `gcov` (79.0% of lines, 55.7% of branches today).
+  * `tests/tools/compare_out.R` (base R): compares reports within one unit
+    in the last printed digit, `-0.000` = `0.000`;
+    `tests/run_tests.sh --tolerant` uses it.
+  * `tests/run_tests.sh` now also fails a run that exits non-zero, even if
+    its report matches.
+  * The reference compiler is the standalone GNU Fortran 14.2.0 installer
+    (`/usr/local/gfortran`), not Homebrew's `gcc` as older notes said.
+    Homebrew's GNU Fortran 16.2.0 gives byte-identical results on all 7
+    fixtures.
+
 ## Removed dead code
 
 * 2026-10-05: **`fortran/selinbreeding.f90` deleted** (test-hardening T0,

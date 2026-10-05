@@ -485,6 +485,14 @@ make test
 
 `make test` builds `build/selaction` if needed and runs `tests/run_tests.sh build` and `tests/run_error_tests.sh build`. To test another build directory, run either script with `<dir>`.
 
+With R installed (base R is enough), more checks are available:
+
+```bash
+make check      # every test layer with one summary: build, golden, errors, strict debug build
+make strict     # strict debug build (array bounds, unset values, floating-point traps) + all tests
+make coverage   # which share of the code the tests reach, per file
+```
+
 - **What the tests check:** each of the 7 test inputs in `tests/fixtures/` is run and its report compared byte for byte with a stored copy. Together they cover 1-, 2- and 3-stage selection, BLUP, the group information sources, and overlapping generations with and without groups.
 - **Error cases:** the 6 inputs in `tests/errors/` must make the program stop with exit code 2 and the right message (over-long, spaced or duplicate names).
 - **More detail:** see [`tests/README.md`](tests/README.md) for the format and how to add a test.
