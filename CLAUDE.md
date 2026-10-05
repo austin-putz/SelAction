@@ -120,7 +120,7 @@ Main programs (fortran: selaction.f90; fortran_orig: mssel.f90, msseld.f90, msse
 ## Plans and current status
 
 - `plans/test-hardening.md` — **approved, next up, not started.** T0 delete `selinbreeding.f90` from `fortran/`; T1 tooling (`strict.sh`, `coverage.sh`, `compare_out.R`, `run_all.sh`); T2 coverage fixtures; T3 unit tests; T4/T5 correctness and property tests (drafted by Claude, *provisional* until verified by Austin/Jack/Piter); T6/T7 CI and coverage gate.
-- `plans/modernize-inputs-and-outputs.md` — **approved (rev 11), waits on test-hardening.** R driver reading YAML scenario folders → legacy answer stream → `selaction --batch`; Fortran writes `results.csv`; no equation changes.
+- `plans/modernize-inputs-and-outputs.md` — **approved (rev 12), waits on test-hardening.** Long trait names are handled by driver-generated short labels, not by widening the Fortran. R driver reading YAML scenario folders → legacy answer stream → `selaction --batch`; Fortran writes `results.csv`; no equation changes.
 - `plans/releases.md` — **not started; after test-hardening T6.** Tested prebuilt binaries (macOS Intel/Apple Silicon, Linux, Windows) on GitHub Releases, so non-programmers (e.g. Jack) can run SelAction without compiling.
 - `plans/document.md` — docs-site idea, not started; written before the code was consolidated into `fortran/`, so its "current state" is out of date.
 - The other files in `plans/` are implemented fixes kept for their reasoning.

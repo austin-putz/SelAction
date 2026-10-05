@@ -2,7 +2,7 @@
 
 ## Status
 
-**Design approved, revision 11 (2026-10-05).** All of Austin's questions
+**Design approved, revision 12 (2026-10-05).** All of Austin's questions
 are answered, and multiple sweeps per folder are confirmed. Nothing is
 implemented yet. The defaults listed in the last section stand unless
 Austin changes them.
@@ -29,6 +29,15 @@ platform. Decision 6 is updated and the old Phase 6 (port to
 Revision 11 changes no design. The binary is now built by the top-level
 `Makefile` into `build/selaction`, and new Fortran modules are added to
 its `SOURCES` list.
+
+Revision 12 (2026-10-05, agreed with Austin): **long trait names are
+handled by the R driver, not by widening the Fortran.** Trait names are
+printed by ~340 `write`/`print` statements, many with fixed `a8` formats,
+so widening `xtraits` would change the layout of every report and every
+fixture. Instead, YAML trait names may be long; the driver gives the
+Fortran short unique labels and maps them back in every CSV (see "Trait
+names" under the R validator and Phase 4). Only the **file name** is
+widened in the Fortran (Phase 2), which doesn't touch the report.
 
 This plan does not touch any selection-index, response or inbreeding
 equations. Every Fortran change is I/O or control flow. The existing `.out`
@@ -363,7 +372,7 @@ The other stages follow the same pattern.
 | Info-source codes | **none** | 3, 44–63, 99 or a code for an unconfigured group are accepted silently |
 | Proportions selected | **none at input**; `trunc` later stops with `-error-20-` only if p is outside [0, 1] | p = 0 or p = 1 gets through to the math |
 | Sires, dams, candidates per dam | **none** | zero, negative, sires > dams, or too few candidates for the requested proportion all reach the math |
-| Trait names and file name | **done 2026-10-05**: `read_name` stops the run (`-error-30-`, exit 2) on names longer than 8 characters, empty, or with a space or comma; duplicate trait names (ignoring case) also stop it. Error cases in `tests/errors/` | the 8-character limit itself stays until Phase 2 widens `fnam`/`xtraits`; the R validator keeps its 1–8 character rule until then |
+| Trait names and file name | **done 2026-10-05**: `read_name` stops the run (`-error-30-`, exit 2) on names longer than 8 characters, empty, or with a space or comma; duplicate trait names (ignoring case) also stop it. Error cases in `tests/errors/` | the file name is widened in Phase 2. Trait names stay 8 characters in the Fortran for good; long names are handled by the driver's short labels (revision 12) |
 | Number of traits, age classes | **none** | 0 or a negative count reaches `allocate` |
 | Type (text where a number is expected) | the gfortran runtime aborts (`Bad real number in item 1 of list input`) | a crash with a compiler message, not a SelAction message |
 
@@ -390,9 +399,20 @@ naming the file, the scenario, the input path and the trait names involved.
   converting it would hide mistakes.
 
 **Trait names**
-- 1–8 characters (the Fortran limit), letters, digits and `_` only. In
-  particular, no spaces.
+- 1–32 characters, letters, digits and `_` only. In particular, no
+  spaces.
 - Unique, case-insensitively.
+- **Short labels for the Fortran.** The Fortran keeps its 8-character
+  trait names (`xtraits`, printed in fixed-width report columns). The
+  driver gives each trait a label of at most 8 characters:
+  - a name of 8 characters or fewer is its own label
+  - a longer name gets its first 6 characters plus a 2-digit trait
+    number, e.g. `eADG_purebred` (trait 1) → `eADG_p01`
+  - labels must be unique (ignoring case); the driver checks this and
+    errors if a short name collides with a generated label
+- The label map is written to `trait_labels.csv` in the run folder and
+  into each `resolved.yaml`. Every CSV the driver assembles uses the full
+  names; the classic `.out` report shows the labels.
 - Every trait name used anywhere (parameters, pairs, info sources, `set`,
   `vary`) must be in `traits`.
 
@@ -673,7 +693,12 @@ gets a `NEWS.md` entry. Work happens in `fortran/` and `driver/` only.
 - In batch mode, EOF or an invalid answer gives `error stop 2` instead of
   a re-prompt loop. The check-failure correction prompts become errors.
 - `stop` becomes `error stop 3` for numerical failures.
-- Widen `fnam`/`fnamein`/`fnameout`.
+- Widen the **file name** (`fnam`, `fnamein`, `fnameout`) to 64
+  characters and raise `read_name`'s limit for it to match. `fnam` only
+  names the files and appears in the `.in` echo, not in the `.out`
+  report, so no fixture changes. The `longfile`/`longovlp` error cases
+  move to a 65-character name. **Trait names stay at 8 characters**
+  (revision 12).
 - The input guards from "Fortran guards: second line of defence" above:
   group counts, trait/age-class counts, info-source codes, proportions,
   and `iostat=` on reads.
@@ -696,6 +721,10 @@ gets a `NEWS.md` entry. Work happens in `fortran/` and `driver/` only.
 **Phase 4: driver merge/validate/run/collect**
 - Scenario/sweep expansion, merge, conflict checks, `changes.csv`, the full validator, parallel runs,
   the `runs/` layout and all batch tables.
+- Trait labels: generate the short labels, write `trait_labels.csv`, pass
+  labels to the Fortran, and replace labels with full names in every
+  collected CSV. Test: a base with a 13-character trait name runs, its
+  `.out` shows the label, and `summary_wide.csv` shows the full name.
 
 **Phase 5: docs and examples**
 - `docs/inputs.md` (generated from `spec.yaml`), `docs/outputs.md` (the
