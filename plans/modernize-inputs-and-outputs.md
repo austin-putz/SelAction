@@ -2,7 +2,7 @@
 
 ## Status
 
-**Design approved, revision 10 (2026-10-05).** All of Austin's questions
+**Design approved, revision 11 (2026-10-05).** All of Austin's questions
 are answered, and multiple sweeps per folder are confirmed. Nothing is
 implemented yet. The defaults listed in the last section stand unless
 Austin changes them.
@@ -25,6 +25,10 @@ Revision 10 changes no design. `fortran_mac/` was renamed `fortran/` and
 `fortran_linux/` was removed, so there is one source tree for every
 platform. Decision 6 is updated and the old Phase 6 (port to
 `fortran_linux/`) is replaced by checking other platforms in CI.
+
+Revision 11 changes no design. The binary is now built by the top-level
+`Makefile` into `build/selaction`, and new Fortran modules are added to
+its `SOURCES` list.
 
 This plan does not touch any selection-index, response or inbreeding
 equations. Every Fortran change is I/O or control flow. The existing `.out`
@@ -474,8 +478,8 @@ silently corrupting a result.
 
 ## Architecture
 
-`fortran/` builds a single binary, `selaction`, which accepts every
-scheme. The driver always calls `selaction`; it never chooses between
+`make` builds `fortran/` into a single binary, `build/selaction`, which
+accepts every scheme. The driver always calls `selaction`; it never chooses between
 binaries.
 
 ```
@@ -682,7 +686,8 @@ gets a `NEWS.md` entry. Work happens in `fortran/` and `driver/` only.
   `report_message`.
 - Each call sits beside an existing `write(unit=20` result line and writes
   the same variables. There is no new computation.
-- Build commands in `CLAUDE.md` are updated.
+- `selreport.f90` is added to `SOURCES` in the `Makefile` (before
+  `selaction.f90`) and to the fallback command in `README.md`/`CLAUDE.md`.
 - **Acceptance:** a golden `results.csv` for each fixture, compared with a
   numeric tolerance, plus a script checking that every `.out` number equals
   its CSV value rounded to 3 decimals.

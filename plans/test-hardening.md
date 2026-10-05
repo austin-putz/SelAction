@@ -240,14 +240,9 @@ doesn't need extra R packages beyond what generating the references used.
 ### T0: Remove dead code (`selinbreeding.f90`)
 
 - Run `git rm fortran/selinbreeding.f90`.
-- Drop it from the build command:
-
-  ```bash
-  gfortran -g -O2 -Wall -o selaction seltools.f90 selparameters.f90 selroutines.f90 \
-           selovlp.f90 seldiscrete.f90 selaction.f90
-  ```
-
-- Update the build command and module notes in `README.md`, `CLAUDE.md`
+- Drop it from `SOURCES` in the top-level `Makefile`, and from the
+  "without make" fallback command in `README.md` and `CLAUDE.md`.
+- Update the module notes in `README.md`, `CLAUDE.md`
   and `tests/README.md`. The `USE selroutines, ONLY: trunc` note in
   `CLAUDE.md` then applies only to `fortran_orig/`.
 - **Acceptance:**
@@ -259,8 +254,12 @@ doesn't need extra R packages beyond what generating the references used.
 
 ### T1: Test tooling
 
+- **Builds go through the `Makefile`.** Each tool builds its own copy
+  side by side with `make BUILD=build/<name> FFLAGS="…"` (e.g.
+  `build/strict`, `build/coverage`) instead of its own gfortran command,
+  so the source list and order live in one place.
 - **`tests/tools/strict.sh`:** builds `selaction` with the strict flags
-  from 1.4 in a temporary directory and runs every fixture. It fails on
+  from 1.4 into `build/strict` and runs every fixture. It fails on
   any trap, runtime error or crash. Output is compared with
   `compare_out.R` (below), not byte for byte, because `-O0` may flip the
   sign of a near-zero value (`blup1`).
@@ -276,8 +275,9 @@ doesn't need extra R packages beyond what generating the references used.
   tolerance, and `-0.000` equals `0.000`. It is used by the strict build,
   the validation tests, and later for comparing platforms (Linux vs macOS,
   and the R port).
-- **`tests/run_all.sh`:** runs golden + strict + unit + validation +
-  properties (whichever exist) and prints one summary.
+- **`tests/run_all.sh`:** runs `make`, then golden + strict + unit +
+  validation + properties (whichever exist) and prints one summary.
+  A `make check` target can call it.
 - **Acceptance:**
   - `run_all.sh` passes on the current code.
   - Deliberately breaking a fixture, the build, or a number makes the
@@ -453,9 +453,9 @@ status as the T4 cases.
 
 - **Trigger:** every push and pull request.
 - **Platforms:** `ubuntu-latest` and `macos-latest`.
-- **Steps:** install gfortran and R, build `fortran/selaction` with
-  the documented command (the same source tree on every platform; there
-  are no per-platform copies), then run `tests/run_all.sh`.
+- **Steps:** install gfortran and R, run `make test` (the same source
+  tree and Makefile on every platform; there are no per-platform copies),
+  then run `tests/run_all.sh`.
 - A Windows runner (gfortran via MSYS2) can be added once Linux and macOS
   are green.
 - **Golden outputs are compared byte for byte on macOS,** the reference
@@ -466,6 +466,8 @@ status as the T4 cases.
   closes the TODO in `CLAUDE.md`.
 - **Acceptance:** CI runs green on both platforms, and a deliberately
   broken commit turns it red.
+- **Next:** prebuilt downloads on GitHub Releases build on this workflow;
+  see `plans/releases.md`.
 
 ### T7: Coverage gate
 

@@ -7,7 +7,7 @@ This document explains how to map your breeding program parameters into the inpu
 > That format is not the one the Fortran program reads, and several of its
 > fields are not yet identified (marked below).
 >
-> The command-line program (`fortran/selaction`) reads one answer per
+> The command-line program (`build/selaction`, built with `make`) reads one answer per
 > prompt. [`tests/fixtures/test1.in`](tests/fixtures/test1.in) is a
 > complete example with every answer labelled. The input codes and rules
 > are summarised under "Input Parameters" in [`README.md`](README.md):
@@ -93,7 +93,7 @@ The sel1s subroutine normally runs interactively, prompting for each input. Howe
 
 ### To Run Interactively:
 ```bash
-./selaction            # built in fortran/
+build/selaction        # from the top of the repository, after `make`
 # Choose option "1" for single-stage selection
 # Answer prompts one by one
 ```
@@ -105,7 +105,7 @@ echo "1" > input.txt          # Choose single-stage selection
 echo "eADG" >> input.txt      # Filename
 echo "3" >> input.txt         # Number of traits
 # ... continue with all parameters in sequence
-./selaction < input.txt
+build/selaction < input.txt
 ```
 
 ## Key Validation Rules

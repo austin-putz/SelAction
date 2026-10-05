@@ -1,17 +1,18 @@
 #!/usr/bin/env bash
 #
 # Runs every fixture in tests/fixtures/ (per manifest.txt) against the
-# compiled binaries in a source directory (default: fortran) and diffs
+# compiled binaries in a binary directory (default: build) and diffs
 # actual output against the canonical expected output.
 #
 # Usage:
-#   tests/run_tests.sh [platform_dir]
+#   make test                    # builds, then runs this script on build/
+#   tests/run_tests.sh [bin_dir]
 #
-# platform_dir defaults to fortran, the single source tree (the same code
-# builds on every OS). The argument is kept so a future port (e.g. a C++
-# build dir) can be checked against the same fixtures.
+# bin_dir defaults to build, where `make` puts selaction. Pass another
+# directory (relative to the repository root, or absolute) to test a different build (e.g. build/strict). On Windows the
+# binary may be named selaction.exe; both names are accepted.
 #
-# A listed binary that isn't built in platform_dir is skipped (SKIP), as
+# A listed binary that isn't built in bin_dir is skipped (SKIP), as
 # long as at least one of the fixture's binaries ran.
 #
 # Nothing is allowed to pass silently: a fixture with NONE of its binaries
@@ -24,11 +25,14 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 FIXTURES_DIR="$SCRIPT_DIR/fixtures"
 MANIFEST="$FIXTURES_DIR/manifest.txt"
-PLATFORM_DIR="${1:-fortran}"
-PLATFORM_PATH="$REPO_ROOT/$PLATFORM_DIR"
+BIN_DIR="${1:-build}"
+case "$BIN_DIR" in
+  /*) BIN_PATH="$BIN_DIR" ;;
+  *)  BIN_PATH="$REPO_ROOT/$BIN_DIR" ;;
+esac
 
-if [[ ! -d "$PLATFORM_PATH" ]]; then
-  echo "error: platform directory not found: $PLATFORM_PATH" >&2
+if [[ ! -d "$BIN_PATH" ]]; then
+  echo "error: binary directory not found: $BIN_PATH (run \`make\` first)" >&2
   exit 2
 fi
 
@@ -57,10 +61,13 @@ while IFS=: read -r base binaries description; do
 
   IFS=',' read -ra binary_list <<< "$binaries"
   for binary in "${binary_list[@]}"; do
-    binary_path="$PLATFORM_PATH/$binary"
+    binary_path="$BIN_PATH/$binary"
+    if [[ ! -x "$binary_path" && -x "$binary_path.exe" ]]; then
+      binary_path="$binary_path.exe"
+    fi
 
     if [[ ! -x "$binary_path" ]]; then
-      echo "SKIP  $base -> $PLATFORM_DIR/$binary (binary not built)"
+      echo "SKIP  $base -> $BIN_DIR/$binary (binary not built)"
       skip=$((skip + 1))
       continue
     fi
@@ -72,18 +79,18 @@ while IFS=: read -r base binaries description; do
     (cd "$tmp_dir" && "$binary_path" < "$base.in" > stdout.log 2>&1)
 
     if [[ ! -f "$tmp_dir/$base.out" ]]; then
-      echo "FAIL  $base -> $PLATFORM_DIR/$binary ($description)"
+      echo "FAIL  $base -> $BIN_DIR/$binary ($description)"
       echo "      no $base.out produced - see $tmp_dir/stdout.log"
       fail=$((fail + 1))
       continue
     fi
 
     if diff -q "$out_file" "$tmp_dir/$base.out" > /dev/null; then
-      echo "PASS  $base -> $PLATFORM_DIR/$binary"
+      echo "PASS  $base -> $BIN_DIR/$binary"
       pass=$((pass + 1))
       rm -rf "$tmp_dir"
     else
-      echo "FAIL  $base -> $PLATFORM_DIR/$binary ($description)"
+      echo "FAIL  $base -> $BIN_DIR/$binary ($description)"
       echo "      diff (expected vs actual), full output kept in $tmp_dir"
       diff "$out_file" "$tmp_dir/$base.out" | head -20 | sed 's/^/      /'
       fail=$((fail + 1))
@@ -91,7 +98,7 @@ while IFS=: read -r base binaries description; do
   done
 
   if [[ "$ran" -eq 0 ]]; then
-    echo "FAIL  $base (none of its binaries [$binaries] are built in $PLATFORM_DIR)"
+    echo "FAIL  $base (none of its binaries [$binaries] are built in $BIN_DIR)"
     fail=$((fail + 1))
   fi
 done < "$MANIFEST"

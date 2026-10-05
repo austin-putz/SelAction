@@ -6,8 +6,8 @@
 # base_name  - shared stem of <base_name>.in / <base_name>.out in this directory.
 #              Must be <= 8 characters - see tests/README.md ("Filename length
 #              constraint") for why.
-# binaries   - comma-separated list of binary names (as built by the gfortran
-#              commands in README.md/CLAUDE.md) this fixture is valid input for.
+# binaries   - comma-separated list of binary names (as built into build/ by
+#              `make`) this fixture is valid input for.
 #              A fixture must only list binaries whose interactive prompt
 #              sequence actually matches what's encoded in <base_name>.in - see
 #              tests/README.md before adding an entry.

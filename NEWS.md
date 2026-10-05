@@ -1,5 +1,24 @@
 # SelAction (development version)
 
+## Build
+
+* 2026-10-05: **build with `make`; output goes to `build/`.** A top-level
+  `Makefile` builds `fortran/` into `build/selaction` (with the `.mod`
+  files and macOS `.dSYM` there too), so `fortran/` holds only source.
+  `build/` is gitignored and made on each machine.
+  * `make` builds, `make test` builds and runs the regression tests, and
+    `make clean` removes `build/`. `FC`, `FFLAGS` and `BUILD` can be
+    overridden.
+  * `tests/run_tests.sh` now takes a binary directory, defaulting to
+    `build`, and also finds `selaction.exe` on Windows.
+  * `README.md`, `CLAUDE.md`, `tests/README.md`, `README_Inputs.md` and
+    the plans use the new commands and paths. The explicit gfortran
+    command is still documented for building without `make`.
+  * Same flags (`-g -O2 -Wall`), so no result changes: all 7 fixtures pass
+    byte-for-byte.
+* Added `plans/releases.md` (not started): tested prebuilt binaries on
+  GitHub Releases, so SelAction can be run without compiling.
+
 ## Layout
 
 * 2026-10-05: **one source tree, `fortran/`.** `fortran_mac/` was renamed

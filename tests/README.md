@@ -25,12 +25,17 @@ tests/
 
 ## Running
 
+From the top of the repository:
+
 ```bash
-tests/run_tests.sh                # against fortran/ (default); build fortran/selaction first
-tests/run_tests.sh <dir>          # against binaries built in another directory
+make test                         # builds build/selaction if needed, then runs every fixture
+tests/run_tests.sh                # against build/ (default); run `make` first
+tests/run_tests.sh <dir>          # against a binary in another directory (relative or absolute)
 ```
 
-Binaries listed in `manifest.txt` that aren't built in the target platform
+On Windows the runner also accepts `selaction.exe`.
+
+Binaries listed in `manifest.txt` that aren't built in the target
 directory are skipped (not failed) **as long as at least one of that
 fixture's binaries ran**. A fixture with none of its binaries built, or
 with a missing `.in`/`.out`, is a FAIL, so a broken or forgotten build can't
@@ -40,14 +45,15 @@ differently named binary.
 
 ## How a fixture is invoked
 
-`selaction` (`fortran/`) is an interactive program: it reads prompts from
+`selaction` (built into `build/` by `make`) is an interactive program: it reads prompts from
 stdin, and separately re-open a file by name (derived from the "filenames"
 prompt answer) to read the bulk of the input and to write output. So a
 fixture named `test1` is run as:
 
 ```bash
-cp tests/fixtures/test1.in ./          # must be present under this exact name
-./selaction < test1.in                  # produces ./test1.out
+mkdir run && cd run
+cp ../tests/fixtures/test1.in .         # must be present under this exact name
+../build/selaction < test1.in           # produces ./test1.out
 ```
 
 `run_tests.sh` does this in a scratch temp dir per run and diffs the result
@@ -100,7 +106,7 @@ regenerated there for the version 1.2 banner) is:
 
 ```
 GNU Fortran (GCC) 14.2.0 (Homebrew gcc), macOS x86_64
-fortran/selaction built with -g -O2 -Wall
+build/selaction built by `make` (-g -O2 -Wall)
 ```
 
 Earlier fixtures were first captured with GNU Fortran 15.2.0 on Ubuntu.
@@ -464,14 +470,14 @@ group-type matrix-block guards, including progeny groups), `ovlp2`
 fixtures must come from actually running a real binary with a valid,
 non-singular parameter set - do not hand-write expected output.
 
-1. Build `fortran/selaction` (see root `README.md`).
+1. Build with `make` (see root `README.md`).
 2. Prepare a `.in` file (an existing one is the easiest starting template),
    keeping the base name ≤ 8 characters and matching the "filenames" line
    inside it.
-3. Run it for real: `cd` into a scratch dir, `selaction < name.in`, confirm it
+3. Run it for real: `cd` into a scratch dir, `<repo>/build/selaction < name.in`, confirm it
    completes without error (a singular/non-positive-definite correlation
    matrix will fail here - that's expected feedback, not a bug).
 4. Copy the resulting `name.in`/`name.out` pair into `tests/fixtures/`.
 5. Add a line to `manifest.txt` naming which binaries it's valid for and
    what it exercises. List `selaction`.
-6. Run `tests/run_tests.sh` and confirm it passes.
+6. Run `make test` and confirm it passes.

@@ -107,7 +107,7 @@ Each Technical Reference module page should follow one consistent template: theo
 - Confirm `https://austin-putz.github.io/SelAction/` renders.
 
 **Phase 1 — User Guide (Document 1), Linux only**
-- Write Installation + Compiling pages directly from CLAUDE.md's verified `gfortran` build commands (already correct and tested — this is a rewrite target, not new research).
+- Write Installation + Compiling pages from the `make` / `make test` instructions in `README.md` (already correct and tested). The "no compiling" route (download a prebuilt binary) comes from `plans/releases.md` once that exists.
 - Quick Start page: walk through `tests/fixtures/test1` end-to-end (input file → compile → run → read output), since it's already a known-good fixture.
 - Input/Output reference pages, pulling from `README_Inputs.md` (link or absorb — decide during implementation whether `README_Inputs.md` becomes a thin pointer to the site or stays the canonical source).
 - macOS and Windows: the same build of `fortran/`; mark each platform "verified" only once CI covers it.

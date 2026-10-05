@@ -58,7 +58,7 @@ SelAction is being brought up to date at Iowa State University (Austin Putz and 
 - **Fixes that change predictions:**
   - **Overlapping generations:** the truncation-point search selected the wrong number of parents (e.g. 67.5 sires when 10 were requested). The generation interval is also corrected.
   - **Multistage selection:** the normal-integral tables were too short, giving grossly wrong responses for small selected fractions.
-- **Regression tests:** 7 test inputs with stored outputs, run by `tests/run_tests.sh`.
+- **Regression tests:** 7 test inputs with stored outputs, run by `make test`.
 - **Technical report:** `docs/SelAction_Technical_Report.pdf` ties every equation to the routine that computes it.
 - **Open modelling questions** for the original authors are written up with evidence in [`correspondence/2026-10-bijma-dekkers/SelAction_open_questions.pdf`](correspondence/2026-10-bijma-dekkers/SelAction_open_questions.pdf). The model itself has **not** been changed while these are open.
 
@@ -89,6 +89,7 @@ SelAction is a Fortran program developed by Marc J.M. Rutten and Piter Bijma at 
 | Directory | Description | Status |
 |-----------|-------------|--------|
 | `fortran/` | Current code (version 1.2); builds one program, `selaction`, on any OS | **Active development: use this.** Verified on macOS (Intel, gfortran 14.2) |
+| `build/` | Build output from `make` (the `selaction` binary and module files) | Created on each machine; not in git |
 | `fortran_orig/` | Original Fortran code from Piter Bijma | Reference only, never modified. Does not build with a current gfortran |
 | `tests/` | Regression test inputs/outputs and runner, shared by all builds | Working, 7 test inputs |
 | `docs/` | LaTeX technical reports on the methods as implemented | Complete; updated October 2026 |
@@ -96,6 +97,8 @@ SelAction is a Fortran program developed by Marc J.M. Rutten and Piter Bijma at 
 | `examples/` | Sample input files and a worked GUI-based example | Reference |
 | `correspondence/` | Write-ups sent to collaborators (e.g. open questions for the original authors) | — |
 | `plans/` | Design plans for larger changes, with their status | — |
+
+The `Makefile` at the top level builds `fortran/` into `build/` (see [Installation and Compilation](#installation-and-compilation)).
 
 `fortran/` is **not** a rewrite. It is `fortran_orig/` with the minimum changes needed to satisfy a modern gfortran compiler (array-constructor syntax, line-continuation formatting, a few local-variable renames and one restricted `USE` statement), plus the fixes listed in [`NEWS.md`](NEWS.md). It contains nothing specific to any operating system, so there is one source tree for every platform. Until October 2026 it was called `fortran_mac/`, and an older, unfixed copy lived in `fortran_linux/`; that copy was removed (it remains in the git history).
 
@@ -123,6 +126,7 @@ Line counts below are for `fortran/`.
 ### Prerequisites
 
 - **Fortran compiler:** gfortran (GNU Fortran). Verified with 14.2.0.
+- **make:** already present on macOS once the Xcode command-line tools are installed (`xcode-select --install`) and on most Linux systems. You can also build without it (see below).
 - **Operating system:** any with gfortran (macOS, Linux; Windows via MSYS2 or WSL, not yet tested)
 
 ### Installing gfortran
@@ -136,27 +140,41 @@ sudo apt-get install gfortran
 
 # CentOS/RHEL
 sudo yum install gcc-gfortran
+
+# Windows (MSYS2, UCRT64 shell)
+pacman -S mingw-w64-ucrt-x86_64-gcc-fortran make
 ```
 
 On macOS, gfortran ships inside Homebrew's `gcc` formula. Apple's own `gcc` is clang and has no Fortran compiler.
 
 ### Building `selaction` (recommended)
 
-`gfortran` compiles left to right and needs each module already built before compiling anything that `USE`s it, so **the main program must come last**:
+From the top of the repository:
 
 ```bash
-cd fortran/
-
-gfortran -g -O2 -Wall -o selaction seltools.f90 selparameters.f90 selroutines.f90 \
-         selinbreeding.f90 selovlp.f90 seldiscrete.f90 selaction.f90
+make          # builds build/selaction
+make test     # builds if needed, then runs the regression tests
+make clean    # removes build/
 ```
 
-- **Use the flags shown.** Without them, the `blup1` test differs in the sign of one near-zero value (`-0.000` vs `0.000`). That is a compiler floating-point effect, not a bug; see `tests/README.md`, "Numerical precision and the reference toolchain".
+- **Where the output goes:** everything the compiler produces (the `selaction` binary, the `.mod` module files and, on macOS, `selaction.dSYM`) goes to `build/`. `fortran/` stays source-only, and `build/` is not tracked by git, so each machine builds its own. On Windows the program is `build/selaction.exe`.
+- **The flags are `-g -O2 -Wall`.** Without them, the `blup1` test differs in the sign of one near-zero value (`-0.000` vs `0.000`). That is a compiler floating-point effect, not a bug; see `tests/README.md`, "Numerical precision and the reference toolchain".
 - **`-Wall` prints many warnings** on the legacy code. They are expected.
+- **Overrides:** e.g. `make FC=gfortran-14` for a specific compiler, or `make BUILD=build/debug FFLAGS="-g -O0 -fcheck=all"` for a second build next to the normal one.
 
-Verified with GNU Fortran 14.2.0 on macOS (x86_64): `selaction` builds without errors and passes every test (`tests/run_tests.sh`).
+**Without make**, run the same command by hand from the top of the repository. `gfortran` compiles left to right and needs each module built before anything that `USE`s it, so **the main program must come last**:
 
-The code is plain standard Fortran with nothing specific to any operating system, so the same command builds it on Linux, macOS (Intel or Apple Silicon) and Windows (gfortran via MSYS2 or WSL). Only the macOS Intel build has been verified so far; automated builds on other platforms are planned (`plans/test-hardening.md`, step T6). Results on other platforms or compilers can differ in the last printed digit, which is why the stored test outputs are tied to one reference toolchain (see `tests/README.md`).
+```bash
+mkdir -p build
+gfortran -g -O2 -Wall -J build -o build/selaction \
+         fortran/seltools.f90 fortran/selparameters.f90 fortran/selroutines.f90 \
+         fortran/selinbreeding.f90 fortran/selovlp.f90 fortran/seldiscrete.f90 \
+         fortran/selaction.f90
+```
+
+Verified with GNU Fortran 14.2.0 on macOS (x86_64): `selaction` builds without errors and passes every test (`make test`).
+
+The code is plain standard Fortran with nothing specific to any operating system, so `make` builds it the same way on Linux, macOS (Intel or Apple Silicon) and Windows (gfortran via MSYS2 or WSL). Only the macOS Intel build has been verified so far; automated builds on other platforms are planned (`plans/test-hardening.md`, step T6). Ready-made downloads, so you can run SelAction without compiling, are planned next ([`plans/releases.md`](plans/releases.md)). Results on other platforms or compilers can differ in the last printed digit, which is why the stored test outputs are tied to one reference toolchain (see `tests/README.md`).
 
 ### Original version (reference only)
 
@@ -177,7 +195,7 @@ The program to run. It is the former `mssel`, renamed, and supports every select
 Its banner (on screen and at the top of every `.out` report) reads "SelAction … version 1.2". It credits the original authors (Rutten and Bijma, Wageningen University, 2000) and the current update (Austin Putz and Jack Dekkers, Iowa State University, 2026).
 
 ```bash
-./selaction
+build/selaction        # from the top of the repository, after `make`
 # Answer the prompts. The first one chooses the scheme:
 # 1 = single stage, 2 = two stage, 3 = three stage, o = overlapping generations
 ```
@@ -342,12 +360,12 @@ The selection intensity is corrected for the finite number of candidates and the
 
 ## Usage Examples
 
-All examples use `selaction` from `fortran/`.
+All examples use `build/selaction`, built with `make`. The program writes `<filename>.out` in the directory you run it from; `selaction` below stands for the path to `build/selaction`.
 
 ### Example 1: Single trait, single stage
 
 ```bash
-./selaction
+selaction
 # Select: 1 (single stage)
 # Input: filename example1, 1 trait, h² 0.3, 10 sires, 100 dams, own performance
 ```
@@ -355,7 +373,7 @@ All examples use `selaction` from `fortran/`.
 ### Example 2: Two traits, two stages
 
 ```bash
-./selaction
+selaction
 # Select: 2 (two stage)
 # Trait 1: h² = 0.4, economic value = 1.0
 # Trait 2: h² = 0.2, economic value = 0.5
@@ -366,7 +384,7 @@ All examples use `selaction` from `fortran/`.
 ### Example 3: Overlapping generations
 
 ```bash
-./selaction
+selaction
 # Select: o (overlapping generations)
 # filename overlap1, 1 trait, 3 age classes
 ```
@@ -378,7 +396,7 @@ A saved `.in` file can be replayed. The program also opens `<filename>.in` by na
 ```bash
 mkdir run && cd run
 cp ../tests/fixtures/test1.in .
-../fortran/selaction < test1.in      # writes test1.out here
+../build/selaction < test1.in        # writes test1.out here
 ```
 
 ### Example 5: Worked example from the GUI version
@@ -388,9 +406,11 @@ cp ../tests/fixtures/test1.in .
 ## Testing
 
 ```bash
-# from the repository root, after building fortran/selaction (see above)
-tests/run_tests.sh
+# from the top of the repository
+make test
 ```
+
+`make test` builds `build/selaction` if needed and runs `tests/run_tests.sh build`. To test another build directory, run `tests/run_tests.sh <dir>`.
 
 - **What the tests check:** each of the 7 test inputs in `tests/fixtures/` is run and its report compared byte for byte with a stored copy. Together they cover 1-, 2- and 3-stage selection, BLUP, the group information sources, and overlapping generations with and without groups.
 - **More detail:** see [`tests/README.md`](tests/README.md) for the format and how to add a test.
@@ -422,7 +442,7 @@ tests/run_tests.sh
   - This is also why the original `mssel`/`msseld` won't build: `selinbreeding.f90` does an unrestricted `USE selroutines`, which imports a second `dFmtblup`.
   - `fortran/` restricts it to `USE selroutines, ONLY: trunc`.
   - Removing the file from `fortran/` is planned (`plans/test-hardening.md`, step T0).
-- **Module not found / build order:** compile `seltools.f90` → `selparameters.f90` → `selroutines.f90` → `selinbreeding.f90`/`selovlp.f90`/`seldiscrete.f90` → the main program, in that order. The main program must always come last.
+- **Module not found / build order:** `make` handles this. By hand, compile `seltools.f90` → `selparameters.f90` → `selroutines.f90` → `selinbreeding.f90`/`selovlp.f90`/`seldiscrete.f90` → the main program, in that order. The main program must always come last.
 
 ## Troubleshooting
 
@@ -432,7 +452,7 @@ tests/run_tests.sh
 ```
 Fatal Error: Cannot open module file 'seltools.mod'
 ```
-**Solution:** Compile in dependency order (see [Installation and Compilation](#installation-and-compilation)).
+**Solution:** Build with `make`, which compiles in dependency order. By hand, use the order shown in [Installation and Compilation](#installation-and-compilation).
 
 **Long line errors (only against `fortran_orig/`):**
 ```
@@ -486,7 +506,8 @@ Error: Line truncated
    - YAML scenario folders, including sweeps over inputs
    - full validation before running
    - full-precision CSV results
-4. **An R implementation** (`SelActionR`), validated against this code.
+4. **Ready-made downloads** ([`plans/releases.md`](plans/releases.md)): tested binaries for macOS (Intel and Apple Silicon), Linux and Windows on GitHub Releases, so people can run SelAction without compiling it.
+5. **An R implementation** (`SelActionR`), validated against this code.
 
 ## Related Project: SelActionR
 

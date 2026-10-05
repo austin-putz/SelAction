@@ -7,7 +7,10 @@ GEMINI.md
 *.mod
 *.obj
 
-# Compiled binaries produced by the build commands in README.md
+# Build output (`make` writes everything here)
+build/
+
+# Binaries from builds made inside fortran/ before the Makefile existed
 fortran/selaction
 # old binary names (removed 2026-10-02); keep ignored so stale builds in
 # older clones don't show up as untracked files
