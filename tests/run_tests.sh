@@ -17,6 +17,10 @@
 # (numbers within one unit in the last printed digit; needs Rscript),
 # which is what the strict -O0 build and other platforms use.
 #
+# On Windows gfortran writes CRLF line endings, so there the byte
+# comparison ignores a trailing CR on each line; everything else must
+# still match exactly.
+#
 # Every run must also exit 0: a run that stops with an error or a trap
 # fails even if its report looks complete.
 #
@@ -58,6 +62,11 @@ if [[ "$TOLERANT" -eq 1 ]] && ! command -v Rscript > /dev/null; then
   echo "error: --tolerant needs R (Rscript not found on PATH)" >&2
   exit 2
 fi
+
+DIFF_OPTS=()
+case "$(uname -s)" in
+  MINGW*|MSYS*|CYGWIN*) DIFF_OPTS=(--strip-trailing-cr) ;;
+esac
 
 pass=0
 fail=0
@@ -123,14 +132,14 @@ while IFS=: read -r base binaries description; do
         head -20 "$tmp_dir/compare.log" | sed 's/^/      /'
         fail=$((fail + 1))
       fi
-    elif diff -q "$out_file" "$tmp_dir/$base.out" > /dev/null; then
+    elif diff -q ${DIFF_OPTS[@]+"${DIFF_OPTS[@]}"} "$out_file" "$tmp_dir/$base.out" > /dev/null; then
       echo "PASS  $base -> $BIN_DIR/$binary"
       pass=$((pass + 1))
       rm -rf "$tmp_dir"
     else
       echo "FAIL  $base -> $BIN_DIR/$binary ($description)"
       echo "      diff (expected vs actual), full output kept in $tmp_dir"
-      diff "$out_file" "$tmp_dir/$base.out" | head -20 | sed 's/^/      /'
+      diff ${DIFF_OPTS[@]+"${DIFF_OPTS[@]}"} "$out_file" "$tmp_dir/$base.out" | head -20 | sed 's/^/      /'
       fail=$((fail + 1))
     fi
   done

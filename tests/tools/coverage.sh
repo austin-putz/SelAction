@@ -42,7 +42,9 @@ mkdir -p build
 is_gcc_gcov() {
   local first
   first="$("$1" --version 2>/dev/null | head -1)"
-  [[ "$first" == *GCC* ]] || return 1
+  # GCC's says "gcov (GCC) 14.2.0" or "gcov (Ubuntu 14.2.0-...) 14.2.0";
+  # Apple's says "Apple LLVM version ...".
+  [[ "$first" == gcov* && "$first" != *LLVM* ]] || return 1
   [[ "$(printf "%s\n" "$first" | awk '{print $NF}' | cut -d. -f1)" == "$major" ]]
 }
 
