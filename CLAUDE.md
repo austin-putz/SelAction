@@ -130,7 +130,7 @@ Main programs (fortran: selaction.f90; fortran_orig: mssel.f90, msseld.f90, msse
 - `plans/releases.md` — **not started; after test-hardening T6.** Tested prebuilt binaries (macOS Intel/Apple Silicon, Linux, Windows) on GitHub Releases, so non-programmers (e.g. Jack) can run SelAction without compiling.
 - `plans/document.md` — docs-site idea, not started; written before the code was consolidated into `fortran/`, so its "current state" is out of date.
 - The other files in `plans/` are implemented fixes kept for their reasoning.
-- Open modelling questions (genetic lag between age classes, family-structure correction under `ovlp`, the 0.93 stage-correlation cap and r13|2, half-sib sources when `nsires == ndams`, the 20-sire inbreeding switch) were sent to Piter Bijma and Jack Dekkers on 2026-10-05 (`correspondence/2026-10-bijma-dekkers/`). Don't change the model on these points until they answer.
+- Open modelling questions (genetic lag between age classes, family-structure correction under `ovlp`, the 0.93 stage-correlation cap and r13|2, half-sib sources when `nsires == ndams`, the 20-sire inbreeding switch) were sent to Piter Bijma and Jack Dekkers on 2026-10-05 (`correspondence/2026-10-bijma-dekkers/`). Don't change the model on these points until they answer. A two-page addendum (Q8: progeny-test c² = 0; an addition to Q6) is in `correspondence/2026-10-bijma-dekkers-addendum/`, written 2026-10-06, **not yet sent**; when Austin sends it, record the date there, in `correspondence/README.md` and in `plans/progress.md`.
 
 ## Common Issues
 

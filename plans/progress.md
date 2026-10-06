@@ -9,8 +9,8 @@ finished, newest first.** Read the top entry to see where things stand.
 - **Last finished:** step 4a, T2a: the input map.
 - **Next:** step 4b, T2b: new discrete-generation test inputs.
 - **Waiting on others:** answers from Piter Bijma and Jack Dekkers to the
-  open modelling questions, and any worked examples
-  (`correspondence/2026-10-bijma-dekkers/`).
+  open modelling questions (Q1–Q7, **sent 2026-10-05**), and any worked
+  examples (`correspondence/2026-10-bijma-dekkers/`).
 - **To send:** the two-page addendum
   (`correspondence/2026-10-bijma-dekkers-addendum/`): Question 8 and an
   addition to Question 6. Austin decides when to send it.

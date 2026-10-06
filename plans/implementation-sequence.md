@@ -79,7 +79,8 @@ waiting for them.** Their answers are needed only before the equations
 change, which is after the sequence.
 
 The open questions (Q1–Q7) are in
-`correspondence/2026-10-bijma-dekkers/SelAction_open_questions.pdf`:
+`correspondence/2026-10-bijma-dekkers/SelAction_open_questions.pdf`,
+**sent to Jack and Piter on 2026-10-05**:
 
 1. generation interval
 2. genetic lag between age classes
