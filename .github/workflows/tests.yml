@@ -26,7 +26,7 @@ jobs:
       # run_tests.sh keeps the folder of a failed fixture here.
       TMPDIR: ${{ github.workspace }}/test-tmp
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - uses: fortran-lang/setup-fortran@v1
         with:
@@ -51,7 +51,12 @@ jobs:
       - name: Comparison tool self-test
         run: tests/tools/selftest.sh
 
+      # The stored outputs come from macOS Intel. Linux matches them byte
+      # for byte; Apple Silicon differs in a last digit in test1 and blup1
+      # (tests/README.md, "Continuous integration"), so there only the
+      # tolerant comparison below is required.
       - name: Golden fixtures (byte-exact)
+        continue-on-error: ${{ matrix.os == 'macos-latest' }}
         run: tests/run_tests.sh build
 
       - name: Golden fixtures (tolerant)
@@ -72,7 +77,7 @@ jobs:
 
       - name: Keep outputs of failed tests
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: failed-tests-${{ matrix.os }}
           path: |
@@ -91,13 +96,13 @@ jobs:
       - run: git config --global core.autocrlf false
         shell: bash
 
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - uses: msys2/setup-msys2@v2
         with:
           msystem: UCRT64
           update: true
-          install: mingw-w64-ucrt-x86_64-gcc-fortran make
+          install: mingw-w64-ucrt-x86_64-gcc-fortran make diffutils
 
       - name: Versions
         run: |

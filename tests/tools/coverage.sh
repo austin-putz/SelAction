@@ -62,7 +62,11 @@ done
 major="$("$FC" -dumpversion | cut -d. -f1)"
 
 GCOV=""
-for candidate in "$(dirname "$fc_path")/gcov-$major" "$(command -v "gcov-$major" || true)" \
+# Also try the compiler's own name with gfortran -> gcov, e.g. Ubuntu's
+# x86_64-linux-gnu-gfortran-14 -> x86_64-linux-gnu-gcov-14.
+fc_base="$(basename "$fc_path")"
+for candidate in "$(dirname "$fc_path")/${fc_base/gfortran/gcov}" \
+                 "$(dirname "$fc_path")/gcov-$major" "$(command -v "gcov-$major" || true)" \
                  "$(dirname "$fc_path")/gcov" "$(command -v gcov || true)"; do
   if [[ -n "$candidate" && -x "$candidate" ]] && is_gcc_gcov "$candidate"; then
     GCOV="$candidate"
