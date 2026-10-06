@@ -37,7 +37,14 @@ cd "$REPO_ROOT" || exit 2
 mkdir -p build
 
 # --- find GCC's gcov -------------------------------------------------------
-is_gcc_gcov() { "$1" --version 2>/dev/null | head -1 | grep -q "GCC"; }
+# GCC's gcov of the same major version as gfortran (another version may
+# not read the coverage data).
+is_gcc_gcov() {
+  local first
+  first="$("$1" --version 2>/dev/null | head -1)"
+  [[ "$first" == *GCC* ]] || return 1
+  [[ "$(printf "%s\n" "$first" | awk '{print $NF}' | cut -d. -f1)" == "$major" ]]
+}
 
 fc_path="$(command -v "$FC" || true)"
 if [[ -z "$fc_path" ]]; then
@@ -55,15 +62,15 @@ done
 major="$("$FC" -dumpversion | cut -d. -f1)"
 
 GCOV=""
-for candidate in "$(dirname "$fc_path")/gcov" "$(dirname "$fc_path")/gcov-$major" \
-                 "$(command -v "gcov-$major" || true)" "$(command -v gcov || true)"; do
+for candidate in "$(dirname "$fc_path")/gcov-$major" "$(command -v "gcov-$major" || true)" \
+                 "$(dirname "$fc_path")/gcov" "$(command -v gcov || true)"; do
   if [[ -n "$candidate" && -x "$candidate" ]] && is_gcc_gcov "$candidate"; then
     GCOV="$candidate"
     break
   fi
 done
 if [[ -z "$GCOV" ]]; then
-  echo "error: no GCC gcov found for $FC (version $major)." >&2
+  echo "error: no GCC gcov $major found for $FC (version $major)." >&2
   echo "       Looked next to $fc_path and for gcov-$major on PATH." >&2
   echo "       (Apple's /usr/bin/gcov is LLVM's and can't read GCC coverage data.)" >&2
   exit 2

@@ -1,0 +1,115 @@
+# Builds SelAction and runs every test layer on Linux and macOS (Apple
+# Silicon), plus the README's MSYS2 route on Windows.
+# See tests/README.md ("Continuous integration").
+
+name: tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: tests-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  unix:
+    name: ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    env:
+      # run_tests.sh keeps the folder of a failed fixture here.
+      TMPDIR: ${{ github.workspace }}/test-tmp
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: fortran-lang/setup-fortran@v1
+        with:
+          compiler: gcc
+          version: 14
+
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          use-public-rspm: true
+
+      - name: Versions
+        run: |
+          mkdir -p "$TMPDIR"
+          uname -a
+          $FC --version | head -1
+          Rscript --version
+          make --version | head -1
+
+      - name: Build
+        run: make
+
+      - name: Comparison tool self-test
+        run: tests/tools/selftest.sh
+
+      - name: Golden fixtures (byte-exact)
+        run: tests/run_tests.sh build
+
+      - name: Golden fixtures (tolerant)
+        if: success() || failure()
+        run: tests/run_tests.sh --tolerant build
+
+      - name: Error cases
+        if: success() || failure()
+        run: tests/run_error_tests.sh build
+
+      - name: Strict debug build
+        if: success() || failure()
+        run: tests/tools/strict.sh
+
+      - name: Coverage (report only)
+        if: runner.os == 'Linux' && (success() || failure())
+        run: tests/tools/coverage.sh
+
+      - name: Keep outputs of failed tests
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: failed-tests-${{ matrix.os }}
+          path: |
+            test-tmp/
+            build/*.log
+          if-no-files-found: ignore
+
+  windows:
+    name: windows-latest (MSYS2 UCRT64)
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: msys2 {0}
+    steps:
+      # Keep the stored .out files byte for byte (no CRLF conversion).
+      - run: git config --global core.autocrlf false
+        shell: bash
+
+      - uses: actions/checkout@v4
+
+      - uses: msys2/setup-msys2@v2
+        with:
+          msystem: UCRT64
+          update: true
+          install: mingw-w64-ucrt-x86_64-gcc-fortran make
+
+      - name: Versions
+        run: |
+          gfortran --version | head -1
+          make --version | head -1
+
+      - name: Build
+        run: make
+
+      - name: Golden fixtures (byte-exact)
+        run: tests/run_tests.sh build
+
+      - name: Error cases
+        if: success() || failure()
+        run: tests/run_error_tests.sh build
