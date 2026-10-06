@@ -324,14 +324,14 @@ property tests in T5 then cross-check several of them.
 | `sxd1` | 1-stage, separate sire/dam indices, **different** sources per sex (`traitinfo2`, dam-index output) |
 | `sxd2`, `sxd3` | the same for 2- and 3-stage (`traitinfo4`/`6`, rest of `traitinfo3`/`5`) |
 | `matrat1` | `nsires = ndams` (`note_matrat`) |
-| `nophen` | a trait with no phenotypic source, correlated with one that has one. Covers `note_pheninfo` and the correction-prompt path, with the answers scripted in the `.in` |
+| `nophen1`–`nophen3`, `nophen1n`–`nophen3n` | a trait with no phenotypic source and no genetic correlation with one that has. Covers `note_pheninfo` and the correction prompts, with the answers scripted in the `.in`. One per stage, since each stage has its own copy of the code; `nophenN` with separate indices (two such traits, answered `i` then `c`), `nophenNn` with one index (answered `c`). *Was a single `nophen`; split after the input map (step 4a).* |
 | `noce1` | discrete 1-stage, common environment off |
 | `goalonly` | a goal-only trait (`use = h`) |
-| `onetrait` | a single trait |
+| `onetrait`, `onetrait2` | a single trait, in 1- and 2-stage selection (one trait skips the trait-use questions in every stage; *`onetrait2` added after the input map*) |
 | `fivetr` | 5 traits (larger matrices, more correlations) |
 | `multigrp` | 2+ groups of the same type (e.g. 2 FS groups, 2 HS groups recorded for different traits) |
-| `prog2s`, `prog3s` | progeny groups in 2- and 3-stage selection |
-| `ovlpfix` | overlapping generations, **fixed numbers** selected per age class |
+| `prog2s`, `prog3s` | progeny groups in 2- and 3-stage selection, with common environment `y` (progeny c²). `prog2s` also uses full-sib and half-sib groups (no 2-stage fixture does), and both add a trait to the index in a later stage (`traitinfo3`/`traitinfo5`) |
+| `ovlpfix` | overlapping generations, **fixed numbers** selected per age class; also includes a goal-only trait (`h`), which no overlapping fixture has |
 | `ovlp3ac` | overlapping generations, 3 age classes per sex, with an age class excluded from selection if the input supports it |
 | `sires19`, `sires20` | the same 1-stage scheme with 19 and with 20 sires, either side of the switch in the inbreeding correction (open Question 7) |
 
@@ -343,7 +343,10 @@ regenerated if Jack and Piter's answers change the model. See
 
 - Before writing fixtures, walk every conditional `read *` and list which
   fixture covers it. This is the same map Phase 1 of the I/O plan needs
-  for its translator.
+  for its translator. **Done 2026-10-06 (step 4a):**
+  `tests/input_map/README.md` and `reads.csv` (regenerate with
+  `tests/tools/read_map.sh`). 124 of 162 input statements were reached;
+  the table above was adjusted to cover the other 38.
 - **Acceptance:**
   - every live subroutine runs at least once
   - **≥ 95% of live lines** run

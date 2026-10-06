@@ -2,6 +2,14 @@
 
 ## Testing
 
+* 2026-10-06: **input map** (test-hardening T2a, step 4a).
+  `tests/input_map/README.md` lists every question the program asks
+  (162 input statements), when it is asked, its checks, and which test
+  input reaches it; `tests/tools/read_map.sh` regenerates the raw table.
+  124 of 162 are reached by today's tests; the planned new test inputs
+  were adjusted to cover the other 38. `coverage.sh` and `read_map.sh`
+  share the gcov lookup (`tests/tools/find_gcov.sh`). No program changes.
+
 * 2026-10-06: **automated tests on GitHub Actions** (test-hardening T6,
   step 3). `.github/workflows/tests.yml` builds and tests every push to
   `main` and every pull request on Linux, macOS (Apple Silicon) and

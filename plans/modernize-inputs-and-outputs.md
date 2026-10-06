@@ -682,7 +682,9 @@ gets a `NEWS.md` entry. Work happens in `fortran/` and `driver/` only.
 **Phase 1: spec, translator and importer (R only, no Fortran edits)**
 - `driver/spec.yaml`.
 - The YAML → answer-stream translator. It mirrors each conditional prompt
-  branch of `sel1s`/`sel2s`/`sel3s`/`ovlp`/`info_sources*`.
+  branch of `sel1s`/`sel2s`/`sel3s`/`ovlp`/`info_sources*`. **Its
+  specification is the input map, `tests/input_map/README.md`** (every
+  question, when it is asked, its checks), built in step 4a.
 - The `import` command (legacy `.in` → YAML).
 - **Branch-coverage fixtures.** The translator must reproduce the prompt
   order exactly, so every conditional `read *` branch needs a fixture.

@@ -6,9 +6,8 @@ finished, newest first.** Read the top entry to see where things stand.
 
 ## Current position
 
-- **Last finished:** step 3, T6: automated tests on GitHub Actions.
-- **Next:** step 4a, T2a: the branch map (every place the program reads
-  input, and which test covers it).
+- **Last finished:** step 4a, T2a: the input map.
+- **Next:** step 4b, T2b: new discrete-generation test inputs.
 - **Waiting on others:** answers from Piter Bijma and Jack Dekkers to the
   open modelling questions, and any worked examples
   (`correspondence/2026-10-bijma-dekkers/`).
@@ -30,6 +29,44 @@ finished, newest first.** Read the top entry to see where things stand.
 ---
 
 ## Log
+
+### Step 4a: T2a, the input map (done 2026-10-06)
+
+- **What changed:** new `tests/input_map/README.md`: every question
+  SelAction asks (162 input statements), in the order it asks them, when
+  each is asked, what answers it accepts, and which test input reaches
+  it. `reads.csv` is the raw table, made by the new
+  `tests/tools/read_map.sh`. This is also the specification for the
+  YAML translator in step 5. No program changes.
+- **Tests:** `read_map.sh` gives an identical table on a second run;
+  every input line appears in the README; spot-checks agree with the
+  test inputs. `make check` passes.
+- **Coverage of questions:** 124 of 162 are reached today. The 38 that
+  aren't: separate sire/dam indices (none of the tests use them),
+  goal-only traits, groups in 2-stage and progeny groups in 2-/3-stage
+  selection, fixed numbers per age class, and the warning for a trait
+  with no phenotypic information (with its corrections).
+- **Results changed?** No.
+- **Changes to the planned test inputs (step 4b/4c):**
+  - `nophen` becomes six small inputs (`nophen1`–`3`, `nophen1n`–`3n`):
+    each stage has its own copy of the correction code, with five
+    different questions.
+  - new `onetrait2`: one trait skips the trait-use questions in every
+    stage, a separate input path in 2-stage selection.
+  - `prog2s` also uses full-sib and half-sib groups; `prog2s`/`prog3s`
+    and `sxd2`/`sxd3` add a trait in a later stage; `ovlpfix` includes a
+    goal-only trait.
+- **Findings** (written up in the map, nothing changed):
+  - **For Jack/Piter (an input check, not an equation):** the progeny-test
+    c² must be above 0, while the ordinary c² may be 0. So a user can't
+    say "no common environment in the progeny test". Is 0 meant to be
+    allowed?
+  - The correction "new genetic correlation" only offers one pair and
+    doesn't recheck the value; the I/O plan's validator will check this
+    before running.
+  - Overlapping generations skip the half-sib question when sires =
+    dams; discrete generations ask it. The translator must copy that.
+- **Next:** step 4b, T2b: new discrete-generation test inputs.
 
 ### Step 3: T6, automated tests on GitHub Actions (done 2026-10-06, commits `5065ecf`–`1283119`)
 
