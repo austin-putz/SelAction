@@ -105,6 +105,33 @@ Coverage on 2026-10-05 (7 fixtures + 6 error cases):
 | `seltools.f90` | 88.1% of 915 | 66.5% of 158 |
 | **Total** | **79.0% of 6,998** | **55.7% of 11,654** |
 
+## Continuous integration
+
+`.github/workflows/tests.yml` runs on every push to `main`, every pull
+request, and by hand (Actions tab, "Run workflow").
+
+| Platform | Compiler | Runs | Byte-exact golden |
+|---|---|---|---|
+| Linux (`ubuntu-latest`, x86_64) | gfortran 14 | build, self-test, golden, error cases, strict, coverage table | required; identical |
+| macOS (`macos-latest`, Apple Silicon) | gfortran 14 | build, self-test, golden, error cases, strict | advisory; tolerant required |
+| Windows (`windows-latest`, MSYS2 UCRT64) | gfortran (MSYS2's current, 16.2 on 2026-10-06) | build, golden, error cases | required; identical apart from CRLF |
+
+- **Apple Silicon** differs from the stored outputs in one last digit in
+  two places (first CI run, 2026-10-06): `test1` "% of total response"
+  `33.378` → `33.379`, and `blup1` `-0.000` → `0.000` plus `57.377` →
+  `57.376`. These are rounding of the last printed digit, the same kind
+  as the strict build's `blup1` difference, so on that platform the
+  byte-exact step may fail without failing the job and the tolerant
+  step must pass. The stored outputs are not changed to suit any
+  platform.
+- **Windows** gfortran writes CRLF line endings, so there
+  `run_tests.sh` compares ignoring a trailing CR. The workflow turns off
+  git's CRLF conversion so the stored `.out` files are checked out
+  unchanged. R isn't installed in that job, so it skips the R-based
+  layers.
+- **When a job fails**, the kept test folders (actual `.out`, logs) are
+  attached to the run as an artifact `failed-tests-<os>`.
+
 ## How a fixture is invoked
 
 `selaction` (built into `build/` by `make`) is an interactive program: it reads prompts from

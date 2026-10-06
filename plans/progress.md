@@ -6,10 +6,9 @@ finished, newest first.** Read the top entry to see where things stand.
 
 ## Current position
 
-- **Last finished:** step 2, T1: test tooling (`make check`,
-  `make strict`, `make coverage`).
-- **Next:** step 3, T6: CI on GitHub Actions (optional now; otherwise
-  after step 8), or step 4a, T2a: the branch map of every input read.
+- **Last finished:** step 3, T6: automated tests on GitHub Actions.
+- **Next:** step 4a, T2a: the branch map (every place the program reads
+  input, and which test covers it).
 - **Waiting on others:** answers from Piter Bijma and Jack Dekkers to the
   open modelling questions, and any worked examples
   (`correspondence/2026-10-bijma-dekkers/`).
@@ -31,6 +30,32 @@ finished, newest first.** Read the top entry to see where things stand.
 ---
 
 ## Log
+
+### Step 3: T6, automated tests on GitHub Actions (done 2026-10-06)
+
+- **What changed:** new `.github/workflows/tests.yml`. Every push to
+  `main` and every pull request is built and tested on Linux, macOS
+  Apple Silicon (Jack's kind of Mac) and Windows. Results:
+  [Actions tab](https://github.com/austin-putz/SelAction/actions/workflows/tests.yml);
+  a tests badge is at the top of the README. No program changes.
+- **Tests:** green on all three. Linux and Mac run every layer of
+  `make check` plus (Linux) the coverage table; Windows runs build,
+  golden and error cases (no R there). A throwaway branch with one digit
+  changed in a stored report turned all three red; the branch was
+  deleted.
+- **Results changed?** No stored output changed.
+- **Findings:**
+  - **First results on other computers.** Linux (gfortran 14.3) and
+    Windows (gfortran 16.2) give exactly the same reports as your Mac.
+    Apple Silicon gives the same numbers except the last printed digit
+    in two places (`33.378` vs `33.379` in `test1`; `57.377` vs `57.376`
+    and `-0.000` vs `0.000` in `blup1`). That's rounding, not a
+    difference in results; the tolerant check is the required one there.
+  - The README's Windows instructions (MSYS2) work as written.
+  - Three small fixes were needed to get CI green: Ubuntu's `gcov` name,
+    `diff` missing in MSYS2, and Windows CRLF line endings.
+  - Nothing for Jack or Piter.
+- **Next:** step 4a, T2a: the branch map.
 
 ### Step 2: T1, test tooling (done 2026-10-05, commit "Step 2 (T1): test tooling")
 

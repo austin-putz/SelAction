@@ -54,8 +54,8 @@ of every finished step.
 |---|---|---|---|---|---|
 | 1 | **T0:** delete the dead `selinbreeding.f90` | test-hardening T0 | — | small | done 2026-10-05 |
 | 2 | **T1:** test tooling: `strict.sh`, `coverage.sh`, `compare_out.R`, `run_all.sh` (`make check`) | test-hardening T1 | 1 | medium | done 2026-10-05 |
-| 3 | **T6:** CI on GitHub Actions (Linux + macOS), golden byte-exact on macOS, tolerant on Linux | test-hardening T6 | 2 | small–medium | next if wanted (optional here; otherwise after step 8) |
-| 4a | **T2a:** branch map: every conditional `read *`, and which fixture covers it | test-hardening T2 | 2 | medium | next (if step 3 is left for later) |
+| 3 | **T6:** CI on GitHub Actions (Linux + macOS), golden byte-exact on macOS, tolerant on Linux | test-hardening T6 | 2 | small–medium | done 2026-10-06 |
+| 4a | **T2a:** branch map: every conditional `read *`, and which fixture covers it | test-hardening T2 | 2 | medium | next |
 | 4b | **T2b:** new discrete-generation fixtures: `sxd1`–`sxd3`, `matrat1`, `nophen`, `noce1`, `goalonly`, `onetrait`, `fivetr`, `multigrp`, `prog2s`, `prog3s`, `sires19`/`sires20` | test-hardening T2 | 4a | large | `matrat1` (Q6) and `sires19`/`sires20` (Q7) marked *pending answer* |
 | 4c | **T2c:** new overlapping-generation fixtures: `ovlpfix`, `ovlp3ac`; coverage check (≥ 95% lines, branches reported) | test-hardening T2 | 4a | medium | `ovlp3ac` (Q2, Q4) marked *pending answer* |
 | 5a | **I/O 1a:** `driver/spec.yaml`, translator and importer for **1-stage** discrete | I/O Phase 1 | 4b | large | |
@@ -63,7 +63,7 @@ of every finished step.
 | 5c | **I/O 1c:** translator and importer for **overlapping generations**; round trip passes for every fixture | I/O Phase 1 | 5a, 4c | medium | |
 | 6 | **I/O 2:** `--batch`, exit codes 2/3, input guards, file name widened to 64 characters; new error cases in `tests/errors/` and the strict build | I/O Phase 2 | 2, 4 | medium | |
 | 7 | **I/O 3:** `selreport.f90` writes `results.csv` and `messages.csv`; golden CSVs and the `.out` ↔ CSV check | I/O Phase 3 | 6 | large | |
-| 8 | **T6** (if not done at step 3) | test-hardening T6 | 2 | small–medium | |
+| 8 | **T6** (if not done at step 3) | test-hardening T6 | 2 | small–medium | not needed (done at step 3) |
 | 9 | **T3:** unit tests of the maths routines against R | test-hardening T3 | 2 | medium | |
 | 10 | **T4:** correctness cases, drafted by Claude, *provisional* until verified | test-hardening T4 | 7 | large | needs review by Austin, Jack, Piter; case 5 expected to fail until Q5 is answered; their worked examples added when they arrive |
 | 11 | **T5:** property tests (as paired inputs, or as sweeps once step 12 exists) | test-hardening T5 | 7 | medium | needs review; "more sires → lower ΔF" fails at 19→20 (Q7); "fewer selected → higher response" direction to confirm |

@@ -486,6 +486,14 @@ status as the T4 cases.
 
 ### T6: Continuous integration (GitHub Actions)
 
+**Done 2026-10-06** (`.github/workflows/tests.yml`; details in
+`tests/README.md`, "Continuous integration"). Linux and macOS Apple
+Silicon as planned, plus Windows (MSYS2). Linux and Windows match the
+stored outputs byte for byte; Apple Silicon differs in a last digit in
+`test1` and `blup1`, so the tolerant comparison is the required check
+there. Coverage prints in the Linux log (T7 adds the gate).
+
+
 - **Trigger:** every push and pull request.
 - **Platforms:** `ubuntu-latest` and `macos-latest`.
 - **Steps:** install gfortran and R, run `make test` (the same source

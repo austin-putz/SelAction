@@ -21,6 +21,7 @@
 <a href="https://fortran-lang.org"><img src="https://img.shields.io/badge/Fortran-90-734f96.svg?style=for-the-badge&logo=fortran&logoColor=white" alt="Fortran 90" /></a>
 <a href="https://gcc.gnu.org/fortran/"><img src="https://img.shields.io/badge/tested%20with-gfortran%2014.2-orange.svg?style=for-the-badge&logo=gnu&logoColor=white" alt="Tested with gfortran 14.2" /></a>
 <a href="#installation-and-compilation"><img src="https://img.shields.io/badge/build-make-427819.svg?style=for-the-badge&logo=gnu&logoColor=white" alt="Build: make" /></a>
+<a href="https://github.com/austin-putz/SelAction/actions/workflows/tests.yml"><img src="https://img.shields.io/github/actions/workflow/status/austin-putz/SelAction/tests.yml?branch=main&style=for-the-badge&label=tests&logo=githubactions&logoColor=white" alt="Tests (GitHub Actions)" /></a>
 <a href="tests/README.md"><img src="https://img.shields.io/badge/tests-7%20golden%20fixtures-1f9c5a.svg?style=for-the-badge" alt="Tests: 7 golden fixtures" /></a>
 <a href="docs/SelAction_Technical_Report.pdf"><img src="https://img.shields.io/badge/docs-technical%20report-555555.svg?style=for-the-badge&logo=latex&logoColor=white" alt="Docs: technical report" /></a>
 </p>
@@ -247,7 +248,7 @@ gfortran -g -O2 -Wall -J build -o build/selaction \
 
 Verified with GNU Fortran 14.2.0 on macOS (x86_64): `selaction` builds without errors and passes every test (`make test`).
 
-The code is plain standard Fortran with nothing specific to any operating system, so `make` builds it the same way on Linux, macOS (Intel or Apple Silicon) and Windows (gfortran via MSYS2 or WSL). Only the macOS Intel build has been verified so far; automated builds on other platforms are planned (`plans/test-hardening.md`, step T6). Ready-made downloads, so you can run SelAction without compiling, are planned next ([`plans/releases.md`](plans/releases.md)). Results on other platforms or compilers can differ in the last printed digit, which is why the stored test outputs are tied to one reference toolchain (see `tests/README.md`).
+The code is plain standard Fortran with nothing specific to any operating system, so `make` builds it the same way on Linux, macOS (Intel or Apple Silicon) and Windows (gfortran via MSYS2 or WSL). Every push is built and tested automatically on Linux, macOS (Apple Silicon) and Windows (MSYS2), as well as on the macOS Intel reference machine. Ready-made downloads, so you can run SelAction without compiling, are planned next ([`plans/releases.md`](plans/releases.md)). Results on other platforms or compilers can differ in the last printed digit, which is why the stored test outputs are tied to one reference toolchain (see `tests/README.md`).
 
 ### Original version (reference only)
 
@@ -495,12 +496,12 @@ make coverage   # which share of the code the tests reach, per file
 
 - **What the tests check:** each of the 7 test inputs in `tests/fixtures/` is run and its report compared byte for byte with a stored copy. Together they cover 1-, 2- and 3-stage selection, BLUP, the group information sources, and overlapping generations with and without groups.
 - **Error cases:** the 6 inputs in `tests/errors/` must make the program stop with exit code 2 and the right message (over-long, spaced or duplicate names).
+- **Automated:** every push to `main` and every pull request runs the tests on Linux, macOS (Apple Silicon) and Windows ([GitHub Actions](https://github.com/austin-putz/SelAction/actions/workflows/tests.yml)).
 - **More detail:** see [`tests/README.md`](tests/README.md) for the format and how to add a test.
 - **Limitation:** these tests detect *changes* in results, not whether results are *correct*. Every stored output was produced by SelAction itself. [`plans/test-hardening.md`](plans/test-hardening.md) adds:
   - checks against independently computed answers
   - unit tests of the maths routines
   - property tests
-  - automated builds
 
 ## Known Issues
 

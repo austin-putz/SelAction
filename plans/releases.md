@@ -2,9 +2,10 @@
 
 ## Status
 
-**Not started (written 2026-10-05). Next step after test-hardening T6.**
-This plan records the approach only. Nothing here is implemented yet,
-and it builds on T6's CI workflow, which doesn't exist yet.
+**Not started (written 2026-10-05).** This plan records the approach
+only. Its prerequisite, T6's CI workflow (`.github/workflows/tests.yml`),
+exists since 2026-10-06 and already builds and tests on Linux, macOS
+Apple Silicon and Windows (MSYS2), so this can start any time.
 
 ## Goal
 
@@ -103,8 +104,8 @@ A short page (`docs/getting-started.md`, linked from the top of
 
 1. Apple signing and notarization: yes (paid) or the free workaround.
 2. One universal macOS binary, or separate Intel and M-series files.
-3. Whether Windows ships in the first release, or after it is verified
-   in CI for a while.
+3. Whether Windows ships in the first release. (CI tests it since
+   2026-10-06: byte-identical results apart from line endings.)
 4. The first release version: `v1.2.0` now, or wait until the open
    modelling questions are answered.
 

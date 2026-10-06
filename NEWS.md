@@ -2,6 +2,20 @@
 
 ## Testing
 
+* 2026-10-06: **automated tests on GitHub Actions** (test-hardening T6,
+  step 3). `.github/workflows/tests.yml` builds and tests every push to
+  `main` and every pull request on Linux, macOS (Apple Silicon) and
+  Windows (MSYS2 UCRT64); a tests badge is in the README.
+  * Linux (gfortran 14.3) and Windows (gfortran 16.2) reproduce all 7
+    stored outputs byte for byte (Windows apart from CRLF line endings).
+  * Apple Silicon (gfortran 14.2) differs in one last printed digit in
+    `test1` and `blup1`; it passes the tolerant comparison, which is the
+    required check there. Stored outputs unchanged.
+  * A deliberately broken stored output turned all three platforms red.
+  * `run_tests.sh` ignores trailing CRs on Windows; `coverage.sh` now also
+    finds Ubuntu's `x86_64-linux-gnu-gcov-14` and requires a gcov of the
+    same major version as gfortran.
+
 * 2026-10-05: **test tooling** (test-hardening T1, step 2 of
   `plans/implementation-sequence.md`). No program changes; no outputs
   changed.
