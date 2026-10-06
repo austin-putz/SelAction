@@ -16,12 +16,17 @@ concurrency:
 
 jobs:
   unix:
-    name: ${{ matrix.os }}
+    name: ${{ matrix.name }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-latest]
+        include:
+          - { os: ubuntu-latest, id: linux,      name: "ubuntu-latest (gfortran 14)",            compiler: setup }
+          - { os: macos-latest,  id: macos,      name: "macos-latest (gfortran 14)",             compiler: setup }
+          # Exactly the README's route for Mac users: brew install gcc
+          # (whatever gfortran Homebrew currently ships).
+          - { os: macos-latest,  id: macos-brew, name: "macos-latest (brew install gcc, README)", compiler: brew }
     env:
       # run_tests.sh keeps the folder of a failed fixture here.
       TMPDIR: ${{ github.workspace }}/test-tmp
@@ -29,9 +34,16 @@ jobs:
       - uses: actions/checkout@v5
 
       - uses: fortran-lang/setup-fortran@v1
+        if: matrix.compiler == 'setup'
         with:
           compiler: gcc
           version: 14
+
+      - name: Install gfortran with Homebrew (as in the README)
+        if: matrix.compiler == 'brew'
+        run: |
+          brew install gcc
+          echo "FC=$(brew --prefix)/bin/gfortran" >> "$GITHUB_ENV"
 
       - uses: r-lib/actions/setup-r@v2
         with:
@@ -56,7 +68,7 @@ jobs:
       # (tests/README.md, "Continuous integration"), so there only the
       # tolerant comparison below is required.
       - name: Golden fixtures (byte-exact)
-        continue-on-error: ${{ matrix.os == 'macos-latest' }}
+        continue-on-error: ${{ runner.os == 'macOS' }}
         run: tests/run_tests.sh build
 
       - name: Golden fixtures (tolerant)
@@ -79,7 +91,7 @@ jobs:
         if: failure()
         uses: actions/upload-artifact@v5
         with:
-          name: failed-tests-${{ matrix.os }}
+          name: failed-tests-${{ matrix.id }}
           path: |
             test-tmp/
             build/*.log
