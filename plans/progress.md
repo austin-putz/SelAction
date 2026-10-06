@@ -30,7 +30,7 @@ finished, newest first.** Read the top entry to see where things stand.
 
 ## Log
 
-### Step 4a: T2a, the input map (done 2026-10-06)
+### Step 4a: T2a, the input map (done 2026-10-06, commit `740a02e`)
 
 - **What changed:** new `tests/input_map/README.md`: every question
   SelAction asks (162 input statements), in the order it asks them, when
