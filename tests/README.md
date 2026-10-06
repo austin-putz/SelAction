@@ -114,12 +114,15 @@ request, and by hand (Actions tab, "Run workflow").
 |---|---|---|---|
 | Linux (`ubuntu-latest`, x86_64) | gfortran 14 | build, self-test, golden, error cases, strict, coverage table | required; identical |
 | macOS (`macos-latest`, Apple Silicon) | gfortran 14 | build, self-test, golden, error cases, strict | advisory; tolerant required |
+| macOS (`macos-latest`, Apple Silicon) | `brew install gcc`, as in the README (gfortran 16.2 on 2026-10-06) | same | advisory; tolerant required |
 | Windows (`windows-latest`, MSYS2 UCRT64) | gfortran (MSYS2's current, 16.2 on 2026-10-06) | build, golden, error cases | required; identical apart from CRLF |
 
 - **Apple Silicon** differs from the stored outputs in one last digit in
   two places (first CI run, 2026-10-06): `test1` "% of total response"
   `33.378` → `33.379`, and `blup1` `-0.000` → `0.000` plus `57.377` →
-  `57.376`. These are rounding of the last printed digit, the same kind
+  `57.376`. gfortran 16 (Homebrew) gives exactly the same two
+  differences as gfortran 14, so they come from the chip, not the
+  compiler version. These are rounding of the last printed digit, the same kind
   as the strict build's `blup1` difference, so on that platform the
   byte-exact step may fail without failing the job and the tolerant
   step must pass. The stored outputs are not changed to suit any

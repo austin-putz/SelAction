@@ -52,6 +52,10 @@ finished, newest first.** Read the top entry to see where things stand.
     and `-0.000` vs `0.000` in `blup1`). That's rounding, not a
     difference in results; the tolerant check is the required one there.
   - The README's Windows instructions (MSYS2) work as written.
+  - Added afterwards: a second Apple Silicon job that installs gfortran
+    the README way (`brew install gcc`, gfortran 16.2). Same result as
+    gfortran 14 there, so the README route for Mac users, including
+    Jack's M-series MacBook, is tested on every push.
   - Three small fixes were needed to get CI green: Ubuntu's `gcov` name,
     `diff` missing in MSYS2, and Windows CRLF line endings.
   - Nothing for Jack or Piter.

@@ -11,6 +11,9 @@
   * Apple Silicon (gfortran 14.2) differs in one last printed digit in
     `test1` and `blup1`; it passes the tolerant comparison, which is the
     required check there. Stored outputs unchanged.
+  * A second Apple Silicon job installs gfortran with `brew install gcc`,
+    exactly as the README says (gfortran 16.2): same last-digit
+    differences as gfortran 14, so they come from the chip.
   * A deliberately broken stored output turned all three platforms red.
   * `run_tests.sh` ignores trailing CRs on Windows; `coverage.sh` now also
     finds Ubuntu's `x86_64-linux-gnu-gcov-14` and requires a gcov of the
