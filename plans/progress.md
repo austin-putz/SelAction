@@ -11,6 +11,9 @@ finished, newest first.** Read the top entry to see where things stand.
 - **Waiting on others:** answers from Piter Bijma and Jack Dekkers to the
   open modelling questions, and any worked examples
   (`correspondence/2026-10-bijma-dekkers/`).
+- **To send:** the two-page addendum
+  (`correspondence/2026-10-bijma-dekkers-addendum/`): Question 8 and an
+  addition to Question 6. Austin decides when to send it.
 
 ## Entry template
 
@@ -63,9 +66,12 @@ finished, newest first.** Read the top entry to see where things stand.
     allowed?
   - The correction "new genetic correlation" only offers one pair and
     doesn't recheck the value; the I/O plan's validator will check this
-    before running.
-  - Overlapping generations skip the half-sib question when sires =
+    before running. Not a question for Jack/Piter (no theory involved).
+  - Overlapping generations skip the half-sib question when sires >=
     dams; discrete generations ask it. The translator must copy that.
+  - The first and last are written up for Jack and Piter as Question 8
+    and an addition to Question 6 in
+    `correspondence/2026-10-bijma-dekkers-addendum/` (not yet sent).
 - **Next:** step 4b, T2b: new discrete-generation test inputs.
 
 ### Step 3: T6, automated tests on GitHub Actions (done 2026-10-06, commits `5065ecf`–`1283119`)

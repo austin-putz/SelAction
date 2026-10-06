@@ -182,7 +182,8 @@ indices `y`) and **`nophen1n`, `nophen2n`, `nophen3n`** (separate indices
    while the ordinary c² accepts 0 (`cc < 0` is rejected). A user who
    wants no common environment in the progeny test can't say so. Same in
    all four routines. Worth confirming with Jack/Piter whether 0 should
-   be allowed; it is an input check, not an equation.
+   be allowed; it is an input check, not an equation. **Raised as
+   Question 8** in `correspondence/2026-10-bijma-dekkers-addendum/`.
 2. **"max=20" groups is not checked** (already a known issue in the
    README); the map confirms it for all four routines.
 3. **The genetic-correlation correction only offers one pair.** With
@@ -193,8 +194,9 @@ indices `y`) and **`nophen1n`, `nophen2n`, `nophen3n`** (separate indices
    before running.
 4. **Overlapping generations skip the half-sib question when sires =
    dams; discrete generations ask it and later drop half-sib sources
-   with a note (`note_matrat`).** Both are deliberate, but the translator
-   (I/O Phase 1) must reproduce the difference exactly.
+   with a note (`note_matrat`).** The translator (I/O Phase 1) must
+   reproduce the difference exactly. Raised as an **addition to
+   Question 6** in `correspondence/2026-10-bijma-dekkers-addendum/`.
 5. **One trait skips the "use" question** (set to `b`), and in 2- and
    3-stage selection skips the stage-2/3 trait questions. `onetrait`
    should therefore be run in 2-stage as well (`onetrait2`).

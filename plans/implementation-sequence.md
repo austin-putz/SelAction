@@ -89,6 +89,13 @@ The open questions (Q1–Q7) are in
 6. half-sib information when each sire has one dam
 7. the switch in the inbreeding correction at 20 sires
 
+Addendum (`correspondence/2026-10-bijma-dekkers-addendum/`, written
+2026-10-06 after the input map, not yet sent):
+
+8. should the progeny-test c² be allowed to be 0? (input check only)
+- addition to 6: discrete and overlapping generations treat half-sib
+  groups differently when sires = dams
+
 **Hard stop: model changes.** No equation changes on Q1–Q7 until Jack
 and Piter have answered and steps 10–11 pass. Each change then gets its
 own commit, `NEWS.md` entry and before/after results.

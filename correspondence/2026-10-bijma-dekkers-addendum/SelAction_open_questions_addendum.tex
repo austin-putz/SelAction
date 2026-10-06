@@ -1,0 +1,90 @@
+\documentclass[11pt]{article}
+\pdfminorversion=7
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{amsmath,amssymb,booktabs,graphicx,geometry,hyperref,xcolor,array,enumitem,listings}
+\usepackage[most]{tcolorbox}
+\geometry{margin=25mm}
+\hypersetup{colorlinks=true,linkcolor=blue!55!black,urlcolor=blue!55!black,citecolor=blue!55!black}
+\newcommand{\src}[1]{\texttt{#1}}
+\newcommand{\ma}[1]{\mathbf{#1}}
+\newcommand{\ve}[1]{\boldsymbol{#1}}
+\newcommand{\E}{\operatorname{E}}
+\newcommand{\Cov}{\operatorname{Cov}}
+\newcommand{\Var}{\operatorname{Var}}
+\setlist{itemsep=2pt,topsep=4pt}
+\lstset{language=Fortran,basicstyle=\ttfamily\small,columns=fullflexible,keepspaces=true,
+  frame=single,rulecolor=\color{black!25},backgroundcolor=\color{black!3},xleftmargin=4pt,xrightmargin=4pt,
+  commentstyle=\color{black!55},keywordstyle=\color{blue!45!black},breaklines=true,showstringspaces=false}
+\newtcolorbox{question}[1]{colback=blue!3!white,colframe=blue!35!black,boxrule=0.5pt,arc=2pt,
+  left=6pt,right=6pt,top=4pt,bottom=4pt,fonttitle=\bfseries,title=#1}
+\newtcolorbox{recommend}{colback=green!4!white,colframe=green!35!black,boxrule=0.5pt,arc=2pt,
+  left=6pt,right=6pt,top=4pt,bottom=4pt,fonttitle=\bfseries,title=Our recommendation}
+
+\title{SelAction: open questions on the model\\[4pt]
+\large Addendum: two further points on the inputs\\
+for Piter Bijma and Jack Dekkers}
+\author{Austin Putz}
+\date{6 October 2026}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+This short addendum follows the open questions sent on 5 October 2026. While mapping every question the program asks and which of our tests reaches it, we found two further points we cannot settle from the code alone. Question~8 is new: the program does not accept a common-environmental effect of zero in the progeny test. The second point adds to Question~6: discrete and overlapping generations treat half-sib groups differently when each sire has one dam. Neither changes an equation, and we have changed nothing in the program.
+\end{abstract}
+
+%======================================================================
+\section{Question 8: zero common-environmental effect in the progeny test}\label{sec:q8}
+
+When common environmental effects are switched on (\src{initc = y}) and progeny groups are used, the program asks for a separate $c^2$ for the progeny test of each trait (\src{ccprog}). It rejects zero:
+
+\begin{lstlisting}
+read *,ccprog(q)
+if (ccprog(q).le.0) then
+  print *," wrong input, com.env.effect must be higher than 0!"
+\end{lstlisting}
+
+The ordinary $c^2$ of each trait (\src{cc}) is checked with \src{cc(p).lt.0} instead, so zero is accepted there. The same check appears in all four routines: \src{sel1s}, \src{sel2s}, \src{sel3s} (\src{seldiscrete.f90}) and \src{ovlp} (\src{selovlp.f90}). It is also in the original code.
+
+The value only enters as a variance,
+\begin{equation*}
+\sigma^2_{c,\mathrm{prog}} = c^2_{\mathrm{prog}}\,\sigma^2_P,
+\qquad
+\Cov_{c,\mathrm{prog}}(p,q) = r_c(p,q)\,\sigma_{c,\mathrm{prog}}(p)\,\sigma_{c,\mathrm{prog}}(q),
+\end{equation*}
+and is never divided by. When common environmental effects are switched off, the program itself sets $c^2_{\mathrm{prog}}=0$ and uses progeny groups normally. So zero appears to be numerically safe. As it stands, a user who wants common environmental effects among full sibs but none in the progeny test (for example, progeny reared in many separate environments) cannot enter that, and must give a small positive value instead.
+
+\begin{question}{Question 8}
+Is there a reason the progeny-test $c^2$ must be strictly positive, or should zero be allowed, as it is for the ordinary $c^2$?
+\end{question}
+
+\begin{recommend}
+Allow $0 \le c^2_{\mathrm{prog}} < 1$, the same rule as for the ordinary $c^2$, unless there is a modelling reason against it. This is an input check only; no equation changes.
+\end{recommend}
+
+%======================================================================
+\section{Addition to Question 6: half-sib groups when each sire has one dam}\label{sec:q6}
+
+Question~6 asked whether half-sib sources should be removed at every stage when $M_s = M_d$. Mapping the inputs showed that the two kinds of selection handle this case differently:
+
+\begin{itemize}
+\item \textbf{Discrete generations} (\src{sel1s}, \src{sel2s}, \src{sel3s}) always ask ``use half-sib groups?''. If $M_s = M_d$, they then remove half-sib sources from the index with the note ``half-sib information is thus not possible'' (\src{note\_matrat}). As described in Question~6, the removal only applies to the final-stage index.
+\item \textbf{Overlapping generations} (\src{ovlp}) ask about half-sib groups only if $M_s < M_d$. With $M_s \ge M_d$, the question is skipped, no half-sib group exists, and there is no note.
+\end{itemize}
+
+The overlapping-generation rule is the stricter of the two, and it also covers $M_s > M_d$. That case is not handled separately in discrete generations.
+
+\begin{question}{Addition to Question 6}
+Should both kinds of selection follow the same rule? If so, is it ``no half-sib groups unless $M_s < M_d$'' (as in overlapping generations), or ask and then remove with a note (as in discrete generations)?
+\end{question}
+
+\begin{recommend}
+Use one rule for both, decided together with Question~6. Our planned input checker would then reject half-sib groups when $M_s \ge M_d$, with a clear message, instead of accepting them and dropping them later.
+\end{recommend}
+
+%======================================================================
+\section*{Source}
+\src{fortran/} at commit \src{4e2a245}. The complete list of inputs, with the condition under which each is asked, is in \src{tests/input\_map/README.md}.
+
+\end{document}
