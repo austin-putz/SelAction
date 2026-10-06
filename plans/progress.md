@@ -31,7 +31,7 @@ finished, newest first.** Read the top entry to see where things stand.
 
 ## Log
 
-### Step 3: T6, automated tests on GitHub Actions (done 2026-10-06)
+### Step 3: T6, automated tests on GitHub Actions (done 2026-10-06, commits `5065ecf`–`1283119`)
 
 - **What changed:** new `.github/workflows/tests.yml`. Every push to
   `main` and every pull request is built and tested on Linux, macOS
@@ -61,7 +61,7 @@ finished, newest first.** Read the top entry to see where things stand.
   - Nothing for Jack or Piter.
 - **Next:** step 4a, T2a: the branch map.
 
-### Step 2: T1, test tooling (done 2026-10-05, commit "Step 2 (T1): test tooling")
+### Step 2: T1, test tooling (done 2026-10-05, commits `9bf98e0`, `60326e7`)
 
 - **What changed:** new test scripts, no program changes.
   - `make check` runs every test layer and prints one summary.
@@ -91,7 +91,7 @@ finished, newest first.** Read the top entry to see where things stand.
   - Nothing for Jack or Piter.
 - **Next:** step 3 (T6, CI) if wanted now, otherwise step 4a (T2a).
 
-### Step 1: T0, delete the dead `selinbreeding.f90` (done 2026-10-05, commit "Step 1 (T0): remove dead selinbreeding.f90 from fortran/")
+### Step 1: T0, delete the dead `selinbreeding.f90` (done 2026-10-05, commit `c5ddae1`)
 
 - **What changed:** `fortran/selinbreeding.f90` (an unused older copy of
   the inbreeding routine) is deleted and no longer compiled. The live
