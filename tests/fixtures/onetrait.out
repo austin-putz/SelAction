@@ -1,0 +1,83 @@
+  
+             *************************************************
+             *                   SelAction                   *
+             *      Multi-Trait Index Selection Software     *
+             *                                               *
+             *                 developed by:                 *
+             *        Marc J.M. Rutten and Piter Bijma       *
+             *       Animal Breeding and Genetics Group      *
+             *          Wageningen University, 2000          *
+             *                                               *
+             *                  updated by:                  *
+             *          Austin Putz and Jack Dekkers         *
+             *          Iowa State University, 2026          *
+             *                                               *
+             *                  version 1.2                  *
+             *************************************************
+  
+  
+  TRAITS
+  
+    ADG     
+  
+  
+   TRAIT PARAMETERS
+   
+        phenotypic variance  heritability  com.env.effect
+ADG            95.000           0.300           0.050
+  
+  
+  BREEDING GOAL INFORMATION
+  
+          5.000 * ADG     
+  
+  
+   POPULATION SIZE
+   
+               number of selected sires :   10.000
+                number of selected dams :  200.000
+ number of male selection candidates per d   5.000
+ number of female selection candidates per   5.000
+  
+ selected proportion sires : 0.010
+  selected proportion dams : 0.200
+  
+  CHARACTERISTICS OF THE USED GROUPS
+  
+  full-sib group            1  with    9.00000000      animals
+  half-sib group            1  with    200.000000      dams, producing    9.00000000     animals
+  
+  
+  INDEX INFORMATION
+  
+     own performance                      for ADG       (   1.060)
+     information of fs-group            1 for ADG       (   1.101)
+     information of hs-group            1 for ADG       (   0.906)
+  
+  
+              ******************   RESULTS   *******************
+  
+  EQUILIBRIUM PARAMETERS
+  
+        phenotypic variance  heritability  com.env.effect
+ADG            88.910           0.252           0.053
+  
+  RESPONSE
+                            sires           dams          total
+ ADG     
+         trait units :      3.414          1.840          5.254
+      economic units :     17.071          9.201         26.272
+ % of total response :     64.980         35.020        100.000
+  
+  TOTAL RESPONSE
+                            sires           dams          total
+      economic units :     17.071          9.201         26.272
+  
+  
+        index variance :       181.702
+ breeding goal variance :       560.251
+     accuracy of index :         0.569
+  
+ increase of inbreeding :  4.135% per generation
+  
+                       ******  end of output  ******
