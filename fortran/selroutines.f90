@@ -9,28 +9,53 @@
         contains
 
         subroutine read_name(what, maxlen, name)
-        ! Reads one name (the file name or a trait name) from the input line.
-        ! Anything after "!" is a comment, as in the .in files. Stops the run
-        ! with exit code 2 if the name is empty, contains a blank or comma, or
-        ! is longer than maxlen, instead of silently cutting it (2026-10-05).
+        ! Reads one name (the file name or a trait name) from the input.
+        ! Blank lines are skipped, as list-directed input does. Anything after
+        ! a "!" outside quotes is a comment, as in the .in files, and one pair
+        ! of surrounding quotes is removed. Stops the run with exit code 2 if
+        ! the name is empty, contains a blank, comma or quote (or, for the
+        ! file name, a / or \), or is longer than maxlen, instead of silently
+        ! cutting it (2026-10-05).
         character(len=*), intent(in) :: what
         integer, intent(in) :: maxlen
         character(len=*), intent(out) :: name
-        character(len=256) :: buf, tmp
-        character(len=400) :: msg
+        character(len=1024) :: buf, tmp
+        character(len=1200) :: msg
+        character(len=1) :: quote
         integer :: ios, k, n
 
-        read(*,'(a)',iostat=ios) buf
-        if (ios.ne.0) then
-          call name_error("unexpected end of input while reading the "//what, " ")
+        if (maxlen.gt.len(name)) then
+          call name_error("internal: read_name called with maxlen larger than the variable", " ")
         end if
-        k=index(buf,"!")
-        if (k.gt.0) buf(k:)=" "
-        do k=1,len(buf)
-          if (iachar(buf(k:k)).eq.9) buf(k:k)=" "
+        n=0
+        do while (n.eq.0)
+          read(*,'(a)',iostat=ios) buf
+          if (ios.ne.0) then
+            call name_error("unexpected end of input while reading the "//what, " ")
+          end if
+          if (len_trim(buf).eq.len(buf)) then
+            write(msg,'(a,a,i0,a,i0)') what," line is longer than ",len(buf)-1, &
+              " characters; the maximum is ",maxlen
+            call name_error(trim(msg), "use a shorter name")
+          end if
+          ! tabs to blanks, and cut a comment that starts outside quotes
+          quote=" "
+          do k=1,len(buf)
+            if (iachar(buf(k:k)).eq.9) buf(k:k)=" "
+            if (quote.eq." ") then
+              if (buf(k:k).eq."'" .or. buf(k:k).eq.'"') then
+                quote=buf(k:k)
+              else if (buf(k:k).eq."!") then
+                buf(k:)=" "
+                exit
+              end if
+            else if (buf(k:k).eq.quote) then
+              quote=" "
+            end if
+          end do
+          buf=adjustl(buf)
+          n=len_trim(buf)
         end do
-        buf=adjustl(buf)
-        n=len_trim(buf)
         if (n.ge.2) then
           if ((buf(1:1).eq."'" .and. buf(n:n).eq."'") .or. &
               (buf(1:1).eq.'"' .and. buf(n:n).eq.'"')) then
@@ -43,9 +68,19 @@
         if (n.eq.0) then
           call name_error("the "//what//" is empty", " ")
         end if
+        if (index(buf(1:n),"'").gt.0 .or. index(buf(1:n),'"').gt.0) then
+          write(msg,'(a,a,a,a)') what," ",buf(1:n)," contains a quote"
+          call name_error(trim(msg), "write the name without quotes, or with one pair around it")
+        end if
         if (index(buf(1:n)," ").gt.0 .or. index(buf(1:n),",").gt.0) then
           write(msg,'(a,a,a,a)') what," '",buf(1:n),"' contains a space or comma"
           call name_error(trim(msg), "use a single word, e.g. with _ instead of spaces")
+        end if
+        if (what.eq."filename" .and. &
+            (index(buf(1:n),"/").gt.0 .or. index(buf(1:n),achar(92)).gt.0)) then
+          write(msg,'(a,a,a,a)') what," '",buf(1:n),"' contains a / or \"
+          call name_error(trim(msg), "give a plain name: the .in and .out files are "// &
+            "written in the current directory")
         end if
         if (n.gt.maxlen) then
           write(msg,'(a,a,a,a,i0,a,i0)') what," '",buf(1:n),"' is ",n, &

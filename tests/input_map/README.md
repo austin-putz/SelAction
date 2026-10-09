@@ -17,7 +17,7 @@ from the code. **After adding fixtures, rerun the script and update the
 "Covered by" columns.** Line numbers refer to `fortran/` at the commit
 that last updated this file.
 
-**Status on 2026-10-06 (7 fixtures, 6 error cases): 124 of 162 input
+**Status on 2026-10-09 (7 fixtures, 8 error cases): 124 of 162 input
 statements are reached; 38 are not.** All 38 are covered by the new test
 inputs planned for steps 4b/4c (last section).
 
@@ -131,37 +131,37 @@ that has animals selected, instead of "next age class" questions.
 
 | Routine | Question | Asked when | Answer (checks) | Line | Covered by |
 |---|---|---|---|---|---|
-| `read_name` | (reads the line for a file or trait name) | every name | text | 23 | every fixture and error case |
-| `traitinfo` | trait name, per trait | discrete, always | ≤ 8 characters, no blanks, unique (`read_name`) | 1191 | all discrete + `longtrt`, `spacetrt`, `duptrt` |
-| `traitinfo` | use: index `i` / goal `h` / both `b` / not now `n` | discrete, **more than one trait** (one trait is set to `b`) | `i`/`h`/`b`/`n` (re-asks) | 1204 | all discrete + `duptrt` |
-| `traitinfo` | economic value, goal-only trait | use `h` | ≠ 0 (re-asks) | **1217** | **none** |
-| `traitinfo` | economic value, index-and-goal trait | use `b` | ≠ 0 (re-asks) | 1229 | all discrete + `duptrt` |
-| `traitinfoovlp` | trait name, per trait | overlapping | as above | 1264 | `ovlp2`, `ovlpgrp`, `ovlptrt` |
-| `traitinfoovlp` | use `i`/`h`/`b`/`n` | overlapping, more than one trait | as above | 1277 | `ovlp2`, `ovlpgrp` |
-| `traitinfoovlp` | economic value, goal-only trait | use `h` | ≠ 0 | **1290** | **none** |
-| `traitinfoovlp` | economic value, index-and-goal trait | use `b` | ≠ 0 | 1302 | `ovlp2`, `ovlpgrp` |
-| `traitinfo2` | dams: use `i`/`h`/`b`/`n` | separate indices `y` | as above | **1344** | **none** |
-| `traitinfo3` | sires, stage 2: add to index? `i`/`n` | 2- or 3-stage, more than one trait, for each trait **not** in the stage-1 index (use `n` or `h`) | `i`/`n` | **1403** | **none** |
-| `traitinfo4` | dams, stage 2: as above | separate indices `y`, 2- or 3-stage, each dam trait not in the stage-1 dam index | `i`/`n` | **1448** | **none** |
-| `traitinfo5` | sires, stage 3: as above | 3-stage, trait not in the stage-2 index | `i`/`n` | **1501** | **none** |
-| `traitinfo6` | dams, stage 3: as above | separate indices `y`, 3-stage, each dam trait not in the stage-2 dam index | `i`/`n` | **1546** | **none** |
-| `info_sources` | information sources for a trait, first and following codes | each index trait (sires; dams too if separate indices) | codes: 1 own performance, 2 BLUP, 3+n full-sib group n, 23+n half-sib group n, 63+n progeny group n; −1 ends | 478, 481 | all discrete |
-| `info_sourcesovlp` | as above, per age class | overlapping | as above | 642, 645 | `ovlp2`, `ovlpgrp` |
-| `info_sources2` | sources added in stage 2 | 2- and 3-stage, if any remain | codes, −1 ends | 860, 870 | `test2s`, `test3s` |
-| `info_sources3` | sources added in stage 3 | 3-stage, if any remain | codes, −1 ends | 1067, 1077 | `test3s` |
-| `note_pheninfo` | warning: trait without phenotypic sources and without genetic correlation to one that has them: edit sources `i` or correlations `c`? | the checks in section 2 find such a trait (discrete only) | `i`/`c` (re-asks) | **359** | **none** |
+| `read_name` | (reads the line for a file or trait name) | every name | text | 32 | every fixture and error case |
+| `traitinfo` | trait name, per trait | discrete, always | ≤ 8 characters, no blanks, unique (`read_name`) | 1226 | all discrete + `longtrt`, `spacetrt`, `duptrt` |
+| `traitinfo` | use: index `i` / goal `h` / both `b` / not now `n` | discrete, **more than one trait** (one trait is set to `b`) | `i`/`h`/`b`/`n` (re-asks) | 1239 | all discrete + `duptrt` |
+| `traitinfo` | economic value, goal-only trait | use `h` | ≠ 0 (re-asks) | **1252** | **none** |
+| `traitinfo` | economic value, index-and-goal trait | use `b` | ≠ 0 (re-asks) | 1264 | all discrete + `duptrt` |
+| `traitinfoovlp` | trait name, per trait | overlapping | as above | 1299 | `ovlp2`, `ovlpgrp`, `ovlptrt` |
+| `traitinfoovlp` | use `i`/`h`/`b`/`n` | overlapping, more than one trait | as above | 1312 | `ovlp2`, `ovlpgrp` |
+| `traitinfoovlp` | economic value, goal-only trait | use `h` | ≠ 0 | **1325** | **none** |
+| `traitinfoovlp` | economic value, index-and-goal trait | use `b` | ≠ 0 | 1337 | `ovlp2`, `ovlpgrp` |
+| `traitinfo2` | dams: use `i`/`h`/`b`/`n` | separate indices `y` | as above | **1379** | **none** |
+| `traitinfo3` | sires, stage 2: add to index? `i`/`n` | 2- or 3-stage, more than one trait, for each trait **not** in the stage-1 index (use `n` or `h`) | `i`/`n` | **1438** | **none** |
+| `traitinfo4` | dams, stage 2: as above | separate indices `y`, 2- or 3-stage, each dam trait not in the stage-1 dam index | `i`/`n` | **1483** | **none** |
+| `traitinfo5` | sires, stage 3: as above | 3-stage, trait not in the stage-2 index | `i`/`n` | **1536** | **none** |
+| `traitinfo6` | dams, stage 3: as above | separate indices `y`, 3-stage, each dam trait not in the stage-2 dam index | `i`/`n` | **1581** | **none** |
+| `info_sources` | information sources for a trait, first and following codes | each index trait (sires; dams too if separate indices) | codes: 1 own performance, 2 BLUP, 3+n full-sib group n, 23+n half-sib group n, 63+n progeny group n; −1 ends | 513, 516 | all discrete |
+| `info_sourcesovlp` | as above, per age class | overlapping | as above | 677, 680 | `ovlp2`, `ovlpgrp` |
+| `info_sources2` | sources added in stage 2 | 2- and 3-stage, if any remain | codes, −1 ends | 895, 905 | `test2s`, `test3s` |
+| `info_sources3` | sources added in stage 3 | 3-stage, if any remain | codes, −1 ends | 1102, 1112 | `test3s` |
+| `note_pheninfo` | warning: trait without phenotypic sources and without genetic correlation to one that has them: edit sources `i` or correlations `c`? | the checks in section 2 find such a trait (discrete only) | `i`/`c` (re-asks) | **394** | **none** |
 
 ## Not reached yet → planned test inputs (steps 4b/4c)
 
 | Not reached | Lines | Planned test input |
 |---|---|---|
-| goal-only trait (`h`): economic value | 1217; 1290 | `goalonly` (discrete); **add a goal-only trait to `ovlpfix`** (overlapping) |
-| dams' trait use and stage-2/3 use with separate indices | 1344, 1448, 1546 | `sxd1`, `sxd2`, `sxd3` |
-| sires' stage-2/3 trait use (trait added to the index in a later stage) | 1403, 1501 | **`sxd2`/`sxd3` and `prog2s`/`prog3s` must include a trait not in the stage-1 (or stage-2) index** |
+| goal-only trait (`h`): economic value | 1252; 1325 | `goalonly` (discrete); **add a goal-only trait to `ovlpfix`** (overlapping) |
+| dams' trait use and stage-2/3 use with separate indices | 1379, 1483, 1581 | `sxd1`, `sxd2`, `sxd3` |
+| sires' stage-2/3 trait use (trait added to the index in a later stage) | 1438, 1536 | **`sxd2`/`sxd3` and `prog2s`/`prog3s` must include a trait not in the stage-1 (or stage-2) index** |
 | full-sib and half-sib groups in 2-stage | 1357–1382 | **`prog2s` must use full-sib and half-sib groups as well as progeny** |
 | progeny groups in 2- and 3-stage, with progeny c² | 1393–1405, 1838; 3054–3066, 3543 | `prog2s`, `prog3s` (common environment `y`) |
 | fixed numbers selected per age class | selovlp 132, 139 | `ovlpfix` |
-| the no-phenotypic-source warning and its corrections | 359; 480, 507, 516, 565, 574 (and the 2-/3-stage copies 1680–1785, 3365–3484) | **`nophen1`, `nophen2`, `nophen3`** (one per stage, replacing the single `nophen`); each needs two runs' worth of paths, see below |
+| the no-phenotypic-source warning and its corrections | 394; 480, 507, 516, 565, 574 (and the 2-/3-stage copies 1680–1785, 3365–3484) | **`nophen1`, `nophen2`, `nophen3`** (one per stage, replacing the single `nophen`); each needs two runs' worth of paths, see below |
 
 **The correction paths need more than one `nophen` input.** Each stage
 has its own copy of the code, and the five correction questions sit on

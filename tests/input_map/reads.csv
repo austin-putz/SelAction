@@ -1,6 +1,6 @@
 file,line,routine,statement,hit_by
-selaction.f90,22,selaction,"read *,stages",test1 test2s test3s blup1 advgrp ovlp2 ovlpgrp longfile longovlp longtrt ovlptrt spacetrt duptrt
-seldiscrete.f90,16,sel1s,"call read_name(""filename"", 8, fnam)",test1 blup1 advgrp longfile longtrt spacetrt duptrt
+selaction.f90,22,selaction,"read *,stages",test1 test2s test3s blup1 advgrp ovlp2 ovlpgrp longfile longovlp longtrt ovlptrt spacetrt duptrt quotefile pathfile
+seldiscrete.f90,16,sel1s,"call read_name(""filename"", 8, fnam)",test1 blup1 advgrp longfile longtrt spacetrt duptrt quotefile pathfile
 seldiscrete.f90,32,sel1s,"read *,ntraits",test1 blup1 advgrp longtrt spacetrt duptrt
 seldiscrete.f90,90,sel1s,"read *,indexdiff",test1 blup1 advgrp longtrt spacetrt duptrt
 seldiscrete.f90,121,sel1s,"read *,initc",test1 blup1 advgrp
@@ -138,26 +138,26 @@ selovlp.f90,524,ovlp,"read *,phcorr(i,j)",ovlp2 ovlpgrp
 selovlp.f90,533,ovlp,"read *,gcorr(i,j)",ovlp2 ovlpgrp
 selovlp.f90,543,ovlp,"read *,ccorr(i,j)",ovlpgrp
 selovlp.f90,615,ovlp,"read *,ccprog(q)",ovlpgrp
-selroutines.f90,23,read_name,"read(*,'(a)',iostat=ios) buf",test1 test2s test3s blup1 advgrp ovlp2 ovlpgrp longfile longovlp longtrt ovlptrt spacetrt duptrt
-selroutines.f90,359,note_pheninfo,"read *,localinit",
-selroutines.f90,478,info_sources,"read *,loctempsource(locp,locits)",test1 test2s test3s blup1 advgrp
-selroutines.f90,481,info_sources,"read *,loctempsource(locp,locits)",test1 test2s test3s blup1 advgrp
-selroutines.f90,642,info_sourcesovlp,"read *,loctempsource(locq,locp,locits)",ovlp2 ovlpgrp
-selroutines.f90,645,info_sourcesovlp,"read *,loctempsource(locq,locp,locits)",ovlp2 ovlpgrp
-selroutines.f90,860,info_sources2,"read *,loctempsourcems2(locp,locits2)",test2s test3s
-selroutines.f90,870,info_sources2,"read *,loctempsourcems2(locp,locits2)",test2s test3s
-selroutines.f90,1067,info_sources3,"read *,loctempsourcems2(locp,locits2)",test3s
-selroutines.f90,1077,info_sources3,"read *,loctempsourcems2(locp,locits2)",test3s
-selroutines.f90,1191,traitinfo,"call read_name(""trait name"", 8, xtraits(i))",test1 test2s test3s blup1 advgrp longtrt spacetrt duptrt
-selroutines.f90,1204,traitinfo,"read *,sdesttraits(i)",test1 test2s test3s blup1 advgrp duptrt
-selroutines.f90,1217,traitinfo,"read *,tempev(i,1)",
-selroutines.f90,1229,traitinfo,"read *,tempev(i,1)",test1 test2s test3s blup1 advgrp duptrt
-selroutines.f90,1264,traitinfoovlp,"call read_name(""trait name"", 8, xtraits(i))",ovlp2 ovlpgrp ovlptrt
-selroutines.f90,1277,traitinfoovlp,"read *,desttraits(i)",ovlp2 ovlpgrp
-selroutines.f90,1290,traitinfoovlp,"read *,tempev(i,1)",
-selroutines.f90,1302,traitinfoovlp,"read *,tempev(i,1)",ovlp2 ovlpgrp
-selroutines.f90,1344,traitinfo2,"read *,ddesttraits(i)",
-selroutines.f90,1403,traitinfo3,"read *,sdesttraits2(i)",
-selroutines.f90,1448,traitinfo4,"read *,ddesttraits2(i)",
-selroutines.f90,1501,traitinfo5,"read *,sdesttraits3(i)",
-selroutines.f90,1546,traitinfo6,"read *,ddesttraits3(i)",
+selroutines.f90,32,read_name,"read(*,'(a)',iostat=ios) buf",test1 test2s test3s blup1 advgrp ovlp2 ovlpgrp longfile longovlp longtrt ovlptrt spacetrt duptrt quotefile pathfile
+selroutines.f90,394,note_pheninfo,"read *,localinit",
+selroutines.f90,513,info_sources,"read *,loctempsource(locp,locits)",test1 test2s test3s blup1 advgrp
+selroutines.f90,516,info_sources,"read *,loctempsource(locp,locits)",test1 test2s test3s blup1 advgrp
+selroutines.f90,677,info_sourcesovlp,"read *,loctempsource(locq,locp,locits)",ovlp2 ovlpgrp
+selroutines.f90,680,info_sourcesovlp,"read *,loctempsource(locq,locp,locits)",ovlp2 ovlpgrp
+selroutines.f90,895,info_sources2,"read *,loctempsourcems2(locp,locits2)",test2s test3s
+selroutines.f90,905,info_sources2,"read *,loctempsourcems2(locp,locits2)",test2s test3s
+selroutines.f90,1102,info_sources3,"read *,loctempsourcems2(locp,locits2)",test3s
+selroutines.f90,1112,info_sources3,"read *,loctempsourcems2(locp,locits2)",test3s
+selroutines.f90,1226,traitinfo,"call read_name(""trait name"", 8, xtraits(i))",test1 test2s test3s blup1 advgrp longtrt spacetrt duptrt
+selroutines.f90,1239,traitinfo,"read *,sdesttraits(i)",test1 test2s test3s blup1 advgrp duptrt
+selroutines.f90,1252,traitinfo,"read *,tempev(i,1)",
+selroutines.f90,1264,traitinfo,"read *,tempev(i,1)",test1 test2s test3s blup1 advgrp duptrt
+selroutines.f90,1299,traitinfoovlp,"call read_name(""trait name"", 8, xtraits(i))",ovlp2 ovlpgrp ovlptrt
+selroutines.f90,1312,traitinfoovlp,"read *,desttraits(i)",ovlp2 ovlpgrp
+selroutines.f90,1325,traitinfoovlp,"read *,tempev(i,1)",
+selroutines.f90,1337,traitinfoovlp,"read *,tempev(i,1)",ovlp2 ovlpgrp
+selroutines.f90,1379,traitinfo2,"read *,ddesttraits(i)",
+selroutines.f90,1438,traitinfo3,"read *,sdesttraits2(i)",
+selroutines.f90,1483,traitinfo4,"read *,ddesttraits2(i)",
+selroutines.f90,1536,traitinfo5,"read *,sdesttraits3(i)",
+selroutines.f90,1581,traitinfo6,"read *,ddesttraits3(i)",
