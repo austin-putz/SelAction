@@ -6,7 +6,9 @@ finished, newest first.** Read the top entry to see where things stand.
 
 ## Current position
 
-- **Last finished:** step 4a, T2a: the input map.
+- **Last finished:** review of steps 1–4a (2026-10-09), see the log.
+- **Open, before step 4b:** the intermittent `ovlp2` failure on Linux
+  (below). Needs Docker Desktop running on Austin's Mac to debug.
 - **Next:** step 4b, T2b: new discrete-generation test inputs.
 - **Waiting on others:** answers from Piter Bijma and Jack Dekkers to the
   open modelling questions (Q1–Q7, **sent 2026-10-05**), and any worked
@@ -32,6 +34,51 @@ finished, newest first.** Read the top entry to see where things stand.
 ---
 
 ## Log
+
+### Review of steps 1–4a (2026-10-09, commits `72b91d1`, `4739da0`, `3f066f2`)
+
+Three read-only reviews (Fortran input checks; test scripts and CI; dead
+files and docs), then fixes approved by Austin.
+
+- **Found and still open: an intermittent wrong result on Linux.** CI on
+  `main` went red at `7dc28f5` (a docs-only commit): one Linux run of
+  `ovlp2` selected 0 sires instead of 10, and still exited 0; a second
+  run of the same binary in the same job was correct. Never seen on a
+  Mac. Most likely a value read before it is set, which the strict
+  build can't see for allocated arrays. Next: run it under valgrind in a
+  Linux container (Docker) and fix it as a plain programming bug. I
+  missed the red run at the time because I didn't watch CI after that
+  push; I now watch every run.
+- **Fixed in the name checks:** blank lines before a name are skipped
+  again; leftover quotes and `/` or `\` in file names stop the run; long
+  lines are reported correctly. Two new error cases (8 in all).
+- **Fixed in the test tools** (none of these had let a real failure
+  through yet, but each could have):
+  - a numbers comparison that let `12.345` vs `12.3` pass
+  - test inputs not listed in a manifest were ignored; an empty
+    manifest "passed"; a missing last newline skipped a test
+  - a non-executable test script showed as "not yet present"
+  - strict and coverage runs could test a stale normal build
+  - on macOS, failed test folders weren't kept where CI uploads them
+  - the program was fed the very file it overwrites with its answer
+    echo (`<filename>.in`); now it reads a copy
+- **CI:** pushes to `main` are never cancelled (so every commit gets a
+  result), 30-minute limit, read-only token, failure folders uploaded on
+  every platform.
+- **Deleted (approved):** the Gemini review and three one-page module
+  reports in `docs/` (stale, one wrong), `examples/input_selaction.txt`
+  (not a valid input), the unused ChatGPT logo, `plans/document.md`. The
+  multi-binary logic in `run_tests.sh` is gone; the fixture manifest is
+  `name:description`.
+- **Docs corrected:** README, CLAUDE.md, tests/README, NEWS, the plans,
+  and `README_Inputs.md` (its line mapping of the GUI file was wrong).
+  The program **writes** `<filename>.in` (an echo of the answers); the
+  docs said it read it.
+- **Tests:** `make check` passes; all 7 fixtures byte-identical; 8/8
+  error cases; tolerant self-test 12/12; CI green on all four jobs after
+  the fixes (the Linux bug is intermittent, so green doesn't clear it).
+- **Results changed?** No.
+- **Next:** debug the Linux failure, then step 4b.
 
 ### Step 4a: T2a, the input map (done 2026-10-06, commit `740a02e`)
 
