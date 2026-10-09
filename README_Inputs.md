@@ -1,6 +1,6 @@
 # SelAction Input File Mapping Guide
 
-This document explains how to map your breeding program parameters into the input format required by the sel1s subroutine in SelAction.
+This document decodes the input file saved by the original Windows GUI version of SelAction, using the worked example in `examples/output_discrete_1_stage/`, and relates its fields to the questions the Fortran program asks.
 
 > **Note (2026-10-05).** This guide decodes the input file saved by the
 > original **Windows GUI** (`examples/output_discrete_1_stage/SelAction_Inputs.txt`).
@@ -16,56 +16,53 @@ This document explains how to map your breeding program parameters into the inpu
 
 ## Example Data Mapping
 
-Based on the file `output_discrete_1_stage/SelAction_Inputs.txt`, here's how the data maps to program inputs:
+Based on the file `examples/output_discrete_1_stage/SelAction_Inputs.txt` (checked against `SelAction_Output.txt` in the same folder, whose datafile name is "Test Run 1"), the lines map as follows. The GUI file has no file-name line.
 
-### Basic Setup
+### Traits
 ```
-Line 1: 3              # Number of traits
-Line 2: eADG           # Filename (creates eADG.in and eADG.out)
-```
-
-### Trait Information
-```
-Lines 3-5: ADG, FCR    # Trait names (first trait "eADG" used for breeding goal)
+Line 1: 3                         # Number of traits
+Lines 2-4: eADG, ADG, FCR         # Trait names (the output lists these as TRAITS USED)
 ```
 
 ### Trait Parameters (for 3 traits)
 ```
-Line 6: 20.000 100.000 0.500    # Phenotypic variances for traits 1, 2, 3
-Line 7: 0.250 0.300 0.200       # Heritabilities (h²) for traits 1, 2, 3  
-Line 8: 0.050 0.050 0.050       # Common environmental effects (c²) for traits 1, 2, 3
-Line 9: 0.000 5.000 -27.000     # Economic values for traits 1, 2, 3
+Line 5: 20.000 100.000 0.500      # Phenotypic variances for traits 1, 2, 3
+Line 6: 0.250 0.300 0.200         # Heritabilities (h²) for traits 1, 2, 3
+Line 7: 0.050 0.050 0.050         # Common environmental effects (c²) for traits 1, 2, 3
+Line 8: 0.000 5.000 -27.000       # Economic values (0 = not in the breeding goal)
 ```
 
 ### Selection Parameters
 ```
-Line 10: 10.000         # Number of selected sires
-Line 11: 200.000        # Number of selected dams
-Line 12: 5.000          # Male selection candidates per dam
-Line 13: 5.000          # Female selection candidates per dam
-Line 14: 0.010          # Proportion selected sires
-Line 15: 0.200          # Proportion selected dams
+Line 9:  10.000                   # Number of selected sires
+Line 10: 200.000                  # Number of selected dams
+Line 11: 5.000                    # Male selection candidates per dam
+Line 12: 5.000                    # Female selection candidates per dam
+Line 13: 0.010                    # Proportion selected sires
+Line 14: 0.200                    # Proportion selected dams
 ```
 
-### Configuration Options
+### Groups
 ```
-Line 16: 1              # Use different indices for sires/dams? (1=yes, 0=no)
-Line 17: 9.000          # (Purpose unclear from current analysis)
-Line 18: 1              # (Purpose unclear from current analysis)
-Line 19: 200.000 190.000 # (Additional parameters)
-Line 20: 0              # (Boolean flag)
-Line 21: n              # Use common environmental effects? (y/n)
+Line 15: 1                        # Number of full-sib groups
+Line 16: 9.000                    # Animals in full-sib group 1
+Line 17: 1                        # Number of half-sib groups
+Line 18: 200.000 190.000          # Half-sib group 1: dams, and animals
+Line 19: 0                        # Number of progeny groups
+Line 20: n                        # Not identified (possibly "different indices for sires and dams")
 ```
 
-### Information Sources (Large arrays on lines 21-22)
-The long arrays specify which information sources are available for each trait:
+The output confirms the groups: "full-sib group 1 with 9.0 animals" and "half-sib group 1 with 200.0 dams, producing 190.0 animals".
+
+### Information Sources (lines 21-22)
+Each line holds 1,680 numbers: a block of 84 positions for each of up to 20 traits, with the codes for traits 1-3 at positions 1, 85 and 169 and zeros everywhere else; line 21 and line 22 are probably the sire and the dam index. The codes:
 - 1 = own performance
-- 2 = BLUP breeding values  
+- 2 = BLUP breeding values
 - 4 = full-sib group 1
 - 24 = half-sib group 1
 - -1 = end of sequence
 
-Pattern: `1 2 4 24 -1` repeated for each trait indicates:
+Pattern: `1 2 4 24 -1` for each trait indicates:
 - Own performance available
 - BLUP breeding values available
 - Full-sib group 1 available

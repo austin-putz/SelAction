@@ -64,7 +64,7 @@ Email :e-mail: putz.austin@gmail.com with a full report
 
 ## Project Status
 
-*Updated 5 October 2026.*
+*Updated 9 October 2026. Step-by-step status: [`plans/progress.md`](plans/progress.md).*
 
 SelAction is being brought up to date at Iowa State University (Austin Putz and Jack Dekkers), starting from the original Fortran code by Marc Rutten and Piter Bijma. The current version is **1.2**, in `fortran/`.
 
@@ -78,11 +78,12 @@ SelAction is being brought up to date at Iowa State University (Austin Putz and 
 - **Fixes that change predictions:**
   - **Overlapping generations:** the truncation-point search selected the wrong number of parents (e.g. 67.5 sires when 10 were requested). The generation interval is also corrected.
   - **Multistage selection:** the normal-integral tables were too short, giving grossly wrong responses for small selected fractions.
-- **Regression tests:** 7 test inputs with stored outputs, run by `make test`.
+- **Regression tests:** 7 test inputs with stored outputs and 8 bad-input cases, run by `make test`; `make check` adds a strict debug build and a tolerant comparison. Every push is tested automatically on Linux, macOS (Apple Silicon) and Windows.
+- **Bad names stop the run:** a file or trait name that is too long, contains a space, or (for traits) is used twice now stops with an error instead of being cut short.
 - **Technical report:** `docs/SelAction_Technical_Report.pdf` ties every equation to the routine that computes it.
 - **Open modelling questions** for the original authors are written up with evidence in [`correspondence/2026-10-bijma-dekkers/SelAction_open_questions.pdf`](correspondence/2026-10-bijma-dekkers/SelAction_open_questions.pdf). The model itself has **not** been changed while these are open.
 
-**Next:** the first part of test hardening ([`plans/test-hardening.md`](plans/test-hardening.md)), then scenario-based YAML input and CSV output ([`plans/modernize-inputs-and-outputs.md`](plans/modernize-inputs-and-outputs.md)), then the correctness tests. See [Roadmap](#roadmap) and the step-by-step order in [`plans/implementation-sequence.md`](plans/implementation-sequence.md).
+**Next:** new test inputs for every untested input path (test hardening T2b, [`plans/test-hardening.md`](plans/test-hardening.md)), then scenario-based YAML input and CSV output ([`plans/modernize-inputs-and-outputs.md`](plans/modernize-inputs-and-outputs.md)), then the correctness tests. See [Roadmap](#roadmap) and the step-by-step order in [`plans/implementation-sequence.md`](plans/implementation-sequence.md).
 
 ## Overview
 
@@ -108,19 +109,19 @@ SelAction is a Fortran program developed by Marc J.M. Rutten and Piter Bijma at 
 
 | Directory | Description | Status |
 |-----------|-------------|--------|
-| `fortran/` | Current code (version 1.2); builds one program, `selaction`, on any OS | **Active development: use this.** Verified on macOS (Intel, gfortran 14.2) |
+| `fortran/` | Current code (version 1.2); builds one program, `selaction`, on any OS | **Active development: use this.** Tested on macOS (Intel and Apple Silicon), Linux and Windows |
 | `build/` | Build output from `make` (the `selaction` binary and module files) | Created on each machine; not in git |
 | `fortran_orig/` | Original Fortran code from Piter Bijma | Reference only, never modified. Does not build with a current gfortran |
-| `tests/` | Regression test inputs/outputs and runner, shared by all builds | Working, 7 test inputs |
+| `tests/` | Regression test inputs/outputs and runner, shared by all builds | Working: 7 test inputs, 8 bad-input cases, test tools, input map |
 | `docs/` | LaTeX technical reports on the methods as implemented | Complete; updated October 2026 |
 | `manual_orig/` | Original user manual and program description (PDF), with Markdown/HTML transcriptions | Reference; describes the original Windows GUI. The PDFs are never modified |
-| `examples/` | Sample input files and a worked GUI-based example | Reference |
+| `examples/` | A worked example from the original Windows GUI (screenshots, input, output) | Reference |
 | `correspondence/` | Write-ups sent to collaborators (e.g. open questions for the original authors) | — |
 | `plans/` | Design plans for larger changes, with their status | — |
 
 The `Makefile` at the top level builds `fortran/` into `build/` (see [Installation and Compilation](#installation-and-compilation)).
 
-`fortran/` is **not** a rewrite. It is `fortran_orig/` with the minimum changes needed to satisfy a modern gfortran compiler (array-constructor syntax, line-continuation formatting, a few local-variable renames and one restricted `USE` statement), plus the fixes listed in [`NEWS.md`](NEWS.md). It contains nothing specific to any operating system, so there is one source tree for every platform. Until October 2026 it was called `fortran_mac/`, and an older, unfixed copy lived in `fortran_linux/`; that copy was removed (it remains in the git history).
+`fortran/` is **not** a rewrite. It is `fortran_orig/` with the minimum changes needed to satisfy a modern gfortran compiler (array-constructor syntax, line-continuation formatting, a few local-variable renames), plus the fixes listed in [`NEWS.md`](NEWS.md). It contains nothing specific to any operating system, so there is one source tree for every platform. Until October 2026 it was called `fortran_mac/`, and an older, unfixed copy lived in `fortran_linux/`; that copy was removed (it remains in the git history).
 
 ### Files
 
@@ -136,7 +137,7 @@ Line counts below are for `fortran/`.
 | `msselo.f90` (`fortran_orig/`) | Overlapping generations main | 46 | Entry point for overlapping generations only |
 | `seldiscrete.f90` | Discrete selection | 4,919 | `sel1s`, `sel2s`, `sel3s`: 1-, 2- and 3-stage selection |
 | `selovlp.f90` | Overlapping generations | 1,499 | `ovlp`: age classes, truncation across classes, generation interval |
-| `selroutines.f90` | Index and utility routines | 3,538 | Selection index, information sources, covariance updates, matrix routines, and the live rate-of-inbreeding code (`dFmtblup`) |
+| `selroutines.f90` | Index and utility routines | 3,677 | Selection index, information sources, covariance updates, matrix routines, and the live rate-of-inbreeding code (`dFmtblup`) |
 | `seltools.f90` | Statistical functions | 1,412 | Normal distribution, truncation, finite-population correction of intensity (`rawl3`), multivariate normal integrals |
 | `selparameters.f90` | Global parameters | 120 | Shared variable declarations |
 
@@ -151,7 +152,7 @@ You need two tools, both free:
 
 The same source and the same `Makefile` are used on every operating system. Only the way you install the two tools differs. If you can't install `make`, you can still build with one gfortran command (see [Building without make](#building-without-make)).
 
-**Tested so far:** macOS (Intel). Linux, Apple Silicon Macs and Windows use the same commands but have not been verified yet; automated checks on all of them are planned (`plans/test-hardening.md`, step T6).
+**Tested on:** macOS Intel (the reference machine), and automatically on every push on Linux, macOS Apple Silicon (including Homebrew's gfortran, as below) and Windows (MSYS2). WSL is not tested yet.
 
 ### Installing the tools
 
@@ -248,7 +249,7 @@ gfortran -g -O2 -Wall -J build -o build/selaction \
 
 Verified with GNU Fortran 14.2.0 on macOS (x86_64): `selaction` builds without errors and passes every test (`make test`).
 
-The code is plain standard Fortran with nothing specific to any operating system, so `make` builds it the same way on Linux, macOS (Intel or Apple Silicon) and Windows (gfortran via MSYS2 or WSL). Every push is built and tested automatically on Linux, macOS (Apple Silicon) and Windows (MSYS2), as well as on the macOS Intel reference machine. Ready-made downloads, so you can run SelAction without compiling, are planned next ([`plans/releases.md`](plans/releases.md)). Results on other platforms or compilers can differ in the last printed digit, which is why the stored test outputs are tied to one reference toolchain (see `tests/README.md`).
+The code is plain standard Fortran with nothing specific to any operating system, so `make` builds it the same way on Linux, macOS (Intel or Apple Silicon) and Windows (gfortran via MSYS2 or WSL). Every push is built and tested automatically on Linux, macOS (Apple Silicon) and Windows (MSYS2); the stored test outputs were made on the macOS Intel reference machine. Ready-made downloads, so you can run SelAction without compiling, are planned next ([`plans/releases.md`](plans/releases.md)). Results on other platforms or compilers can differ in the last printed digit, which is why the stored test outputs are tied to one reference toolchain (see `tests/README.md`).
 
 ### Original version (reference only)
 
@@ -397,7 +398,7 @@ An excerpt from `tests/fixtures/test1.out`:
 
 ## Mathematical Background
 
-This is a short summary. `docs/SelAction_Technical_Report.pdf` gives the full equations as implemented, with the routine that computes each one. The module reports (`docs/seldiscrete_report.pdf`, `docs/selovlp_report.pdf`, `docs/selinbreeding_report.pdf`) go into more detail; the last describes the unused inbreeding module, which is now only in `fortran_orig/`.
+This is a short summary. `docs/SelAction_Technical_Report.pdf` gives the full equations as implemented, with the routine that computes each one.
 
 ### Selection index
 
@@ -465,12 +466,12 @@ selaction
 
 ### Example 4: Re-running a saved input
 
-A saved `.in` file can be replayed. The program also opens `<filename>.in` by name, so run it in a directory holding the file under the name given on its "filenames" line:
+A saved `.in` file can be replayed by feeding it to the program. The program **writes** its own copy of the answers to `<filename>.in` (the name on the "filenames" line), so give the file you replay another name, or it is overwritten while being read:
 
 ```bash
 mkdir run && cd run
-cp ../tests/fixtures/test1.in .
-../build/selaction < test1.in        # writes test1.out here
+cp ../tests/fixtures/test1.in answers.txt
+../build/selaction < answers.txt     # writes test1.in (answer echo) and test1.out here
 ```
 
 ### Example 5: Worked example from the GUI version
@@ -584,9 +585,10 @@ Error: Line truncated
 
 1. **Test hardening, part 1** ([`plans/test-hardening.md`](plans/test-hardening.md), T0–T2):
    - remove the unused `selinbreeding.f90` (done 2026-10-05)
-   - test tooling: a scripted strict debug build, coverage measurement, tolerant output comparison
-   - test inputs for every untested feature and input path
-   - automated builds on macOS and Linux (and Windows), possibly here already
+   - test tooling: a scripted strict debug build, coverage measurement, tolerant output comparison (done 2026-10-05)
+   - automated tests on Linux, macOS and Windows (done 2026-10-06)
+   - a map of every input question and the test that reaches it (done 2026-10-06)
+   - test inputs for every untested feature and input path (next)
 2. **Scenario input and structured output** ([`plans/modernize-inputs-and-outputs.md`](plans/modernize-inputs-and-outputs.md), Phases 1–3 first). This changes no equations, and every stored report must stay byte-identical:
    - YAML scenario folders, including sweeps over inputs
    - full validation before running, and clear errors with exit codes

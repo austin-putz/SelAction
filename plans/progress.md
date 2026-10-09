@@ -102,7 +102,7 @@ finished, newest first.** Read the top entry to see where things stand.
   - Three small fixes were needed to get CI green: Ubuntu's `gcov` name,
     `diff` missing in MSYS2, and Windows CRLF line endings.
   - Nothing for Jack or Piter.
-- **Next:** step 4a, T2a: the branch map.
+- **Next:** step 4a, T2a: the input map.
 
 ### Step 2: T1, test tooling (done 2026-10-05, commits `9bf98e0`, `60326e7`)
 

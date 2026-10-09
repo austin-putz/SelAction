@@ -3,9 +3,10 @@
 ## Status
 
 **Approved, revision 3 (2026-10-05).** Austin's answers to the four
-questions are recorded under "Decisions" below. Nothing is implemented
-yet, apart from the first error tests (`tests/errors/`, bad file and
-trait names). Directory names updated 2026-10-05: `fortran_mac/` is now
+questions are recorded under "Decisions" below. **Progress:** T0, T1,
+T6 and T2a are done (2026-10-05/06); T2b is next. The order and status
+of every step are in `plans/implementation-sequence.md`, with summaries
+in `plans/progress.md`. Directory names updated 2026-10-05: `fortran_mac/` is now
 `fortran/`, and `fortran_linux/` was removed, so there is one source tree
 to test on every platform.
 
@@ -313,6 +314,8 @@ doesn't need extra R packages beyond what generating the references used.
 
 ### T2: Close the coverage gaps with new golden fixtures
 
+**T2a (input map) done 2026-10-06; T2b next.**
+
 New inputs for every untested feature in 1.3. Each new fixture is a
 golden test, so it **also gets a sanity review**: read the output and
 check that the numbers are plausible (sires selected = sires requested,
@@ -508,8 +511,7 @@ there. Coverage prints in the Linux log (T7 adds the gate).
   toolchain. On Linux they use `compare_out.R` with tight tolerance, if
   the byte comparison differs only in last digits or `-0.000`; this
   difference is documented.
-- Once CI is green, add the real build/test badge to `README.md`. That
-  closes the TODO in `CLAUDE.md`.
+- Once CI is green, add the real build/test badge to `README.md` (done).
 - **Acceptance:** CI runs green on both platforms, and a deliberately
   broken commit turns it red.
 - **Next:** prebuilt downloads on GitHub Releases build on this workflow;

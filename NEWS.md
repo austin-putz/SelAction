@@ -2,6 +2,28 @@
 
 ## Testing
 
+* 2026-10-09: **test tooling fixes after review** (nothing passes
+  silently any more):
+  * `run_tests.sh` and `run_error_tests.sh` fail on an `.in` not in the
+    manifest, an empty manifest, or (errors) a malformed manifest line;
+    read a last line without a newline; feed the program a copy named
+    `input.stdin`, because it writes its own `<filename>.in`; keep failed
+    runs under `TMPDIR` on macOS too (`mktemp -d` ignored it there).
+  * `run_tests.sh` accepts `--tolerant` anywhere and rejects unknown
+    arguments; the unused multi-binary logic is gone and the fixture
+    manifest is now `name:description`.
+  * `compare_out.R`: a number printed with different decimals or with/
+    without an exponent is a difference (`12.345` vs `12.3` used to pass).
+  * `run_all.sh`: a layer script that isn't executable is a FAIL; `make
+    check BUILD=dir` tests that directory.
+  * `strict.sh`, `coverage.sh`, `read_map.sh` always rebuild (`make -B`),
+    so they can't test a stale build made with other flags.
+    `coverage.sh` reports a source file without coverage data instead of
+    leaving it out; `read_map.sh` checks every run's exit code. The gcov
+    lookup and coverage build live in `tests/tools/coverage_build.sh`.
+  * CI: pushes to `main` are never cancelled; 30-minute job limit;
+    read-only token; failed test folders are uploaded on every platform.
+
 * 2026-10-06: **input map** (test-hardening T2a, step 4a).
   `tests/input_map/README.md` lists every question the program asks
   (162 input statements), when it is asked, its checks, and which test
@@ -66,6 +88,19 @@
 
 ## Input checks
 
+* 2026-10-09: **name checks tightened after review.**
+  * Blank lines before a name are skipped again, as list-directed input
+    did (since 2026-10-05 an accidental empty line stopped the run).
+  * A name that still contains a quote after one surrounding pair is
+    removed now stops the run (`'abc` used to create `'abc.out`), and
+    `!` starts a comment only outside quotes.
+  * A file name with `/` or `\` now stops with `-error-30-` (it used to
+    crash at the open, or write into that directory).
+  * Lines over 1,023 characters are reported as too long instead of being
+    cut first and miscounted.
+  * New error cases `quotefile` and `pathfile` (8 in all). Valid input
+    unchanged: all 7 fixtures byte-identical.
+
 * 2026-10-05: **bad file and trait names now stop the run instead of being
   silently cut.** Both are limited to 8 characters (`character(len=8)`).
   Before, a longer name was cut without warning: runs named `scenario_A`
@@ -119,7 +154,7 @@
   remains in the git history (last present in commit `4c3b29b`). The same
   `fortran/` source is built on every platform; other platforms are to be
   checked in CI (test-hardening T6).
-  * `tests/run_tests.sh` now defaults to `fortran`, and
+  * `tests/run_tests.sh` now defaults to `fortran` (later `build`), and
     `tests/fixtures/manifest.txt` lists only `selaction` for every fixture.
   * `README.md`, `CLAUDE.md`, `tests/README.md`, `README_Inputs.md`, the
     technical report and the active plans now refer to `fortran/`.
@@ -451,7 +486,7 @@ fixtures byte-identical.
   earlier-stage source lists of `sel2s`/`sel3s` are not filtered for
   half-sib sources; only the final-stage list is. Unchanged from the
   original; raised as Question 6 in the open-questions report.
-* `fortran_linux/` still has every bug fixed above. `fortran_orig/` has all
+* `fortran_linux/` (removed 2026-10-05) had every bug fixed above. `fortran_orig/` has all
   of them except the generation-interval error (change 3), which was
   introduced in the Linux fork.
 
@@ -461,7 +496,8 @@ The consolidated write-up, with equations, evidence and recommendations,
 was sent on 2026-10-05:
 `correspondence/2026-10-bijma-dekkers/SelAction_open_questions.pdf`. It
 also asks for worked examples with known answers, for the test suite. The
-list below is the working list it was built from.
+list below is the working list it was built from; its numbering differs
+from the sent Q1–Q7.
 
 1. Was the ±1.5 SD search bracket in `selovlp.f90` deliberate, or just a
    starting range? It is now ±8 SD.

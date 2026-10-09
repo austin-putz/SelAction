@@ -24,10 +24,11 @@ platform, for a known version of the source.
 2. A GitHub Actions workflow (`.github/workflows/release.yml`) builds
    `selaction` on each platform with `make`, using the release flags
    below.
-3. On each platform it runs `make test` **before** uploading anything.
-   On the reference toolchain the comparison is byte for byte.
-   Elsewhere it uses the tolerant comparison (`tests/tools/compare_out.R`,
-   from test-hardening T1), since last digits can differ. Any failure
+3. On each platform it runs the tests **before** uploading anything:
+   `make test` (byte for byte) where CI shows the stored outputs are
+   reproduced exactly (Linux, Windows), and `tests/run_tests.sh
+   --tolerant` plus the error cases on Apple Silicon, where last digits
+   differ. Any failure
    stops the release.
 4. The binaries and a `SHA256SUMS` file are attached to a GitHub Release.
    The release notes are the matching `NEWS.md` section.
