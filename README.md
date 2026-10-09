@@ -590,7 +590,7 @@ Error: Line truncated
    - a map of every input question and the test that reaches it (done 2026-10-06)
    - test inputs for every untested feature and input path (next)
 2. **Scenario input and structured output** ([`plans/modernize-inputs-and-outputs.md`](plans/modernize-inputs-and-outputs.md), Phases 1–3 first). This changes no equations, and every stored report must stay byte-identical:
-   - YAML scenario folders, including sweeps over inputs
+   - YAML scenario files: run one file, a folder of complete files (e.g. comparing schemes), or a base plus sweeps over inputs
    - full validation before running, and clear errors with exit codes
    - full-precision CSV results
 3. **Test hardening, part 2** (T3–T5, T7), built on the CSV results and sweeps:

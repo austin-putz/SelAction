@@ -2,7 +2,7 @@
 
 ## Status
 
-**Design approved, revision 12 (2026-10-05).** All of Austin's questions
+**Design approved, revision 13 (2026-10-09).** All of Austin's questions
 are answered, and multiple sweeps per folder are confirmed. Nothing is
 implemented yet. The defaults listed in the last section stand unless
 Austin changes them.
@@ -45,6 +45,20 @@ Fortran short unique labels and maps them back in every CSV (see "Trait
 names" under the R validator and Phase 4). Only the **file name** is
 widened in the Fortran (Phase 2), which doesn't touch the report.
 
+Revision 13 (2026-10-09, agreed with Austin): **three ways to run, and
+`base.yaml` is optional.** A base + changes folder only makes sense for
+variations of one scheme (e.g. 5 to 10 boars). Comparing two different
+schemes (overlapping vs discrete) needs complete, independent files. So:
+(1) **one complete file**, `run scenario_A.yaml`, easy to call from a
+shell script; (2) **a folder (or list) of complete files**, no
+`base.yaml`, each run on its own, back to back; (3) **a folder with
+`base.yaml`** plus scenario and sweep files, as before. A complete file
+may also hold its own `sweeps:`. Every mode writes the same output
+layout, including the `.out` report and `results.csv`. See "Three ways to
+run" below. Users never use `--batch`: it is a flag the driver passes to
+the Fortran program so a bad answer stops the run instead of waiting at
+a prompt. Interactive use and `selaction < old.in` are unchanged.
+
 This plan does not touch any selection-index, response or inbreeding
 equations. Every Fortran change is I/O or control flow. The existing `.out`
 text report stays byte-identical, so all fixtures in `tests/fixtures/`
@@ -55,18 +69,19 @@ keep passing at every step.
 | # | Question | Decision |
 |---|---|---|
 | 1 | Driver language | **R.** It is only a front end: it reads YAML, validates, writes the answer stream, runs the binary and collects CSVs. **It does no genetics.** Fortran stays the computational reference until it is "bullet proof"; the later R port (`SelActionR`) is separate work. |
-| 2 | How scenarios are organised | **A scenario folder:** `base.yaml` (the defaults) plus one or more files that define named scenarios, each listing only what changes. Default folder `scenarios/`; `--folder <dir>` selects another. Conflicts are checked, and errors stop the batch before anything runs. |
+| 2 | How scenarios are organised | **Three ways (revision 13):** one complete file; a folder (or list) of complete files with no `base.yaml`; or a folder with `base.yaml` (the defaults) plus files that define named scenarios and sweeps, each listing only what changes. The presence of `base.yaml` decides between the last two. Conflicts are checked, and errors stop the batch before anything runs. |
 | 3 | Summary table contents | No choice needed (see below). `summary_wide.csv` holds **every** scalar result, one row per scenario, next to the inputs that differ from base. |
 | 4 | YAML reader | **The R `yaml` package (CRAN, wraps libyaml).** Nothing is hand-built, and Fortran never parses YAML. The former "Phase 6: native Fortran input" is dropped. |
 | 5 | Keep the legacy `.in` echo | **Yes.** It is kept per scenario as the exact replay record. |
 | 6 | Platform copies | **One source tree, `fortran/`, for every platform** (revision 10; `fortran_linux/` was removed). All of this work lands there. Other platforms are checked in CI, not ported (see Phase 6). |
-| 7 | Does base run as a scenario? | **No.** `base.yaml` is only the defaults. Only explicitly named scenarios run and appear in outputs. |
+| 7 | Does base run as a scenario? | **No.** `base.yaml` is only the defaults. Only explicitly named scenarios run and appear in outputs. Likewise, a complete file with a `sweeps:` block runs only its sweep scenarios (list the file's own value in the sweep to include it). A complete file without sweeps is one scenario and runs. |
 | 8 | One file controlling many scenarios | **Yes.** One file can hold a `scenarios:` list (named, hand-written changes) and `sweeps:`. A sweep varies one or more inputs, crossed as a grid or paired, with names built from a template. Any input can be varied, including matrices and info-source lists. |
 | 9 | Tracking what changed | **Yes.** `changes.csv` records exactly which input changed, from what to what, per scenario. `inputs_wide.csv` records every input of every scenario. The changed inputs are also the leading columns of `summary_wide.csv`. |
 | 10 | Re-running a folder | **Error unless `--overwrite`** is given. Output paths stay predictable. |
 | 11 | Grids (crossing inputs) | **Yes**, as part of sweeps (`mode: grid`, the default), plus `mode: paired` for inputs that change together. Names come from per-input aliases (`s{sires}_h{h2}`), with a readable default when no template is given. |
 | 12 | Rebuild the Fortran input reader? | **No.** The Fortran keeps its `read *` prompt input unchanged, and R translates YAML into that answer stream. The whole program will be rebuilt in R (or other languages) later, so a Fortran input rewrite would be thrown away. It would also mean editing the core routines still under accuracy review. Fortran changes are limited to batch-mode control flow and the structured output writer. |
 | 13 | Input checking | **R validates everything before any run**: types, names, matrix shape/symmetry/PD, ranges, sizes and cross-field rules. **Fortran adds guards as a second line**: group counts, info-source codes, proportions, `iostat=` on reads, and incoherent parameters treated as failure in batch mode. Any mistake must make the run fail loudly with a message and a non-zero exit code. |
+| 14 | How users run it (revision 13) | **Through the R driver only:** `Rscript driver/selaction.R run <file.yaml>`, `run <a.yaml> <b.yaml> …`, or `run --folder <dir>`. Users never type `--batch`. The Fortran program alone still works interactively and with `selaction < old.in`. |
 
 Austin's priority is that the Fortran must be correct before the R port.
 This work supports that goal rather than competing with it:
@@ -133,7 +148,42 @@ Features that make it AI- and script-friendly:
   validator, `docs/inputs.md` and the commented templates are all
   generated from it, so they can't drift apart.
 
-### `scenarios/base.yaml` (the defaults, never run itself; `test1` as the example)
+### Three ways to run
+
+| Mode | Command | What's in the YAML | Use it for |
+|---|---|---|---|
+| **1. One file** | `Rscript driver/selaction.R run scenario_A.yaml` | one **complete** scenario (every input, like the example below) | a single run, or a loop in a shell script |
+| **2. Complete files** | `run --folder comparisons` (no `base.yaml` in it), or `run a.yaml b.yaml …` | each file is a **complete**, independent scenario; files may use different schemes, traits, anything | comparing different schemes, e.g. overlapping vs discrete |
+| **3. Base + changes** | `run --folder boars` (with `base.yaml`) | `base.yaml` is complete; the other files hold `scenarios:` and `sweeps:` that list **only what changes** | variations of one scheme, e.g. 5 to 10 boars |
+
+- **The scenario name** is the file name without `.yaml` in modes 1 and 2
+  (`scenario_A.yaml` → `scenario_A`), and the `name` (or sweep template)
+  in mode 3. The same naming rules apply in all modes (letters, digits,
+  `.`, `_`, `-`; unique, ignoring case).
+- **A complete file may also hold a `sweeps:` block** (modes 1 and 2).
+  The rest of the file is then the starting point for those sweeps, just
+  as `base.yaml` is in mode 3, and only the sweep scenarios run. So "the
+  same scheme with 5, 6, … 10 boars" fits in one file, without a
+  `base.yaml`.
+- **Every mode writes the same output layout** (see "Batch output"): the
+  classic `.out` report, `results.csv`, `messages.csv` and the summary
+  tables, which have one row for a single scenario. A shell script can
+  therefore always read `runs/<name>/summary_wide.csv`.
+- **Default output folder:** `runs/<file name>/` for one file,
+  `runs/<folder name>/` for a folder; a list of files needs `--out`.
+- **Exit code** of `run`: 0 when every scenario succeeded, non-zero
+  otherwise (2 = input error, 3 = numerical failure; for several
+  scenarios, the first failure's code), so `set -e` in a script works.
+
+A shell script can then do, for example:
+
+```bash
+for f in schemes/*.yaml; do
+  Rscript driver/selaction.R run "$f" --overwrite || echo "failed: $f"
+done
+```
+
+### A complete scenario file (`test1` as the example; also what `base.yaml` holds)
 
 ```yaml
 description: "3-trait pig index, FS+HS groups, base case"
@@ -194,11 +244,13 @@ Other schemes use the same structure:
 `spec.yaml` covers every branch the current prompts cover. The importer
 (Phase 1) is what proves it.
 
-### Scenario files: named scenarios and sweeps
+### Mode 3: base + named scenarios and sweeps
 
-`base.yaml` is **only the defaults. It is never run and never appears in
-the outputs.** Every scenario that runs has an explicit name and lists only
-what it changes from base.
+In a folder with `base.yaml`, the base is **only the defaults. It is never
+run and never appears in the outputs.** Every scenario that runs has an
+explicit name and lists only what it changes from base. (The `sweeps:`
+syntax below is the same inside a complete file in modes 1 and 2, with
+that file in place of `base.yaml`.)
 
 The other `.yaml` files in the folder define scenarios. There can be one
 file or many, with any file names. Each file can use either or both of two
@@ -346,7 +398,10 @@ and reports every problem at once rather than stopping at the first.
 | A `set` value identical to base (redundant change) | warning |
 | **Two scenarios resolve to identical inputs** (catches "copied it but forgot to change it") | warning |
 | Scenario with empty `set` | warning |
-| Folder has no `base.yaml`, or no scenarios at all | error |
+| Folder (or file list) with no scenarios at all | error |
+| Mode 3: a file next to `base.yaml` that is a complete scenario rather than `scenarios:`/`sweeps:` (mixing modes) | error |
+| Modes 1–2: a file that holds only `scenarios:`/`set:` changes, with no `base.yaml` to apply them to | error |
+| Modes 1–2: a file is not a complete scenario (missing required inputs) | error |
 
 Then **every resolved scenario gets the full validation** (see "Input
 validation" below for the full rule list and why R has to do it).
@@ -510,9 +565,9 @@ accepts every scheme. The driver always calls `selaction`; it never chooses betw
 binaries.
 
 ```
-scenarios/base.yaml + scenarios/*.yaml
-        │   Rscript driver/selaction.R run --folder scenarios
-        │   (merge → check conflicts → validate all → translate)
+one complete file | complete files | base.yaml + scenario/sweep files
+        │   Rscript driver/selaction.R run scenario_A.yaml | a.yaml b.yaml … | --folder <dir>
+        │   (merge if base/sweeps → check conflicts → validate all → translate)
         ▼
   legacy answer stream (<scenario>.in)  ──►  selaction --batch
                                                  │
@@ -595,8 +650,15 @@ sires_5,warning,W031,ovlp/truncation,"requested number of sires cannot be met; s
 
 ### Batch output (assembled by the driver)
 
+The same layout for every mode; a single file gives tables with one row.
+`changes.csv` is written when there is a base to compare with (mode 3,
+or a file with `sweeps:`); in mode 2, `inputs_wide.csv` shows how the
+files differ, and `summary_wide.csv` leads with the inputs that differ
+between them. Results that exist only for some schemes (e.g. generation
+interval for overlapping generations) are left empty for the others.
+
 ```
-runs/<folder name>/              # e.g. runs/scenarios/, runs/my_scenarios_folder/
+runs/<name>/                     # e.g. runs/scenario_A/, runs/scenarios/, runs/comparisons/
   manifest.csv                   # scenario, status, exit_code, n_warnings, runtime_s, input_sha256, git_commit, binary
   scenarios.csv                  # scenario, group, source file, description, + one column per varied input (value or label)
   changes.csv                    # long: scenario, input_path, base_value, scenario_value: exactly what changed
@@ -658,8 +720,8 @@ whole batch up front, before anything runs.
 ## Driver commands
 
 ```
-Rscript driver/selaction.R validate [--folder scenarios]
-Rscript driver/selaction.R run      [--folder scenarios] [--out runs/<folder>] [--jobs N] [--overwrite]
+Rscript driver/selaction.R validate <file.yaml …> | --folder <dir>
+Rscript driver/selaction.R run      <file.yaml …> | --folder <dir>  [--out runs/<name>] [--jobs N] [--overwrite]
 Rscript driver/selaction.R template --scheme discrete --stages 2 --traits 3 > scenarios/base.yaml
 Rscript driver/selaction.R import   legacy.in > base.yaml
 Rscript driver/selaction.R collect  runs/<folder>
@@ -668,6 +730,9 @@ Rscript driver/selaction.R sources  # name ↔ code table
 
 - **`run` validates first** and refuses to write into an existing output
   directory unless `--overwrite` is given.
+- **`run` takes files or `--folder`**: one file is mode 1; several files,
+  or a folder without `base.yaml`, is mode 2; a folder with `base.yaml` is
+  mode 3. `--folder` with no argument means `scenarios/`.
 - **Running several folders back to back is safe.** For example,
   `--folder heritability_study` then `--folder sire_study` give separate
   `runs/heritability_study/` and `runs/sire_study/` directories.
@@ -727,6 +792,9 @@ gets a `NEWS.md` entry. Work happens in `fortran/` and `driver/` only.
   its CSV value rounded to 3 decimals.
 
 **Phase 4: driver merge/validate/run/collect**
+- The three ways to run: one complete file, complete files (folder
+  without `base.yaml`, or a list), and base + changes. Sweeps inside a
+  complete file.
 - Scenario/sweep expansion, merge, conflict checks, `changes.csv`, the full validator, parallel runs,
   the `runs/` layout and all batch tables.
 - Trait labels: generate the short labels, write `trait_labels.csv`, pass
@@ -737,10 +805,15 @@ gets a `NEWS.md` entry. Work happens in `fortran/` and `driver/` only.
 **Phase 5: docs and examples**
 - `docs/inputs.md` (generated from `spec.yaml`), `docs/outputs.md` (the
   quantity dictionary) and `docs/messages.md`.
-- `examples/scenarios/`: a base plus a scenarios file (with sweeps) for each scheme.
+- `examples/scenarios/`: for each scheme, a complete file (mode 1), a
+  comparison folder of complete files across schemes (mode 2, e.g.
+  overlapping vs discrete), and a base plus a scenarios file with sweeps
+  (mode 3).
 - **`docs/scenarios.md`: a user guide to scenario folders and sweeps.** The
   design is settled but not yet written up for users. It should cover:
+  - the three ways to run, and when to use each
   - how `base.yaml` and scenario files combine
+  - sweeps inside a complete file
   - hand-written `scenarios:`
   - one-input sweeps, grids and `mode: paired`
   - several sweeps in one folder
@@ -778,6 +851,12 @@ gets a `NEWS.md` entry. Work happens in `fortran/` and `driver/` only.
   - `stages: 4`
 
   Each must fail fast and never hang; the runner enforces a timeout.
+- **Modes:** one complete file gives one row and the same layout as a
+  folder; a folder of complete files with different schemes (discrete
+  1-stage and overlapping) runs both and leaves scheme-specific results
+  empty for the other; a complete file with a 6-value sweep gives 6 rows
+  and not the file's own scenario; each mixing-modes row of the conflict
+  table gives its error.
 - **Batch:** a folder with a base, 2 hand-written scenarios and a
   5-value sweep must produce exactly 7 rows with unique keys. A second
   folder must spread several sweeps (a 5-value sweep, a 5×3 grid and a

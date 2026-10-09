@@ -67,7 +67,7 @@ of every finished step.
 | 9 | **T3:** unit tests of the maths routines against R | test-hardening T3 | 2 | medium | |
 | 10 | **T4:** correctness cases, drafted by Claude, *provisional* until verified | test-hardening T4 | 7 | large | needs review by Austin, Jack, Piter; case 5 expected to fail until Q5 is answered; their worked examples added when they arrive |
 | 11 | **T5:** property tests (as paired inputs, or as sweeps once step 12 exists) | test-hardening T5 | 7 | medium | needs review; "more sires → lower ΔF" fails at 19→20 (Q7); "fewer selected → higher response" direction to confirm |
-| 12 | **I/O 4:** full driver: merge, conflicts, validator, trait labels, parallel runs, batch tables | I/O Phase 4 | 5, 7 | large | can run alongside 9–11 |
+| 12 | **I/O 4:** full driver: the three ways to run (one file, complete files, base + changes), merge, conflicts, validator, trait labels, parallel runs, batch tables | I/O Phase 4 | 5, 7 | large | can run alongside 9–11 |
 | 13 | **I/O 5:** docs (`inputs.md`, `outputs.md`, `messages.md`, `scenarios.md`) and examples | I/O Phase 5 | 12 | medium | |
 | 14 | **T7:** coverage gate in CI | test-hardening T7 | 3 or 8, 4c | small | |
 | 15 | **I/O 6:** driver and batch tests in CI on every platform | I/O Phase 6 | 3 or 8, 12 | small | |

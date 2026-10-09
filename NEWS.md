@@ -1,5 +1,15 @@
 # SelAction (development version)
 
+## Plans
+
+* 2026-10-09: **I/O plan revision 13: three ways to run.** One complete
+  YAML file (`Rscript driver/selaction.R run scenario_A.yaml`, easy to
+  script); a folder or list of complete files with no `base.yaml` (e.g.
+  overlapping vs discrete, each run on its own); or a folder with
+  `base.yaml` plus scenario and sweep files (variations of one scheme). A
+  complete file may hold its own `sweeps:`. Same output layout in every
+  mode. `--batch` stays internal to the driver. Nothing implemented yet.
+
 ## Testing
 
 * 2026-10-09: **test tooling fixes after review** (nothing passes
