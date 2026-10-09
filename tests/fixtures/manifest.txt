@@ -27,3 +27,6 @@ multigrp:discrete 1-stage selection with two groups of each type (2 full-sib, 2 
 matrat1:[pending Q6] test1 with sires = dams = 10 (mating ratio 1): note_matrat warns and the half-sib sources (including the BLUP half-sib terms) are dropped
 sires19:[pending Q7] the Question 7 example: test1 traits, 19 sires, 50 dams, 5 male and 20 female candidates per dam, p dams 0.05, p sires 19/250 (half-sib group kept at 200 dams as in the letter's figure); predicted inbreeding 4.590% per generation, below the 20-sire switch in dFmtblup
 sires20:[pending Q7] as sires19 with 20 sires (p sires 20/250): predicted inbreeding 4.682% per generation, above the 20-sire switch
+sxd1:separate indices for sires and dams in discrete 1-stage selection (traitinfo2): sires use own performance, full-sib and half-sib groups for all 3 traits; dams use own performance for eADG and ADG only (FCR not in the dam index); prints the dam index
+sxd2:separate indices in discrete 2-stage selection: FCR goal-only in stage 1 and added to both the sire and the dam index in stage 2 (traitinfo3, traitinfo4); sires add FS/HS groups in stage 2, dams add BLUP
+sxd3:separate indices in discrete 3-stage selection: FCR goal-only in stages 1-2 and added to both indices in stage 3 (traitinfo5, traitinfo6); BLUP in stage 2, groups in stage 3; one dam trait adds nothing in stage 3

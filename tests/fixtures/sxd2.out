@@ -1,0 +1,200 @@
+  
+             *************************************************
+             *                   SelAction                   *
+             *      Multi-Trait Index Selection Software     *
+             *                                               *
+             *                 developed by:                 *
+             *        Marc J.M. Rutten and Piter Bijma       *
+             *       Animal Breeding and Genetics Group      *
+             *          Wageningen University, 2000          *
+             *                                               *
+             *                  updated by:                  *
+             *          Austin Putz and Jack Dekkers         *
+             *          Iowa State University, 2026          *
+             *                                               *
+             *                  version 1.2                  *
+             *************************************************
+  
+  
+  TRAITS
+  
+    eADG    
+    ADG     
+    FCR     
+  
+  
+   TRAIT PARAMETERS
+   
+        phenotypic variance  heritability  com.env.effect
+eADG           25.000           0.200           0.050
+ADG            95.000           0.300           0.050
+FCR             0.040           0.200           0.050
+  
+   PHENOTYPIC CORRELATIONS
+   
+             eADG     ADG      FCR     
+eADG           1.000
+ADG            0.250    1.000
+FCR            0.100   -0.500    1.000
+  
+   GENETIC CORRELATIONS
+   
+             eADG     ADG      FCR     
+eADG           1.000
+ADG            0.250    1.000
+FCR            0.100   -0.500    1.000
+  
+   COMMON ENVIRONMENTAL CORRELATIONS
+   
+             eADG     ADG      FCR     
+eADG           1.000
+ADG            0.050    1.000
+FCR            0.050   -0.050    1.000
+  
+  BREEDING GOAL INFORMATION
+  
+          5.000 * ADG     
+        -27.000 * FCR     
+  
+   POPULATION SIZE
+   
+                      number of selected sires :   10.000
+                       number of selected dams :  200.000
+ number of male selection candidates per dam   :    5.000
+ number of female selection candidates per dam :    5.000
+  
+          selected proportion sires in stage 1 : 0.100
+          selected proportion sires in stage 2 : 0.100
+               total selected proportion sires : 0.010
+  
+           selected proportion dams in stage 1 : 0.400
+           selected proportion dams in stage 2 : 0.500
+                total selected proportion dams : 0.200
+  
+  CHARACTERISTICS OF THE USED GROUPS
+  
+  full-sib group            1  with    9.00000000      animals
+  half-sib group            1  with    200.000000      dams, producing    9.00000000     animals
+  
+  STAGE 1 INDEX INFORMATION FOR SIRES :
+  
+     own performance                      for eADG      (  -0.165)
+  
+     own performance                      for ADG       (   1.352)
+  
+  STAGE 1 INDEX INFORMATION FOR DAMS:
+     own performance                      for eADG      (  -0.165)
+  
+     own performance                      for ADG       (   1.352)
+  
+  STAGE 2 INDEX INFORMATION FOR SIRES :
+     own performance                      for eADG      (  -0.200)
+     information of fs-group            1 for eADG      (   0.316)
+     information of hs-group            1 for eADG      (  -0.164)
+  
+     own performance                      for ADG       (   1.201)
+     information of fs-group            1 for ADG       (   0.964)
+     information of hs-group            1 for ADG       (   0.983)
+  
+     own performance                      for FCR       (   4.855)
+     information of fs-group            1 for FCR       ( -21.325)
+     information of hs-group            1 for FCR       (   3.127)
+  
+  STAGE 2 INDEX INFORMATION FOR DAMS :
+     own performance                      for eADG      (  -0.198)
+     ebv of the dam                       for eADG      (  -0.049)
+     ebv of the sire                      for eADG      (  -0.054)
+  
+     own performance                      for ADG       (   1.370)
+     ebv of the dam                       for ADG       (   1.878)
+     ebv of the sire                      for ADG       (   1.806)
+  
+     own performance                      for FCR       (   3.475)
+  
+  
+              ******************   RESULTS   *******************
+  
+  EQUILIBRIUM PARAMETERS
+  
+        phenotypic variance  heritability  com.env.effect
+eADG           24.952           0.198           0.050
+ADG            89.222           0.255           0.053
+FCR             0.040           0.192           0.051
+  
+   PHENOTYPIC CORRELATIONS
+  
+   
+             eADG     ADG      FCR     
+eADG           1.000
+ADG            0.247    1.000
+FCR            0.105   -0.493    1.000
+  
+   GENETIC CORRELATIONS
+  
+             eADG     ADG      FCR     
+eADG           1.000
+ADG            0.232    1.000
+FCR            0.126   -0.457    1.000
+  
+   COMMON ENVIRONMENTAL CORRELATIONS
+  
+             eADG     ADG      FCR     
+eADG           1.000
+ADG            0.050    1.000
+FCR            0.050   -0.050    1.000
+  
+  RESPONSE AFTER STAGE 1
+                            sires           dams          total
+ ADG     
+         trait units :      2.104          1.159          3.263
+      economic units :     10.518          5.795         16.313
+ % of total response :     61.616         33.948         95.564
+  
+ FCR     
+         trait units :     -0.018         -0.010         -0.028
+      economic units :      0.488          0.269          0.757
+ % of total response :      2.860          1.576          4.436
+  
+  CORRELATED RESPONSE AFTER STAGE 1
+                            sires           dams          total
+ eADG    
+         trait units :      0.174          0.096          0.270
+  
+  TOTAL RESPONSE AFTER STAGE 1
+                            sires           dams          total
+      economic units :     11.006          6.064         17.070
+  
+  
+        index variance :       158.642
+breeding goal variance :       624.799
+     accuracy of index :         0.504
+  
+  
+  RESPONSE AFTER STAGE 2
+                            sires           dams          total
+ ADG     
+         trait units :      3.482          1.731          5.214
+      economic units :     17.410          8.657         26.068
+ % of total response :     63.909         31.779         95.689
+  
+ FCR     
+         trait units :     -0.032         -0.012         -0.044
+      economic units :      0.859          0.315          1.175
+ % of total response :      3.154          1.157          4.311
+  
+  CORRELATED RESPONSE AFTER STAGE 2
+                            sires           dams          total
+ eADG    
+         trait units :      0.328          0.150          0.478
+  
+  TOTAL RESPONSE AFTER STAGE 2
+                            sires           dams          total
+      economic units :     18.270          8.973         27.242
+  
+  
+  index variance sires :       207.736    index variance dams :       166.637
+breeding goal variance :       624.799
+accuracy of sire index :         0.577  accuracy of dam index :         0.516
+  
+  
+                       ******  end of output  ******
