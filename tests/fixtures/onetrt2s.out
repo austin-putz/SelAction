@@ -1,0 +1,107 @@
+  
+             *************************************************
+             *                   SelAction                   *
+             *      Multi-Trait Index Selection Software     *
+             *                                               *
+             *                 developed by:                 *
+             *        Marc J.M. Rutten and Piter Bijma       *
+             *       Animal Breeding and Genetics Group      *
+             *          Wageningen University, 2000          *
+             *                                               *
+             *                  updated by:                  *
+             *          Austin Putz and Jack Dekkers         *
+             *          Iowa State University, 2026          *
+             *                                               *
+             *                  version 1.2                  *
+             *************************************************
+  
+  
+  TRAITS
+  
+    ADG     
+  
+  
+   TRAIT PARAMETERS
+   
+        phenotypic variance  heritability  com.env.effect
+ADG            95.000           0.300           0.050
+  
+  BREEDING GOAL INFORMATION
+  
+          5.000 * ADG     
+  
+   POPULATION SIZE
+   
+                      number of selected sires :   10.000
+                       number of selected dams :  200.000
+ number of male selection candidates per dam   :    5.000
+ number of female selection candidates per dam :    5.000
+  
+          selected proportion sires in stage 1 : 0.100
+          selected proportion sires in stage 2 : 0.100
+               total selected proportion sires : 0.010
+  
+           selected proportion dams in stage 1 : 0.400
+           selected proportion dams in stage 2 : 0.500
+                total selected proportion dams : 0.200
+  
+  CHARACTERISTICS OF THE USED GROUPS
+  
+  full-sib group            1  with    9.00000000      animals
+  half-sib group            1  with    200.000000      dams, producing    9.00000000     animals
+  
+  STAGE 1 INDEX INFORMATION:
+  
+     own performance                      for ADG       (   1.257)
+  
+  STAGE 2 INDEX INFORMATION :
+     own performance                      for ADG       (   1.051)
+     ebv of the dam                       for ADG       (   1.462)
+     ebv of the sire                      for ADG       (   1.015)
+     information of fs-group            1 for ADG       (   1.025)
+     information of hs-group            1 for ADG       (   0.894)
+     mean ebv of the dams of hs-group   1 for ADG       (  -0.447)
+  
+  
+              ******************   RESULTS   *******************
+  
+  EQUILIBRIUM PARAMETERS
+  
+        phenotypic variance  heritability  com.env.effect
+ADG            88.826           0.251           0.053
+  
+  RESPONSE AFTER STAGE 1
+                            sires           dams          total
+ ADG     
+         trait units :      2.070          1.141          3.211
+      economic units :     10.351          5.703         16.053
+ % of total response :     64.476         35.524        100.000
+  
+  TOTAL RESPONSE AFTER STAGE 1
+                            sires           dams          total
+      economic units :     10.351          5.703         16.053
+  
+  
+        index variance :       140.288
+breeding goal variance :       558.149
+     accuracy of index :         0.501
+  
+  
+  RESPONSE AFTER STAGE 2
+                            sires           dams          total
+ ADG     
+         trait units :      3.443          1.838          5.281
+      economic units :     17.214          9.190         26.404
+ % of total response :     65.193         34.807        100.000
+  
+  TOTAL RESPONSE AFTER STAGE 2
+                            sires           dams          total
+      economic units :     17.214          9.190         26.404
+  
+  
+        index variance :       184.210
+breeding goal variance :       558.149
+     accuracy of index :         0.574
+  
+  
+                       ******  end of output  ******
