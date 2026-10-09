@@ -1,5 +1,24 @@
 # SelAction (development version)
 
+## Bug fixes (2026-10-09)
+
+* **Unset common-environmental correlations (`ccorr`).** When common
+  environmental effects are switched off (`initc = n`), the program never
+  set the off-diagonal `ccorr` values but still used them (multiplied by
+  c² = 0). Usually that gives 0, but memory left over from earlier can
+  hold a NaN, and NaN × 0 is NaN. On Linux CI this once made `ovlp2`
+  select 0 sires instead of 10, with exit code 0. Found with valgrind
+  (`selection_index`, `selroutines.f90`, reading `ccorr` allocated in
+  `ovlp`). Present in all four routines (`sel1s`, `sel2s`, `sel3s`,
+  `ovlp`) and inherited from the original code. Fixed by setting `ccorr`
+  to 0 right after it is allocated, the same pattern as `ccprog`.
+  * All 7 fixtures byte-identical; every fixture and error case is now
+    clean under valgrind (`ovlp2` had 38,883 reports before; a discrete
+    1-stage run with common environment off had 20,266).
+  * New `tests/tools/memcheck.sh` (`make memcheck`, Linux) runs every test
+    under valgrind; CI runs it in the Linux job, so this kind of bug fails
+    CI every time instead of once in a while.
+
 ## Plans
 
 * 2026-10-09: **I/O plan revision 13: three ways to run.** One complete

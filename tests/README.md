@@ -36,6 +36,7 @@ tests/
     coverage.sh      coverage build + line/branch table (`make coverage`)
     coverage_build.sh  shared by coverage.sh and read_map.sh: finds gcov, builds with --coverage
     read_map.sh      regenerates input_map/reads.csv
+    memcheck.sh      every test under valgrind (`make memcheck`, Linux)
 ```
 
 ## Running
@@ -120,7 +121,7 @@ request, and by hand (Actions tab, "Run workflow").
 
 | Platform | Compiler | Runs | Byte-exact golden |
 |---|---|---|---|
-| Linux (`ubuntu-latest`, x86_64) | gfortran 14 | build, self-test, golden, error cases, strict, coverage table | required; identical |
+| Linux (`ubuntu-latest`, x86_64) | gfortran 14 | build, self-test, golden, error cases, strict, valgrind memcheck, coverage table | required; identical |
 | macOS (`macos-latest`, Apple Silicon) | gfortran 14 | build, self-test, golden, error cases, strict | advisory; tolerant required |
 | macOS (`macos-latest`, Apple Silicon) | `brew install gcc`, as in the README (gfortran 16.2 on 2026-10-06) | same | advisory; tolerant required |
 | Windows (`windows-latest`, MSYS2 UCRT64) | gfortran (MSYS2's current, 16.2 on 2026-10-06) | build, golden, error cases | required; identical apart from CRLF |
@@ -250,6 +251,23 @@ near-zero or last-digit value, don't assume it's either "definitely a
 regression" or "definitely safe to regenerate" - check whether the affected
 value is genuinely near a rounding boundary (as `blup1`'s was) before doing
 either.
+
+## Resolved: unset common-environmental correlations (`ccorr`), Linux only
+
+On 2026-10-06 one Linux CI run of `ovlp2` selected 0 sires instead of 10
+(generation interval 0.00, age-class sections missing) and still exited
+0; a rerun of the same binary in the same job was correct, and no Mac run
+ever showed it. valgrind (in an Ubuntu container) pointed at
+`selection_index` reading `ccorr`, allocated in `ovlp`: with common
+environmental effects off (`ovlp2` answers `n`), the off-diagonal
+`ccorr(i,j)` were never set, but `covc = ccorr * sqrt(sigmac(i)) *
+sqrt(sigmac(j))` used them with `sigmac = 0`. A NaN left in reused memory
+makes that NaN instead of 0. The discrete routines had the same pattern
+(no fixture switches common environment off there yet; `noce1` will).
+The strict build couldn't see it: `-finit-real=snan` doesn't cover
+allocated arrays. Fixed by `ccorr=0.0` right after each allocation; all
+fixtures unchanged and valgrind-clean. `tests/tools/memcheck.sh` now runs
+every test under valgrind in the Linux CI job.
 
 ## Resolved: unconfigured group-type matrix blocks
 

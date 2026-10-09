@@ -5,6 +5,7 @@
 #   make check    every test layer (tests/run_all.sh; parts need R)
 #   make strict   strict debug build in build/strict, all tests on it (needs R)
 #   make coverage coverage build in build/coverage, line/branch table
+#   make memcheck all tests under valgrind (Linux only)
 #   make clean    remove build/
 #
 # Every variable can be overridden on the command line, e.g.
@@ -38,7 +39,7 @@ SOURCES := seltools.f90 selparameters.f90 selroutines.f90 selovlp.f90 \
 
 BIN := $(BUILD)/selaction$(EXE)
 
-.PHONY: all test check strict coverage clean help
+.PHONY: all test check strict coverage memcheck clean help
 
 all: $(BIN)
 
@@ -60,6 +61,9 @@ strict:
 coverage:
 	tests/tools/coverage.sh
 
+memcheck:
+	tests/tools/memcheck.sh
+
 clean:
 	rm -rf $(BUILD)
 
@@ -69,4 +73,5 @@ help:
 	@echo "make check     run every test layer (golden, errors, strict, ...; needs R)"
 	@echo "make strict    strict debug build in build/strict, all tests on it (needs R)"
 	@echo "make coverage  coverage build in build/coverage, line/branch table"
+	@echo "make memcheck  every test under valgrind, catches unset values (Linux)"
 	@echo "make clean     remove $(BUILD)/"

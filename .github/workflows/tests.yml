@@ -92,6 +92,14 @@ jobs:
         if: success() || failure()
         run: tests/tools/strict.sh
 
+      # Catches values used before they are set, which can change results
+      # only on some machines or runs (the 2026-10-09 ovlp2 failure).
+      - name: Memory check (valgrind)
+        if: runner.os == 'Linux' && (success() || failure())
+        run: |
+          sudo apt-get install -y -qq valgrind > /dev/null
+          tests/tools/memcheck.sh
+
       - name: Coverage (report only)
         if: runner.os == 'Linux' && (success() || failure())
         run: tests/tools/coverage.sh

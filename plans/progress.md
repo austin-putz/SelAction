@@ -6,9 +6,8 @@ finished, newest first.** Read the top entry to see where things stand.
 
 ## Current position
 
-- **Last finished:** review of steps 1–4a (2026-10-09), see the log.
-- **Open, before step 4b:** the intermittent `ovlp2` failure on Linux
-  (below). Needs Docker Desktop running on Austin's Mac to debug.
+- **Last finished:** the Linux `ovlp2` bug is fixed (2026-10-09), see the
+  log.
 - **Next:** step 4b, T2b: new discrete-generation test inputs.
 - **Waiting on others:** answers from Piter Bijma and Jack Dekkers to the
   open modelling questions (Q1–Q7, **sent 2026-10-05**), and any worked
@@ -34,6 +33,30 @@ finished, newest first.** Read the top entry to see where things stand.
 ---
 
 ## Log
+
+### Fix: the intermittent Linux `ovlp2` failure (done 2026-10-09)
+
+- **What was wrong:** with common environmental effects switched off,
+  the program never set the correlations between traits for the common
+  environment, but still used them (multiplied by zero). Usually 0 × junk
+  = 0, but if the junk left in memory is "not a number", the result is
+  "not a number" too. On Linux that once made `ovlp2` select 0 sires
+  instead of 10. Same pattern in 1-, 2- and 3-stage selection; inherited
+  from the original code.
+- **How it was found:** valgrind in an Ubuntu container (Docker on
+  Austin's Mac), which reports every use of a value that was never set.
+- **Fix:** set those correlations to 0 right after the array is created,
+  in all four routines (the same kind of fix as `ccprog` earlier). A
+  plain programming bug, no equation involved.
+- **Tests:** all 7 stored outputs byte-identical; every fixture and error
+  case clean under valgrind (before: 38,883 reports for `ovlp2`, 20,266
+  for a 1-stage run with common environment off). New `make memcheck`
+  runs every test under valgrind; CI now runs it on Linux, and it fails
+  on the old code.
+- **Results changed?** No (the stored outputs were made where the junk
+  happened to be harmless).
+- **Findings:** nothing for Jack or Piter.
+- **Next:** step 4b, T2b.
 
 ### Review of steps 1–4a (2026-10-09, commits `72b91d1`, `4739da0`, `3f066f2`)
 

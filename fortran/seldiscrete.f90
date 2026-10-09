@@ -39,6 +39,12 @@
         allocate(covapiq(ntraits,ntraits), covapaq(ntraits,ntraits))
         allocate(phcorr(ntraits,ntraits), gcorr(ntraits,ntraits))
         allocate(ccorr(ntraits,ntraits), ecorr(ntraits,ntraits))
+        ! ccorr (common-environmental correlations) is only read when common
+        ! environmental effects are used (initc = y), but is used either way
+        ! (multiplied by c2 = 0 when they are off). Unset, it could hold a NaN
+        ! from reused memory, and NaN*0 is NaN: on Linux this once made ovlp2
+        ! select 0 sires. Zero it here; the diagonal is set to 1 below.
+        ccorr=0.0
         allocate(hh(ntraits), cc(ntraits), ccprog(ntraits))
         allocate(response(ntraits), tempev(ntraits,1))
         allocate(xtraits(ntraits), progsigmac(ntraits))
@@ -1186,6 +1192,12 @@
         allocate(covapiq(ntraits,ntraits), covapaq(ntraits,ntraits))
         allocate(phcorr(ntraits,ntraits), gcorr(ntraits,ntraits))
         allocate(ccorr(ntraits,ntraits), ecorr(ntraits,ntraits))
+        ! ccorr (common-environmental correlations) is only read when common
+        ! environmental effects are used (initc = y), but is used either way
+        ! (multiplied by c2 = 0 when they are off). Unset, it could hold a NaN
+        ! from reused memory, and NaN*0 is NaN: on Linux this once made ovlp2
+        ! select 0 sires. Zero it here; the diagonal is set to 1 below.
+        ccorr=0.0
         allocate(hh(ntraits), cc(ntraits), ccprog(ntraits))
         allocate(response(ntraits), tempev(ntraits,1))
         allocate(xtraits(ntraits), progsigmac(ntraits))
@@ -2823,6 +2835,12 @@
         allocate(covapiq(ntraits,ntraits), covapaq(ntraits,ntraits))
         allocate(phcorr(ntraits,ntraits), gcorr(ntraits,ntraits))
         allocate(ccorr(ntraits,ntraits), ecorr(ntraits,ntraits))
+        ! ccorr (common-environmental correlations) is only read when common
+        ! environmental effects are used (initc = y), but is used either way
+        ! (multiplied by c2 = 0 when they are off). Unset, it could hold a NaN
+        ! from reused memory, and NaN*0 is NaN: on Linux this once made ovlp2
+        ! select 0 sires. Zero it here; the diagonal is set to 1 below.
+        ccorr=0.0
         allocate(hh(ntraits), cc(ntraits), ccprog(ntraits))
         allocate(response(ntraits), tempev(ntraits,1))
         allocate(xtraits(ntraits), progsigmac(ntraits))

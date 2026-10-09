@@ -77,6 +77,12 @@
         allocate(sigmaaw(ntraits), sigmae(ntraits), ccprog(ntraits))
         allocate(hh(ntraits), cc(ntraits), its(2*nclass,ntraits))
         allocate(phcorr(ntraits,ntraits), gcorr(ntraits,ntraits), ccorr(ntraits,ntraits))
+        ! ccorr (common-environmental correlations) is only read when common
+        ! environmental effects are used (initc = y), but is used either way
+        ! (multiplied by c2 = 0 when they are off). Unset, it could hold a NaN
+        ! from reused memory, and NaN*0 is NaN: on Linux this once made ovlp2
+        ! select 0 sires. Zero it here; the diagonal is set to 1 below.
+        ccorr=0.0
         allocate(ecorr(ntraits,ntraits), stempsource(ntraits,84))
         allocate(oresponse(ntraits), sresponse(ntraits), dresponse(ntraits))
         allocate(omatc(ntraits,ntraits), osigmah(1,1))
