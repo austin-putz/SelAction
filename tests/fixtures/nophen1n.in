@@ -1,0 +1,69 @@
+         1 ! stage selection
+  nophen1n ! filenames
+         4 ! number of traits
+         n ! different indices for sires and dams
+  GoalA    ! name of trait  1
+         h ! use of GoalA   
+     1.000 ! economic value GoalA   
+  ADG      ! name of trait  2
+         b ! use of ADG     
+     5.000 ! economic value ADG     
+  GoalB    ! name of trait  3
+         h ! use of GoalB   
+     1.000 ! economic value GoalB   
+  BlupT    ! name of trait  4
+         i ! use of BlupT   
+         y ! use of common environment
+    25.000 ! phenotypic variance GoalA   
+     0.200 ! heritability GoalA   
+     0.050 ! common environmental effect GoalA   
+    95.000 ! phenotypic variance ADG     
+     0.300 ! heritability ADG     
+     0.050 ! common environmental effect ADG     
+     0.040 ! phenotypic variance GoalB   
+     0.200 ! heritability GoalB   
+     0.050 ! common environmental effect GoalB   
+    10.000 ! phenotypic variance BlupT   
+     0.250 ! heritability BlupT   
+     0.050 ! common environmental effect BlupT   
+         y ! full-sib groups ?
+         1 ! number of fsgroups
+     9.000 ! number of animals in fsgroup  1
+         n ! half-sib groups ?
+         n ! progeny groups ?
+         1 ! info source ADG     
+         4 ! info source ADG     
+        -1 ! info source ADG     
+         2 ! info source BlupT   
+        -1 ! info source BlupT   
+     0.100 ! phenotypic correlation between GoalA    and ADG     
+     0.000 !    genetic correlation between GoalA    and ADG     
+     0.000 !   com.env. correlation between GoalA    and ADG     
+     0.100 ! phenotypic correlation between GoalA    and GoalB   
+     0.000 !    genetic correlation between GoalA    and GoalB   
+     0.000 !   com.env. correlation between GoalA    and GoalB   
+     0.100 ! phenotypic correlation between GoalA    and BlupT   
+     0.000 !    genetic correlation between GoalA    and BlupT   
+     0.000 !   com.env. correlation between GoalA    and BlupT   
+     0.100 ! phenotypic correlation between ADG      and GoalB   
+     0.000 !    genetic correlation between ADG      and GoalB   
+     0.000 !   com.env. correlation between ADG      and GoalB   
+     0.100 ! phenotypic correlation between ADG      and BlupT   
+     0.000 !    genetic correlation between ADG      and BlupT   
+     0.000 !   com.env. correlation between ADG      and BlupT   
+     0.100 ! phenotypic correlation between GoalB    and BlupT   
+     0.000 !    genetic correlation between GoalB    and BlupT   
+     0.000 !   com.env. correlation between GoalB    and BlupT   
+    10.000 ! number of sires
+   200.000 ! number of dams
+     5.000 ! male candidates per dam
+     5.000 ! female candidates per dam
+     0.010 ! proportion sires
+     0.200 ! proportion dams
+         c ! information sources or correlation to be changed
+     0.300 !    genetic correlation between GoalA    and ADG     
+         c ! information sources or correlation to be changed
+     0.200 !    genetic correlation between ADG      and GoalB   
+         i ! information sources or correlation to be changed
+         1 ! info source BlupT   
+        -1 ! info source BlupT   

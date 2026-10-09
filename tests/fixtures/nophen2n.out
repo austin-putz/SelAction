@@ -1,0 +1,196 @@
+  
+             *************************************************
+             *                   SelAction                   *
+             *      Multi-Trait Index Selection Software     *
+             *                                               *
+             *                 developed by:                 *
+             *        Marc J.M. Rutten and Piter Bijma       *
+             *       Animal Breeding and Genetics Group      *
+             *          Wageningen University, 2000          *
+             *                                               *
+             *                  updated by:                  *
+             *          Austin Putz and Jack Dekkers         *
+             *          Iowa State University, 2026          *
+             *                                               *
+             *                  version 1.2                  *
+             *************************************************
+  
+  
+  TRAITS
+  
+    GoalA   
+    ADG     
+    GoalB   
+    BlupT   
+  
+  
+   TRAIT PARAMETERS
+   
+        phenotypic variance  heritability  com.env.effect
+GoalA          25.000           0.200           0.050
+ADG            95.000           0.300           0.050
+GoalB           0.040           0.200           0.050
+BlupT          10.000           0.250           0.050
+  
+   PHENOTYPIC CORRELATIONS
+   
+             GoalA    ADG      GoalB    BlupT   
+GoalA          1.000
+ADG            0.100    1.000
+GoalB          0.100    0.100    1.000
+BlupT          0.100    0.100    0.100    1.000
+  
+   GENETIC CORRELATIONS
+   
+             GoalA    ADG      GoalB    BlupT   
+GoalA          1.000
+ADG            0.300    1.000
+GoalB          0.000    0.200    1.000
+BlupT          0.000    0.000    0.000    1.000
+  
+   COMMON ENVIRONMENTAL CORRELATIONS
+   
+             GoalA    ADG      GoalB    BlupT   
+GoalA          1.000
+ADG            0.000    1.000
+GoalB          0.000    0.000    1.000
+BlupT          0.000    0.000    0.000    1.000
+  
+  BREEDING GOAL INFORMATION
+  
+          1.000 * GoalA   
+          5.000 * ADG     
+          1.000 * GoalB   
+  
+   POPULATION SIZE
+   
+                      number of selected sires :   10.000
+                       number of selected dams :  200.000
+ number of male selection candidates per dam   :    5.000
+ number of female selection candidates per dam :    5.000
+  
+          selected proportion sires in stage 1 : 0.100
+          selected proportion sires in stage 2 : 0.100
+               total selected proportion sires : 0.010
+  
+           selected proportion dams in stage 1 : 0.400
+           selected proportion dams in stage 2 : 0.500
+                total selected proportion dams : 0.200
+  
+  CHARACTERISTICS OF THE USED GROUPS
+  
+  full-sib group            1  with    9.00000000      animals
+  
+  STAGE 1 INDEX INFORMATION:
+  
+     own performance                      for ADG       (   1.314)
+  
+     own performance                      for BlupT     (  -0.369)
+  
+  STAGE 2 INDEX INFORMATION :
+     own performance                      for ADG       (   1.120)
+     information of fs-group            1 for ADG       (   1.307)
+  
+     own performance                      for BlupT     (  -0.320)
+  
+  
+              ******************   RESULTS   *******************
+  
+  EQUILIBRIUM PARAMETERS
+  
+        phenotypic variance  heritability  com.env.effect
+GoalA          24.907           0.197           0.050
+ADG            89.091           0.254           0.053
+GoalB           0.040           0.199           0.050
+BlupT           9.999           0.250           0.050
+  
+   PHENOTYPIC CORRELATIONS
+  
+   
+             GoalA    ADG      GoalB    BlupT   
+GoalA          1.000
+ADG            0.088    1.000
+GoalB          0.098    0.093    1.000
+BlupT          0.101    0.106    0.101    1.000
+  
+   GENETIC CORRELATIONS
+  
+             GoalA    ADG      GoalB    BlupT   
+GoalA          1.000
+ADG            0.270    1.000
+GoalB         -0.013    0.179    1.000
+BlupT          0.003    0.012    0.002    1.000
+  
+   COMMON ENVIRONMENTAL CORRELATIONS
+  
+             GoalA    ADG      GoalB    BlupT   
+GoalA          1.000
+ADG            0.000    1.000
+GoalB          0.000    0.000    1.000
+BlupT          0.000    0.000    0.000    1.000
+  
+  RESPONSE AFTER STAGE 1
+                            sires           dams          total
+ GoalA   
+         trait units :      0.264          0.145          0.409
+      economic units :      0.264          0.145          0.409
+ % of total response :      1.580          0.870          2.450
+  
+ ADG     
+         trait units :      2.101          1.157          3.258
+      economic units :     10.503          5.787         16.290
+ % of total response :     62.855         34.630         97.485
+  
+ GoalB   
+         trait units :      0.007          0.004          0.011
+      economic units :      0.007          0.004          0.011
+ % of total response :      0.042          0.023          0.065
+  
+  CORRELATED RESPONSE AFTER STAGE 1
+                            sires           dams          total
+ BlupT   
+         trait units :     -0.057         -0.031         -0.088
+  
+  TOTAL RESPONSE AFTER STAGE 1
+                            sires           dams          total
+      economic units :     10.774          5.936         16.710
+  
+  
+        index variance :       152.042
+breeding goal variance :       598.821
+     accuracy of index :         0.504
+  
+  
+  RESPONSE AFTER STAGE 2
+                            sires           dams          total
+ GoalA   
+         trait units :      0.436          0.230          0.666
+      economic units :      0.436          0.230          0.666
+ % of total response :      1.603          0.847          2.450
+  
+ ADG     
+         trait units :      3.470          1.834          5.304
+      economic units :     17.349          9.171         26.520
+ % of total response :     63.772         33.712         97.485
+  
+ GoalB   
+         trait units :      0.012          0.006          0.018
+      economic units :      0.012          0.006          0.018
+ % of total response :      0.043          0.023          0.065
+  
+  CORRELATED RESPONSE AFTER STAGE 2
+                            sires           dams          total
+ BlupT   
+         trait units :     -0.056         -0.031         -0.087
+  
+  TOTAL RESPONSE AFTER STAGE 2
+                            sires           dams          total
+      economic units :     17.797          9.408         27.204
+  
+  
+        index variance :       185.526
+breeding goal variance :       598.821
+     accuracy of index :         0.557
+  
+  
+                       ******  end of output  ******

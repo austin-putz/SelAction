@@ -1,0 +1,99 @@
+         3 ! stage selection
+  nophen3  ! filenames
+         4 ! number of traits
+         y ! different indices for sires and dams
+  GoalA    ! name of trait  1
+         h ! use of GoalA   
+     1.000 ! economic value GoalA   
+  ADG      ! name of trait  2
+         b ! use of ADG     
+     5.000 ! economic value ADG     
+  GoalB    ! name of trait  3
+         h ! use of GoalB   
+     1.000 ! economic value GoalB   
+  BlupT    ! name of trait  4
+         i ! use of BlupT   
+         n ! use of GoalA   for dams
+         i ! use of ADG     for dams
+         n ! use of GoalB   for dams
+         n ! use of BlupT   for dams
+         n ! use of GoalA   in stage 2 for sires
+         n ! use of GoalB   in stage 2 for sires
+         n ! use of GoalA   in stage 2 for dams
+         n ! use of GoalB   in stage 2 for dams
+         n ! use of BlupT   in stage 2 for dams
+         n ! use of GoalA   in stage 3 for sires
+         n ! use of GoalB   in stage 3 for sires
+         n ! use of GoalA   in stage 3 for dams
+         n ! use of GoalB   in stage 3 for dams
+         n ! use of BlupT   in stage 3 for dams
+         y ! use of common environment
+    25.000 ! phenotypic variance GoalA   
+     0.200 ! heritability GoalA   
+     0.050 ! common environmental effect GoalA   
+    95.000 ! phenotypic variance ADG     
+     0.300 ! heritability ADG     
+     0.050 ! common environmental effect ADG     
+     0.040 ! phenotypic variance GoalB   
+     0.200 ! heritability GoalB   
+     0.050 ! common environmental effect GoalB   
+    10.000 ! phenotypic variance BlupT   
+     0.250 ! heritability BlupT   
+     0.050 ! common environmental effect BlupT   
+         y ! full-sib groups ?
+         1 ! number of fsgroups
+     9.000 ! number of animals in fsgroup  1
+         n ! half-sib groups ?
+         n ! progeny groups ?
+         1 ! info source ADG      for males
+        -1 ! info source ADG      for males
+         4 ! info source ADG      in stage 2 for males
+        -1 ! info source ADG      in stage 2 for males
+         2 ! info source ADG      in stage 3 for males
+        -1 ! info source ADG      in stage 3 for males
+         2 ! info source BlupT    for males
+        -1 ! info source BlupT    for males
+        -1 ! info source BlupT    in stage 2 for males
+        -1 ! info source BlupT    in stage 3 for males
+         1 ! info source ADG      for females
+        -1 ! info source ADG      for females
+        -1 ! info source ADG      in stage 2 for females
+        -1 ! info source ADG      in stage 3 for females
+     0.100 ! phenotypic correlation between GoalA    and ADG     
+     0.000 ! genetic correlation between GoalA    and ADG     
+     0.000 ! com.env. correlation between GoalA    and ADG     
+     0.100 ! phenotypic correlation between GoalA    and GoalB   
+     0.000 ! genetic correlation between GoalA    and GoalB   
+     0.000 ! com.env. correlation between GoalA    and GoalB   
+     0.100 ! phenotypic correlation between GoalA    and BlupT   
+     0.000 ! genetic correlation between GoalA    and BlupT   
+     0.000 ! com.env. correlation between GoalA    and BlupT   
+     0.100 ! phenotypic correlation between ADG      and GoalB   
+     0.000 ! genetic correlation between ADG      and GoalB   
+     0.000 ! com.env. correlation between ADG      and GoalB   
+     0.100 ! phenotypic correlation between ADG      and BlupT   
+     0.000 ! genetic correlation between ADG      and BlupT   
+     0.000 ! com.env. correlation between ADG      and BlupT   
+     0.100 ! phenotypic correlation between GoalB    and BlupT   
+     0.000 ! genetic correlation between GoalB    and BlupT   
+     0.000 ! com.env. correlation between GoalB    and BlupT   
+    10.000 ! number of sires
+   200.000 ! number of dams
+     5.000 ! number of male offspring per dam
+     5.000 ! number of female offspring per dam
+     0.500 ! proportion sires in stage 1
+     0.200 ! proportion sires in stage 2
+     0.100 ! proportion sires in stage 3
+     0.800 ! proportion dams in stage 1
+     0.500 ! proportion dams in stage 2
+     0.500 ! proportion dams in stage 3
+         c ! information sources or correlation to be changed
+     0.300 ! genetic correlation between GoalA    and ADG     
+         c ! information sources or correlation to be changed
+     0.200 ! genetic correlation between ADG      and GoalB   
+         i ! information sources or correlation to be changed
+         s ! sire or dam information to be changed
+         1 ! info source BlupT    for males
+        -1 ! info source BlupT    for males
+        -1 ! info source BlupT    in stage 2 for males
+        -1 ! info source BlupT    in stage 3 for males
