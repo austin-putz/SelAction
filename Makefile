@@ -9,7 +9,9 @@
 #
 # Every variable can be overridden on the command line, e.g.
 #   make BUILD=build/strict FFLAGS="-g -O0 -fcheck=all"
-# builds a second copy next to the normal one.
+# builds a second copy next to the normal one. make does not notice a
+# change of FC or FFLAGS by itself: use another BUILD directory, `make
+# clean`, or `make -B` (the test scripts that need special flags use -B).
 #
 # Works with GNU Make 3.81 (macOS), Linux make and MSYS2 make (Windows).
 
@@ -50,7 +52,7 @@ test: all
 	tests/run_error_tests.sh $(BUILD)
 
 check:
-	tests/run_all.sh
+	BUILD=$(BUILD) tests/run_all.sh
 
 strict:
 	tests/tools/strict.sh

@@ -53,6 +53,9 @@ check integer_changed    1 's/  20$/  21/'
 check text_changed       1 's/response/responses/'
 check exponent_changed   1 's/E-03/E-02/'
 check line_missing       1 '/sires/d'
+check fewer_decimals     1 's/12\.345/12.3/'
+check integer_to_real    1 's/  20$/  20.0/'
+check exponent_dropped   1 's/1\.234E-03/0.001234/'
 
 echo ""
 echo "$pass passed, $fail failed (compare_out.R self-test)"

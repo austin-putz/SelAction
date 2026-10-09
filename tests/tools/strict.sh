@@ -28,7 +28,7 @@ cd "$REPO_ROOT" || exit 2
 mkdir -p build
 
 echo "== strict build ($BUILD)"
-if ! make --no-print-directory BUILD="$BUILD" FFLAGS="$FLAGS" > "$REPO_ROOT/$BUILD.log" 2>&1; then
+if ! make -B --no-print-directory BUILD="$BUILD" FFLAGS="$FLAGS" > "$REPO_ROOT/$BUILD.log" 2>&1; then
   echo "FAIL  strict build did not compile - see $BUILD.log"
   exit 1
 fi

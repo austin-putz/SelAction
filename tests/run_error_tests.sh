@@ -11,7 +11,8 @@
 # bin_dir defaults to build (relative to the repository root, or absolute).
 # A case that exits 0, exits with the wrong code, prints the wrong message,
 # or leaves the wrong files behind is a FAIL. The script exits non-zero on
-# any FAIL.
+# any FAIL. A malformed manifest line, an .in not listed in the manifest,
+# or a manifest with no cases is also a FAIL.
 
 set -u
 
@@ -41,9 +42,23 @@ fi
 
 pass=0
 fail=0
+listed=" "
 
-while IFS=: read -r name want_code files expected description; do
+# "|| [[ -n ... ]]" also reads a last line that has no newline.
+while IFS=: read -r name want_code files expected description || [[ -n "$name" ]]; do
+  name="${name%$'\r'}"
   [[ -z "$name" || "$name" == \#* ]] && continue
+  listed="$listed$name "
+
+  bad=""
+  [[ "$want_code" =~ ^[1-9][0-9]*$ ]] || bad="exit code '$want_code' is not a positive integer"
+  [[ "$files" == none || "$files" == report ]] || bad="files field '$files' is not none or report"
+  [[ -n "$expected" ]] || bad="expected text is empty"
+  if [[ -n "$bad" ]]; then
+    echo "FAIL  $name (manifest: $bad)"
+    fail=$((fail + 1))
+    continue
+  fi
 
   in_file="$CASES_DIR/$name.in"
   if [[ ! -f "$in_file" ]]; then
@@ -52,9 +67,11 @@ while IFS=: read -r name want_code files expected description; do
     continue
   fi
 
-  tmp_dir="$(mktemp -d)"
-  cp "$in_file" "$tmp_dir/$name.in"
-  (cd "$tmp_dir" && "$binary" < "$name.in" > stdout.log 2>&1)
+  tmp_dir="$(mktemp -d "${TMPDIR:-/tmp}/selaction.XXXXXX")" || { echo "error: mktemp failed" >&2; exit 2; }
+  # The program writes its input echo to <filename>.in: feed it a copy
+  # under another name so it never overwrites the file it is reading.
+  cp "$in_file" "$tmp_dir/input.stdin"
+  (cd "$tmp_dir" && "$binary" < input.stdin > stdout.log 2>&1)
   code=$?
 
   problems=()
@@ -74,9 +91,6 @@ while IFS=: read -r name want_code files expected description; do
         tail -1 "${outs[0]}" | grep -qF "run stopped" || problems+=(".out does not end with 'run stopped'")
       fi
       ;;
-    *)
-      problems+=("unknown files field '$files' in manifest")
-      ;;
   esac
 
   if [[ ${#problems[@]} -eq 0 ]]; then
@@ -90,6 +104,21 @@ while IFS=: read -r name want_code files expected description; do
     fail=$((fail + 1))
   fi
 done < "$MANIFEST"
+
+# Every .in in the directory must be in the manifest.
+for f in "$CASES_DIR"/*.in; do
+  [[ -e "$f" ]] || continue
+  n="$(basename "$f" .in)"
+  if [[ "$listed" != *" $n "* ]]; then
+    echo "FAIL  $n.in is not listed in manifest.txt"
+    fail=$((fail + 1))
+  fi
+done
+
+if [[ $((pass + fail)) -eq 0 ]]; then
+  echo "FAIL  no error cases listed in $MANIFEST"
+  fail=1
+fi
 
 echo ""
 echo "$pass passed, $fail failed (error cases)"

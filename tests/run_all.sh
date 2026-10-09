@@ -16,17 +16,22 @@
 #   unit         tests/unit/run.sh             (test-hardening T3)
 #   validation   tests/validation/run.sh       (T4)
 #   properties   tests/properties/run.sh       (T5)
-# A layer whose script doesn't exist yet is listed as "not yet present".
+# A layer whose script doesn't exist yet is listed as "not yet present";
+# a script that exists but isn't executable is a FAIL.
 # Layers marked (R) need Rscript; without it they FAIL rather than being
 # skipped. `make test` (golden + errors) needs no R.
 #
 # Coverage is not a layer here: run `make coverage`.
+#
+# BUILD (default build) is the build directory, as for make;
+# `make check BUILD=dir` passes it on.
 
 set -u
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 cd "$REPO_ROOT" || exit 2
+BUILD="${BUILD:-build}"
 
 names=()
 results=()
@@ -42,8 +47,12 @@ record() {
 run_layer() {
   local name="$1" needs_r="$2"
   shift 2
-  if [[ ! -x "$1" ]]; then
+  if [[ ! -e "$1" ]]; then
     record "$name" "not yet present"
+    return
+  fi
+  if [[ ! -x "$1" ]]; then
+    record "$name" "FAIL ($1 is not executable)"
     return
   fi
   if [[ "$needs_r" -eq 1 ]] && ! command -v Rscript > /dev/null; then
@@ -60,18 +69,18 @@ run_layer() {
 }
 
 echo "=================== build ==================="
-mkdir -p build
-if make --no-print-directory > build/make.log 2>&1; then
+mkdir -p "$BUILD"
+if make --no-print-directory BUILD="$BUILD" > "$BUILD/make.log" 2>&1; then
   record build PASS
 else
-  record build "FAIL (see build/make.log)"
-  tail -20 build/make.log
+  record build "FAIL (see $BUILD/make.log)"
+  tail -20 "$BUILD/make.log"
 fi
 
 if [[ "${results[0]}" == PASS ]]; then
   run_layer tools      1 tests/tools/selftest.sh
-  run_layer golden     0 tests/run_tests.sh build
-  run_layer errors     0 tests/run_error_tests.sh build
+  run_layer golden     0 tests/run_tests.sh "$BUILD"
+  run_layer errors     0 tests/run_error_tests.sh "$BUILD"
   run_layer strict     1 tests/tools/strict.sh
   run_layer unit       1 tests/unit/run.sh
   run_layer validation 1 tests/validation/run.sh

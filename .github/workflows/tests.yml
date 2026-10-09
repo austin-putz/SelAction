@@ -10,14 +10,20 @@ on:
   pull_request:
   workflow_dispatch:
 
+permissions:
+  contents: read
+
+# A newer push to the same pull request cancels the older run; pushes to
+# main all run to the end, so every commit on main gets a result.
 concurrency:
   group: tests-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   unix:
     name: ${{ matrix.name }}
     runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
     strategy:
       fail-fast: false
       matrix:
@@ -27,10 +33,14 @@ jobs:
           # Exactly the README's route for Mac users: brew install gcc
           # (whatever gfortran Homebrew currently ships).
           - { os: macos-latest,  id: macos-brew, name: "macos-latest (brew install gcc, README)", compiler: brew }
-    env:
-      # run_tests.sh keeps the folder of a failed fixture here.
-      TMPDIR: ${{ github.workspace }}/test-tmp
     steps:
+      # The test runners keep the folder of a failed test under TMPDIR;
+      # the last step uploads it.
+      - name: Temp folder for test outputs
+        run: |
+          mkdir -p "$RUNNER_TEMP/selaction-tests"
+          echo "TMPDIR=$RUNNER_TEMP/selaction-tests" >> "$GITHUB_ENV"
+
       - uses: actions/checkout@v5
 
       - uses: fortran-lang/setup-fortran@v1
@@ -51,7 +61,6 @@ jobs:
 
       - name: Versions
         run: |
-          mkdir -p "$TMPDIR"
           uname -a
           $FC --version | head -1
           Rscript --version
@@ -93,13 +102,14 @@ jobs:
         with:
           name: failed-tests-${{ matrix.id }}
           path: |
-            test-tmp/
-            build/*.log
-          if-no-files-found: ignore
+            ${{ runner.temp }}/selaction-tests/
+            build/**/*.log
+          if-no-files-found: warn
 
   windows:
     name: windows-latest (MSYS2 UCRT64)
     runs-on: windows-latest
+    timeout-minutes: 30
     defaults:
       run:
         shell: msys2 {0}
@@ -116,6 +126,12 @@ jobs:
           update: true
           install: mingw-w64-ucrt-x86_64-gcc-fortran make diffutils
 
+      - name: Temp folder for test outputs
+        run: |
+          d="$(cygpath -u "$RUNNER_TEMP")/selaction-tests"
+          mkdir -p "$d"
+          echo "TMPDIR=$d" >> "$GITHUB_ENV"
+
       - name: Versions
         run: |
           gfortran --version | head -1
@@ -130,3 +146,13 @@ jobs:
       - name: Error cases
         if: success() || failure()
         run: tests/run_error_tests.sh build
+
+      - name: Keep outputs of failed tests
+        if: failure()
+        uses: actions/upload-artifact@v5
+        with:
+          name: failed-tests-windows
+          path: |
+            ${{ runner.temp }}/selaction-tests/
+            build/**/*.log
+          if-no-files-found: warn

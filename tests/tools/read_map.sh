@@ -25,13 +25,8 @@ CSV="$OUT_DIR/reads.csv"
 cd "$REPO_ROOT" || exit 2
 mkdir -p build "$OUT_DIR"
 
-source "$SCRIPT_DIR/find_gcov.sh"
-
-echo "== coverage build ($BUILD), gcov: $GCOV"
-if ! make --no-print-directory BUILD="$BUILD" FFLAGS="-O0 -g --coverage" > "$BUILD.log" 2>&1; then
-  echo "FAIL  coverage build did not compile - see $BUILD.log"
-  exit 1
-fi
+# Sets GCOV and builds $BUILD with --coverage.
+source "$SCRIPT_DIR/coverage_build.sh"
 binary="$REPO_ROOT/$BUILD/selaction"
 [[ -x "$binary" ]] || binary="$binary.exe"
 
@@ -68,24 +63,30 @@ for src in fortran/*.f90; do
 done > "$work/reads.tsv"
 
 # --- 2. which lines each test input executes ---------------------------------
-# lists of name<TAB>input file, in manifest order
+# name<TAB>input file<TAB>expected exit code, in manifest order
 {
   grep -v '^#' tests/fixtures/manifest.txt | grep -v '^[[:space:]]*$' | cut -d: -f1 |
-    while read -r name; do printf "%s\ttests/fixtures/%s.in\n" "$name" "$name"; done
-  grep -v '^#' tests/errors/manifest.txt | grep -v '^[[:space:]]*$' | cut -d: -f1 |
-    while read -r name; do printf "%s\ttests/errors/%s.in\n" "$name" "$name"; done
+    while read -r name; do printf "%s\ttests/fixtures/%s.in\t0\n" "$name" "$name"; done
+  grep -v '^#' tests/errors/manifest.txt | grep -v '^[[:space:]]*$' | cut -d: -f1,2 |
+    while IFS=: read -r name code; do printf "%s\ttests/errors/%s.in\t%s\n" "$name" "$name" "$code"; done
 } > "$work/inputs.tsv"
 
 : > "$work/hits.tsv"   # name<TAB>file<TAB>line
-while IFS=$'\t' read -r name input; do
+status=0
+while IFS=$'\t' read -r name input want; do
   rm -f "$BUILD"/*.gcda
   run="$work/run_$name"
   mkdir -p "$run"
-  cp "$input" "$run/$name.in"
-  (cd "$run" && "$binary" < "$name.in" > stdout.log 2>&1)
+  cp "$input" "$run/input.stdin"
+  (cd "$run" && "$binary" < input.stdin > stdout.log 2>&1)
+  rc=$?
+  if [[ "$rc" -ne "$want" ]]; then
+    echo "FAIL  $name exited $rc, expected $want; its lines would be missing from the map"
+    status=1
+  fi
   for gcda in "$BUILD"/selaction-*.gcda; do
     [[ -f "$gcda" ]] || continue
-    "$GCOV" -t "$gcda" 2>/dev/null | awk -v name="$name" -F: '
+    "$GCOV" -t "$gcda" 2>/dev/null | LC_ALL=C awk -v name="$name" -F: '
       $2 + 0 == 0 && $3 == "Source" { src = $4; sub(/^.*\//, "", src); next }
       {
         count = $1
@@ -122,3 +123,7 @@ awk -F, 'NR > 1 { tot[$1]++; if ($NF != "") hit[$1]++ }
         printf "  %-18s %3d of %3d\n", "TOTAL", H, T }' "$CSV" | sort -k1,1 | awk '/TOTAL/ {t = $0; next} {print} END {print t}'
 echo ""
 echo "wrote $CSV"
+if [[ "$status" -ne 0 ]]; then
+  echo "FAIL  some runs ended with the wrong exit code (see above); the map is incomplete"
+fi
+exit "$status"

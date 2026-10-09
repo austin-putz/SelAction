@@ -1,22 +1,21 @@
 # Fixture manifest.
 #
-# Format (colon-separated, 3 fields):
-#   <base_name>:<binaries>:<description>
+# Format (colon-separated, 2 fields):
+#   <base_name>:<description>
 #
-# base_name  - shared stem of <base_name>.in / <base_name>.out in this directory.
-#              Must be <= 8 characters - see tests/README.md ("Filename length
-#              constraint") for why.
-# binaries   - comma-separated list of binary names (as built into build/ by
-#              `make`) this fixture is valid input for.
-#              A fixture must only list binaries whose interactive prompt
-#              sequence actually matches what's encoded in <base_name>.in - see
-#              tests/README.md before adding an entry.
-# description - short human-readable summary of what the fixture exercises.
+# base_name   - shared stem of <base_name>.in / <base_name>.out in this
+#               directory. Must be <= 8 characters - see tests/README.md
+#               ("Filename length constraint") for why.
+# description - short human-readable summary of what the fixture exercises
+#               (may contain colons).
+#
+# Every .in in this directory must be listed here; tests/run_tests.sh fails
+# otherwise.
 
-test1:selaction:3-trait discrete 1-stage selection, FS/HS groups, common environmental effects (ported from the original SelAction distribution's smoke test)
-test2s:selaction:3-trait discrete 2-stage selection (sel2s), own performance in stage 1 then added BLUP breeding values in stage 2, no FS/HS/progeny groups, same genetic parameters as test1
-test3s:selaction:3-trait discrete 3-stage selection (sel3s), own performance in stage 1, BLUP breeding values added in stage 2, FS+HS group information added in stage 3, same genetic parameters and FS/HS group sizes as test1
-blup1:selaction:3-trait discrete 1-stage selection (sel1s) isolating the BLUP-specific branch of the inbreeding calculation (dFmtblup/hyper_correct in selroutines.f90): all 3 traits use only BLUP breeding values (code 2) plus the half-sib group (code 24) as information sources, terminated by -1 - no own performance or full-sib info, unlike test1's mixed source list; same genetic parameters and HS group size as test1
-advgrp:selaction:3-trait discrete 1-stage selection (sel1s) adversarial coverage for the unconfigured-group-type matrix-block guards in selection_index (selroutines.f90): full-sib groups left fully unconfigured (fsgroups=0) while half-sib (1 group, code 24) AND progeny groups (1 group, code 64) are both configured and actually selected as info sources - the progeny-group path (matp's i+63 block) was previously untested by any fixture; also zeroes the ADG-FCR common environmental correlation to exercise a legitimately-zero numerator term inside the group-block formulas
-ovlp2:selaction:2-trait overlapping generations (ovlp in selovlp.f90), 2 age classes per sex (4 effective classes), truncation selection, own performance only as info source in every age class, no fs/hs/progeny groups, common environment disabled - first regression fixture for the overlapping-generations code path; also the fixture that surfaced and pinned down the ccprog uninitialized-read fix (see tests/README.md)
-ovlpgrp:selaction:2-trait overlapping generations, 2 age classes per sex, truncation selection, common environment enabled, all three group types configured and selected as info sources (1 full-sib, 1 half-sib, 1 progeny group, each paired with own performance) in every age class - exercises info_sourcesovlp's group-code branches and ovlp_cov_update's fs/hs covariance terms, previously untested by any fixture; expected output regenerated after the ovlp truncation threshold-search fix (see tests/README.md)
+test1:3-trait discrete 1-stage selection, FS/HS groups, common environmental effects (ported from the original SelAction distribution's smoke test)
+test2s:3-trait discrete 2-stage selection (sel2s), own performance in stage 1 then added BLUP breeding values in stage 2, no FS/HS/progeny groups, same genetic parameters as test1
+test3s:3-trait discrete 3-stage selection (sel3s), own performance in stage 1, BLUP breeding values added in stage 2, FS+HS group information added in stage 3, same genetic parameters and FS/HS group sizes as test1
+blup1:3-trait discrete 1-stage selection (sel1s) isolating the BLUP-specific branch of the inbreeding calculation (dFmtblup/hyper_correct in selroutines.f90): all 3 traits use only BLUP breeding values (code 2) plus the half-sib group (code 24) as information sources, terminated by -1 - no own performance or full-sib info, unlike test1's mixed source list; same genetic parameters and HS group size as test1
+advgrp:3-trait discrete 1-stage selection (sel1s) adversarial coverage for the unconfigured-group-type matrix-block guards in selection_index (selroutines.f90): full-sib groups left fully unconfigured (fsgroups=0) while half-sib (1 group, code 24) AND progeny groups (1 group, code 64) are both configured and actually selected as info sources - the progeny-group path (matp's i+63 block) was previously untested by any fixture; also zeroes the ADG-FCR common environmental correlation to exercise a legitimately-zero numerator term inside the group-block formulas
+ovlp2:2-trait overlapping generations (ovlp in selovlp.f90), 2 age classes per sex (4 effective classes), truncation selection, own performance only as info source in every age class, no fs/hs/progeny groups, common environment disabled - first regression fixture for the overlapping-generations code path; also the fixture that surfaced and pinned down the ccprog uninitialized-read fix (see tests/README.md)
+ovlpgrp:2-trait overlapping generations, 2 age classes per sex, truncation selection, common environment enabled, all three group types configured and selected as info sources (1 full-sib, 1 half-sib, 1 progeny group, each paired with own performance) in every age class - exercises info_sourcesovlp's group-code branches and ovlp_cov_update's fs/hs covariance terms, previously untested by any fixture; expected output regenerated after the ovlp truncation threshold-search fix (see tests/README.md)

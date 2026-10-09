@@ -8,6 +8,9 @@
 # Each line is split into text and numbers.
 #   - Text must match exactly, except that runs of blanks count as one
 #     (a sign change from -0.000 to 0.000 shifts a blank).
+#   - Numbers must be printed the same way: the same number of decimals,
+#     and an exponent in both or in neither (12.345 vs 12.3 is a
+#     difference, even though the values are close).
 #   - Numbers with a decimal point must agree within one unit in the last
 #     printed digit (0.001 for 12.345), unless --abs and/or --rel are
 #     given, in which case a pair passes if it is within either. -0.000
@@ -68,31 +71,37 @@ split_line <- function(line) {
   list(text = text, nums = nums)
 }
 
+# How a number is printed: decimals (-1 for an integer) and whether it
+# has an exponent.
+num_format <- function(tok) {
+  mant <- sub("[EeDd].*$", "", tok)
+  decimals <- if (grepl(".", mant, fixed = TRUE)) nchar(sub("^.*\\.", "", mant)) else -1
+  list(decimals = decimals, exponent = grepl("[EeDd]", tok))
+}
+
 # One unit in the last printed digit, or NA for an integer.
 last_digit_unit <- function(tok) {
-  mant <- sub("[EeDd].*$", "", tok)
-  if (!grepl(".", mant, fixed = TRUE)) return(NA_real_)
-  decimals <- nchar(sub("^.*\\.", "", mant))
-  expo <- if (grepl("[EeDd]", tok)) as.numeric(sub("^.*[EeDd]", "", tok)) else 0
-  10^(expo - decimals)
+  f <- num_format(tok)
+  if (f$decimals < 0) return(NA_real_)
+  expo <- if (f$exponent) as.numeric(sub("^.*[EeDd]", "", tok)) else 0
+  10^(expo - f$decimals)
 }
 
 to_num <- function(tok) as.numeric(chartr("Dd", "Ee", tok))
 
 numbers_agree <- function(e, a) {
+  if (!identical(num_format(e), num_format(a))) return(FALSE)
   ve <- to_num(e)
   va <- to_num(a)
   ue <- last_digit_unit(e)
-  ua <- last_digit_unit(a)
-  if (is.na(ue) && is.na(ua)) return(ve == va)
+  if (is.na(ue)) return(ve == va)
   diff <- abs(ve - va)
   if (!is.na(abs_tol) || !is.na(rel_tol)) {
     ok_abs <- !is.na(abs_tol) && diff <= abs_tol
     ok_rel <- !is.na(rel_tol) && diff <= rel_tol * max(abs(ve), abs(va))
     return(ok_abs || ok_rel)
   }
-  unit <- max(ue, ua, na.rm = TRUE)
-  diff <= unit * (1 + 1e-9)
+  diff <= ue * (1 + 1e-9)
 }
 
 problems <- character(0)
@@ -106,7 +115,7 @@ if (length(expected) != length(actual)) {
 for (k in seq_len(min(length(expected), length(actual)))) {
   se <- split_line(expected[k])
   sa <- split_line(actual[k])
-  if (se$text != sa$text || length(se$nums) != length(sa$nums)) {
+  if (se$text != sa$text) {
     note(sprintf("line %d text differs:\n  expected: %s\n  actual:   %s",
                  k, expected[k], actual[k]))
     next
