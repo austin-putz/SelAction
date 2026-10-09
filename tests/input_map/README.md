@@ -17,14 +17,20 @@ from the code. **After adding fixtures, rerun the script and update the
 "Covered by" columns.** Line numbers refer to `fortran/` at the commit
 that last updated this file.
 
-**Status on 2026-10-09 (7 fixtures, 8 error cases): 124 of 162 input
-statements are reached; 38 are not.** All 38 are covered by the new test
-inputs planned for steps 4b/4c (last section).
+**Status on 2026-10-09, after step 4b (27 fixtures, 8 error cases): 159
+of 162 input statements are reached.** The 3 not reached are in
+overlapping generations (fixed numbers per age class, and a goal-only
+trait); the step-4c inputs cover them (last section). Before step 4b, 124
+were reached.
 
 Notation: *sel1s / sel2s / sel3s* are the 1-, 2- and 3-stage routines in
 `seldiscrete.f90`; they ask the same questions, so they share a table
-with one line-number column each. "All discrete" = `test1`, `blup1`,
-`advgrp` (1-stage), `test2s` (2-stage), `test3s` (3-stage). "Re-asks"
+with one line-number column each. "All discrete" = every discrete
+fixture: 1-stage `test1`, `blup1`, `advgrp`, `noce1`, `goalonly`,
+`onetrait`, `fivetr`, `multigrp`, `matrat1`, `sires19`, `sires20`,
+`sxd1`, `nophen1`, `nophen1n`; 2-stage `test2s`, `sxd2`, `prog2s`,
+`onetrt2s`, `nophen2`, `nophen2n`; 3-stage `test3s`, `sxd3`, `prog3s`,
+`nophen3`, `nophen3n`. "Re-asks"
 means the program prints a message and asks again (with `goto`) on an
 invalid answer; in batch mode (I/O Phase 2) these become errors.
 
@@ -44,43 +50,43 @@ proportions selected → checks and corrections → c² in the progeny test.
 
 | Question | Asked when | Answer (checks) | sel1s | sel2s | sel3s | Covered by |
 |---|---|---|---|---|---|---|
-| file name | always | ≤ 8 characters, no blanks (`read_name`) | 16 | 1163 | 2800 | all discrete + error cases |
-| number of traits | always | integer | 32 | 1179 | 2816 | all discrete |
-| different indices / sources for sires and dams? | always | `y`/`n` | 90 | 1245 | 2891 | all discrete (all answer `n`) |
-| use common environmental effects? | always | `y`/`n` (re-asks) | 121 | 1289 | 2950 | all discrete (all `y`) |
-| phenotypic variance, per trait | always | real | 139 | 1307 | 2968 | all discrete |
-| heritability h², per trait | always | 0 < h² < 1 (re-asks) | 144 | 1312 | 2973 | all discrete |
-| c², per trait | common environment `y` | 0 ≤ c² < 1, h² + c² < 1 (re-asks) | 161 | 1329 | 2990 | all discrete |
-| use full-sib groups? | always | `y`/`n` | 184 | 1352 | 3013 | all discrete |
-| number of full-sib groups | FS `y` | integer, "max=20" (not checked) | 189 | **1357** | 3018 | `test1`, `test3s`; **2-stage: none** |
-| animals per full-sib group, per group | FS `y` | real | 194 | **1362** | 3023 | `test1`, `test3s`; **2-stage: none** |
-| use half-sib groups? | always | `y`/`n` | 200 | 1368 | 3029 | all discrete |
-| number of half-sib groups | HS `y` | integer, "max=20" (not checked) | 205 | **1373** | 3034 | 1-stage, `test3s`; **2-stage: none** |
-| dams per half-sib group, per group | HS `y` | real | 210 | **1378** | 3039 | 1-stage, `test3s`; **2-stage: none** |
-| animals per half-sib group, per group | HS `y` | real | 214 | **1382** | 3043 | 1-stage, `test3s`; **2-stage: none** |
-| use progeny groups? | always | `y`/`n` | 220 | 1388 | 3049 | all discrete |
-| number of progeny groups | progeny `y` | integer, "max=20" (not checked) | 225 | **1393** | **3054** | `advgrp`; **2- and 3-stage: none** |
-| dams per progeny group, per group | progeny `y` | real | 231 | **1399** | **3060** | `advgrp`; **2- and 3-stage: none** |
-| animals per progeny group, per group | progeny `y` | real | 237 | **1405** | **3066** | `advgrp`; **2- and 3-stage: none** |
-| phenotypic correlation, per trait pair | always | −1 < r < 1 (re-asks the pair) | 310 | 1498 | 3181 | all discrete |
-| genetic correlation, per trait pair | always | −1 < r < 1 (re-asks the pair) | 319 | 1507 | 3190 | all discrete |
-| common environmental correlation, per pair | common environment `y` | −1 < r < 1 (re-asks the pair) | 329 | 1517 | 3200 | all discrete |
-| number of selected sires | always | integer | 361 | 1549 | 3232 | all discrete |
-| number of selected dams | always | integer | 365 | 1554 | 3236 | all discrete |
-| male candidates per dam | always | real | 369 | 1559 | 3240 | all discrete |
-| female candidates per dam | always | real | 373 | 1563 | 3244 | all discrete |
-| proportion selected sires (stage 1) | always | real | 377 | 1568 | 3248 | all discrete |
-| proportion selected sires, stage 2 | 2- and 3-stage | real | — | 1573 | 3252 | `test2s`, `test3s` |
-| proportion selected sires, stage 3 | 3-stage | real | — | — | 3256 | `test3s` |
-| proportion selected dams (stage 1) | always | real | 381 | 1578 | 3260 | all discrete |
-| proportion selected dams, stage 2 | 2- and 3-stage | real | — | 1583 | 3264 | `test2s`, `test3s` |
-| proportion selected dams, stage 3 | 3-stage | real | — | — | 3268 | `test3s` |
-| **correction:** change sire or dam sources? | separate indices `y`, a trait has no phenotypic source in either sex and no genetic correlation with a trait that has one, and the answer to the warning (section 4, `note_pheninfo`) is `i` | `s`/`d`; then the sources for that trait are asked again (section 4) and the check repeats | **480** | **1680** | **3365** | **none** |
-| **correction:** new genetic correlation (no-source trait listed first) | as above but answer `c`, separate indices `y`; asked for the **first** trait with phenotypic sources, when it comes after the no-source trait | real | **507** | **1715** | **3408** | **none** |
-| **correction:** new genetic correlation (no-source trait listed later) | as above, when the first trait with sources comes before the no-source trait | real | **516** | **1724** | **3417** | **none** |
-| **correction:** new genetic correlation, same index (first trait after) | separate indices `n`, a trait without phenotypic source and no genetic correlation with one that has, answer `c` | real | **565** | **1776** | **3475** | **none** |
-| **correction:** new genetic correlation, same index (first trait before) | as above | real | **574** | **1785** | **3484** | **none** |
-| c² in the progeny test, per trait | progeny groups `y` **and** common environment `y` | 0 < c² < 1 (re-asks; note: 0 is rejected) | 617 | **1838** | **3543** | `advgrp`; **2- and 3-stage: none** |
+| file name | always | ≤ 8 characters, no blanks (`read_name`) | 16 | 1169 | 2812 | all discrete + error cases |
+| number of traits | always | integer | 32 | 1185 | 2828 | all discrete |
+| different indices / sources for sires and dams? | always | `y`/`n` | 96 | 1257 | 2909 | all discrete (`y`: `sxd1`–`sxd3`, `nophen1`–`nophen3`) |
+| use common environmental effects? | always | `y`/`n` (re-asks) | 127 | 1301 | 2968 | all discrete (`n`: `noce1`; `y`: the rest) |
+| phenotypic variance, per trait | always | real | 145 | 1319 | 2986 | all discrete |
+| heritability h², per trait | always | 0 < h² < 1 (re-asks) | 150 | 1324 | 2991 | all discrete |
+| c², per trait | common environment `y` | 0 ≤ c² < 1, h² + c² < 1 (re-asks) | 167 | 1341 | 3008 | all discrete |
+| use full-sib groups? | always | `y`/`n` | 190 | 1364 | 3031 | all discrete |
+| number of full-sib groups | FS `y` | integer, "max=20" (not checked) | 195 | 1369 | 3036 | most discrete; 2-stage: `prog2s`, `sxd2`, `onetrt2s` |
+| animals per full-sib group, per group | FS `y` | real | 200 | 1374 | 3041 | as above |
+| use half-sib groups? | always | `y`/`n` | 206 | 1380 | 3047 | all discrete |
+| number of half-sib groups | HS `y` | integer, "max=20" (not checked) | 211 | 1385 | 3052 | most discrete; 2-stage: `prog2s`, `sxd2`, `onetrt2s` |
+| dams per half-sib group, per group | HS `y` | real | 216 | 1390 | 3057 | as above |
+| animals per half-sib group, per group | HS `y` | real | 220 | 1394 | 3061 | as above |
+| use progeny groups? | always | `y`/`n` | 226 | 1400 | 3067 | all discrete |
+| number of progeny groups | progeny `y` | integer, "max=20" (not checked) | 231 | 1405 | 3072 | `advgrp`, `multigrp`; `prog2s`; `prog3s` |
+| dams per progeny group, per group | progeny `y` | real | 237 | 1411 | 3078 | as above |
+| animals per progeny group, per group | progeny `y` | real | 243 | 1417 | 3084 | as above |
+| phenotypic correlation, per trait pair | always | −1 < r < 1 (re-asks the pair) | 316 | 1510 | 3199 | all discrete |
+| genetic correlation, per trait pair | always | −1 < r < 1 (re-asks the pair) | 325 | 1519 | 3208 | all discrete |
+| common environmental correlation, per pair | common environment `y` | −1 < r < 1 (re-asks the pair) | 335 | 1529 | 3218 | all discrete |
+| number of selected sires | always | integer | 367 | 1561 | 3250 | all discrete |
+| number of selected dams | always | integer | 371 | 1566 | 3254 | all discrete |
+| male candidates per dam | always | real | 375 | 1571 | 3258 | all discrete |
+| female candidates per dam | always | real | 379 | 1575 | 3262 | all discrete |
+| proportion selected sires (stage 1) | always | real | 383 | 1580 | 3266 | all discrete |
+| proportion selected sires, stage 2 | 2- and 3-stage | real | — | 1585 | 3270 | all 2- and 3-stage |
+| proportion selected sires, stage 3 | 3-stage | real | — | — | 3274 | all 3-stage |
+| proportion selected dams (stage 1) | always | real | 387 | 1590 | 3278 | all discrete |
+| proportion selected dams, stage 2 | 2- and 3-stage | real | — | 1595 | 3282 | all 2- and 3-stage |
+| proportion selected dams, stage 3 | 3-stage | real | — | — | 3286 | all 3-stage |
+| **correction:** change sire or dam sources? | separate indices `y`, a trait has no phenotypic source in either sex and no genetic correlation with a trait that has one, and the answer to the warning (section 4, `note_pheninfo`) is `i` | `s`/`d`; then the sources for that trait are asked again (section 4) and the check repeats | 486 | 1692 | 3383 | `nophen1` (`s`), `nophen2` (`d`), `nophen3` (`s`) |
+| **correction:** new genetic correlation (no-source trait listed first) | as above but answer `c`, separate indices `y`; asked for the **first** trait with phenotypic sources, when it comes after the no-source trait | real | 513 | 1727 | 3426 | `nophen1`, `nophen2`, `nophen3` |
+| **correction:** new genetic correlation (no-source trait listed later) | as above, when the first trait with sources comes before the no-source trait | real | 522 | 1736 | 3435 | `nophen1`, `nophen2`, `nophen3` |
+| **correction:** new genetic correlation, same index (first trait after) | separate indices `n`, a trait without phenotypic source and no genetic correlation with one that has, answer `c` | real | 571 | 1788 | 3493 | `nophen1n`, `nophen2n`, `nophen3n` |
+| **correction:** new genetic correlation, same index (first trait before) | as above | real | 580 | 1797 | 3502 | `nophen1n`, `nophen2n`, `nophen3n` |
+| c² in the progeny test, per trait | progeny groups `y` **and** common environment `y` | 0 < c² < 1 (re-asks; note: 0 is rejected) | 623 | 1850 | 3561 | `advgrp`, `multigrp`; `prog2s`; `prog3s` |
 
 With separate indices `n` and answer `i` to the warning, the sources
 for the trait are asked again (section 4) without a sire/dam question.
@@ -104,25 +110,25 @@ there are as many sires as dams**.
 | male candidates per dam | always | real | 55 | same |
 | female candidates per dam | always | real | 59 | same |
 | number of age classes per sex | always | integer | 66 | same |
-| truncation selection, or fixed number per age class? | always | `t`/`n` | 88 | same (all answer `t`) |
-| male candidates in age class, per class except the first (set from candidates per dam) | always | real | 106 | same |
-| female candidates in age class, per class except the first | always | real | 112 | same |
-| selected sires in age class, per class | fixed numbers (`n`) | real | **132** | **none** |
-| selected dams in age class, per class | fixed numbers (`n`) | real | **139** | **none** |
-| use common environmental effects? | always | `y`/`n` | 232 | `ovlp2` (`n`), `ovlpgrp` (`y`) |
-| phenotypic variance, per trait | always | real | 250 | `ovlp2`, `ovlpgrp` |
-| heritability h², per trait | always | 0 < h² < 1 (re-asks) | 255 | `ovlp2`, `ovlpgrp` |
-| c², per trait | common environment `y` | as discrete | 272 | `ovlpgrp` |
-| use full-sib groups? | always | `y`/`n` | 295 | `ovlp2`, `ovlpgrp` |
-| number of full-sib groups / animals per group | FS `y` | integer / real | 300, 305 | `ovlpgrp` |
-| use half-sib groups? | **only if sires < dams** | `y`/`n` | 312 | `ovlp2`, `ovlpgrp` |
-| number of half-sib groups / dams / animals per group | HS `y` | integer / real / real | 317, 322, 326 | `ovlpgrp` |
-| use progeny groups? | always | `y`/`n` | 336 | `ovlp2`, `ovlpgrp` |
-| number of progeny groups / dams / animals per group | progeny `y` | integer / real / real | 341, 347, 352 | `ovlpgrp` |
-| next sire age class with more information (or −1) | truncation (`t`); after the sources for the first sire class | integer or −1 | 398 | `ovlp2`, `ovlpgrp` |
-| next dam age class with more information (or −1) | truncation (`t`); after the sources for the first dam class | integer or −1 | 464 | `ovlp2`, `ovlpgrp` |
-| phenotypic / genetic / common env. correlation, per pair | always (common env. only if `y`) | −1 < r < 1 (re-asks the pair) | 524, 533, 543 | `ovlp2`, `ovlpgrp` (543: `ovlpgrp`) |
-| c² in the progeny test, per trait | progeny `y` and common environment `y` | 0 < c² < 1 (re-asks) | 615 | `ovlpgrp` |
+| truncation selection, or fixed number per age class? | always | `t`/`n` | 94 | same (all answer `t`) |
+| male candidates in age class, per class except the first (set from candidates per dam) | always | real | 112 | same |
+| female candidates in age class, per class except the first | always | real | 118 | same |
+| selected sires in age class, per class | fixed numbers (`n`) | real | **138** | **none** |
+| selected dams in age class, per class | fixed numbers (`n`) | real | **145** | **none** |
+| use common environmental effects? | always | `y`/`n` | 238 | `ovlp2` (`n`), `ovlpgrp` (`y`) |
+| phenotypic variance, per trait | always | real | 256 | `ovlp2`, `ovlpgrp` |
+| heritability h², per trait | always | 0 < h² < 1 (re-asks) | 261 | `ovlp2`, `ovlpgrp` |
+| c², per trait | common environment `y` | as discrete | 278 | `ovlpgrp` |
+| use full-sib groups? | always | `y`/`n` | 301 | `ovlp2`, `ovlpgrp` |
+| number of full-sib groups / animals per group | FS `y` | integer / real | 306, 311 | `ovlpgrp` |
+| use half-sib groups? | **only if sires < dams** | `y`/`n` | 318 | `ovlp2`, `ovlpgrp` |
+| number of half-sib groups / dams / animals per group | HS `y` | integer / real / real | 323, 328, 332 | `ovlpgrp` |
+| use progeny groups? | always | `y`/`n` | 342 | `ovlp2`, `ovlpgrp` |
+| number of progeny groups / dams / animals per group | progeny `y` | integer / real / real | 347, 353, 358 | `ovlpgrp` |
+| next sire age class with more information (or −1) | truncation (`t`); after the sources for the first sire class | integer or −1 | 404 | `ovlp2`, `ovlpgrp` |
+| next dam age class with more information (or −1) | truncation (`t`); after the sources for the first dam class | integer or −1 | 470 | `ovlp2`, `ovlpgrp` |
+| phenotypic / genetic / common env. correlation, per pair | always (common env. only if `y`) | −1 < r < 1 (re-asks the pair) | 530, 539, 549 | `ovlp2`, `ovlpgrp` (549: `ovlpgrp`) |
+| c² in the progeny test, per trait | progeny `y` and common environment `y` | 0 < c² < 1 (re-asks) | 621 | `ovlpgrp` |
 
 With fixed numbers (`n`), the sources are asked for **every** age class
 that has animals selected, instead of "next age class" questions.
@@ -134,46 +140,40 @@ that has animals selected, instead of "next age class" questions.
 | `read_name` | (reads the line for a file or trait name) | every name | text | 32 | every fixture and error case |
 | `traitinfo` | trait name, per trait | discrete, always | ≤ 8 characters, no blanks, unique (`read_name`) | 1226 | all discrete + `longtrt`, `spacetrt`, `duptrt` |
 | `traitinfo` | use: index `i` / goal `h` / both `b` / not now `n` | discrete, **more than one trait** (one trait is set to `b`) | `i`/`h`/`b`/`n` (re-asks) | 1239 | all discrete + `duptrt` |
-| `traitinfo` | economic value, goal-only trait | use `h` | ≠ 0 (re-asks) | **1252** | **none** |
+| `traitinfo` | economic value, goal-only trait | use `h` | ≠ 0 (re-asks) | 1252 | `goalonly`, `fivetr`, `nophen*`, `sxd2`, `sxd3`, `prog2s`, `prog3s` |
 | `traitinfo` | economic value, index-and-goal trait | use `b` | ≠ 0 (re-asks) | 1264 | all discrete + `duptrt` |
 | `traitinfoovlp` | trait name, per trait | overlapping | as above | 1299 | `ovlp2`, `ovlpgrp`, `ovlptrt` |
 | `traitinfoovlp` | use `i`/`h`/`b`/`n` | overlapping, more than one trait | as above | 1312 | `ovlp2`, `ovlpgrp` |
 | `traitinfoovlp` | economic value, goal-only trait | use `h` | ≠ 0 | **1325** | **none** |
 | `traitinfoovlp` | economic value, index-and-goal trait | use `b` | ≠ 0 | 1337 | `ovlp2`, `ovlpgrp` |
-| `traitinfo2` | dams: use `i`/`h`/`b`/`n` | separate indices `y` | as above | **1379** | **none** |
-| `traitinfo3` | sires, stage 2: add to index? `i`/`n` | 2- or 3-stage, more than one trait, for each trait **not** in the stage-1 index (use `n` or `h`) | `i`/`n` | **1438** | **none** |
-| `traitinfo4` | dams, stage 2: as above | separate indices `y`, 2- or 3-stage, each dam trait not in the stage-1 dam index | `i`/`n` | **1483** | **none** |
-| `traitinfo5` | sires, stage 3: as above | 3-stage, trait not in the stage-2 index | `i`/`n` | **1536** | **none** |
-| `traitinfo6` | dams, stage 3: as above | separate indices `y`, 3-stage, each dam trait not in the stage-2 dam index | `i`/`n` | **1581** | **none** |
+| `traitinfo2` | dams: use `i`/`h`/`b`/`n` | separate indices `y` | as above | 1379 | `sxd1`–`sxd3`, `nophen1`–`nophen3` |
+| `traitinfo3` | sires, stage 2: add to index? `i`/`n` | 2- or 3-stage, more than one trait, for each trait **not** in the stage-1 index (use `n` or `h`) | `i`/`n` | 1438 | `sxd2`, `sxd3`, `prog2s`, `prog3s`, `nophen2`, `nophen2n`, `nophen3`, `nophen3n` |
+| `traitinfo4` | dams, stage 2: as above | separate indices `y`, 2- or 3-stage, each dam trait not in the stage-1 dam index | `i`/`n` | 1483 | `sxd2`, `sxd3`, `nophen2`, `nophen3` |
+| `traitinfo5` | sires, stage 3: as above | 3-stage, trait not in the stage-2 index | `i`/`n` | 1536 | `sxd3`, `prog3s`, `nophen3`, `nophen3n` |
+| `traitinfo6` | dams, stage 3: as above | separate indices `y`, 3-stage, each dam trait not in the stage-2 dam index | `i`/`n` | 1581 | `sxd3`, `nophen3` |
 | `info_sources` | information sources for a trait, first and following codes | each index trait (sires; dams too if separate indices) | codes: 1 own performance, 2 BLUP, 3+n full-sib group n, 23+n half-sib group n, 63+n progeny group n; −1 ends | 513, 516 | all discrete |
 | `info_sourcesovlp` | as above, per age class | overlapping | as above | 677, 680 | `ovlp2`, `ovlpgrp` |
-| `info_sources2` | sources added in stage 2 | 2- and 3-stage, if any remain | codes, −1 ends | 895, 905 | `test2s`, `test3s` |
-| `info_sources3` | sources added in stage 3 | 3-stage, if any remain | codes, −1 ends | 1102, 1112 | `test3s` |
-| `note_pheninfo` | warning: trait without phenotypic sources and without genetic correlation to one that has them: edit sources `i` or correlations `c`? | the checks in section 2 find such a trait (discrete only) | `i`/`c` (re-asks) | **394** | **none** |
+| `info_sources2` | sources added in stage 2 | 2- and 3-stage, if any remain | codes, −1 ends | 895, 905 | all 2- and 3-stage |
+| `info_sources3` | sources added in stage 3 | 3-stage, if any remain | codes, −1 ends | 1102, 1112 | all 3-stage |
+| `note_pheninfo` | warning: trait without phenotypic sources and without genetic correlation to one that has them: edit sources `i` or correlations `c`? | the checks in section 2 find such a trait (discrete only) | `i`/`c` (re-asks) | 394 | `nophen1`–`nophen3`, `nophen1n`–`nophen3n` |
 
-## Not reached yet → planned test inputs (steps 4b/4c)
+## Not reached yet → step 4c
+
+Step 4b (2026-10-09) added 20 discrete-generation inputs and reached
+every discrete question. Three input lines are left, all in overlapping
+generations:
 
 | Not reached | Lines | Planned test input |
 |---|---|---|
-| goal-only trait (`h`): economic value | 1252; 1325 | `goalonly` (discrete); **add a goal-only trait to `ovlpfix`** (overlapping) |
-| dams' trait use and stage-2/3 use with separate indices | 1379, 1483, 1581 | `sxd1`, `sxd2`, `sxd3` |
-| sires' stage-2/3 trait use (trait added to the index in a later stage) | 1438, 1536 | **`sxd2`/`sxd3` and `prog2s`/`prog3s` must include a trait not in the stage-1 (or stage-2) index** |
-| full-sib and half-sib groups in 2-stage | 1357–1382 | **`prog2s` must use full-sib and half-sib groups as well as progeny** |
-| progeny groups in 2- and 3-stage, with progeny c² | 1393–1405, 1838; 3054–3066, 3543 | `prog2s`, `prog3s` (common environment `y`) |
-| fixed numbers selected per age class | selovlp 132, 139 | `ovlpfix` |
-| the no-phenotypic-source warning and its corrections | 394; 480, 507, 516, 565, 574 (and the 2-/3-stage copies 1680–1785, 3365–3484) | **`nophen1`, `nophen2`, `nophen3`** (one per stage, replacing the single `nophen`); each needs two runs' worth of paths, see below |
+| selected sires / dams per age class (fixed numbers) | selovlp 138, 145 | `ovlpfix` |
+| goal-only trait (`h`): economic value | selroutines 1325 | `ovlpfix` (includes a goal-only trait) |
 
-**The correction paths need more than one `nophen` input.** Each stage
-has its own copy of the code, and the five correction questions sit on
-different paths: separate indices `y` with answer `i` (then `s`/`d`),
-separate indices `y` with answer `c`, and separate indices `n` with
-answer `c`; and "trait with sources comes after / before the no-source
-trait". One input per stage can cover the separate-indices `y` paths with
-two no-source traits (trait 1 answered `i`, trait 3 answered `c`, with a
-trait that has sources in between), and the separate-indices `n` path
-needs a second input. Plan: **`nophen1`, `nophen2`, `nophen3`** (separate
-indices `y`) and **`nophen1n`, `nophen2n`, `nophen3n`** (separate indices
-`n`). Six small inputs, built from existing fixtures.
+How step 4b reached the correction questions: each `nophen` input has two
+goal-only traits with zero genetic correlations (answered `c`; the trait
+with sources is listed after the first and before the second), and a
+BLUP-only trait (BLUP alone is not phenotypic information) answered `i`.
+`nophen1`–`nophen3` use separate indices (`nophen2` answers `d`, the
+others `s`); `nophen1n`–`nophen3n` use one index.
 
 ## Findings from the walk (no code changed)
 
@@ -199,4 +199,10 @@ indices `y`) and **`nophen1n`, `nophen2n`, `nophen3n`** (separate indices
    Question 6** in `correspondence/2026-10-bijma-dekkers-addendum/`.
 5. **One trait skips the "use" question** (set to `b`), and in 2- and
    3-stage selection skips the stage-2/3 trait questions. `onetrait`
-   should therefore be run in 2-stage as well (`onetrait2`).
+   is therefore also run in 2-stage selection (`onetrt2s`; the planned
+   name `onetrait2` is over the 8-character limit).
+6. **The stage-2/3 trait questions (`traitinfo3`–`traitinfo6`) don't
+   re-ask.** Any answer other than `i` or `n` falls through: nothing is
+   written to the echo `.in` and the trait's stage-2/3 use is left as it
+   was. The other use questions re-ask. Found in step 4b; recorded for the
+   I/O plan's batch-mode input guards (Phase 2), no code changed.

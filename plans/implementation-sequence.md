@@ -56,8 +56,8 @@ of every finished step.
 | 2 | **T1:** test tooling: `strict.sh`, `coverage.sh`, `compare_out.R`, `run_all.sh` (`make check`) | test-hardening T1 | 1 | medium | done 2026-10-05 |
 | 3 | **T6:** CI on GitHub Actions (Linux, macOS Apple Silicon, Windows): golden byte-exact on Linux and Windows, tolerant on Apple Silicon | test-hardening T6 | 2 | small–medium | done 2026-10-06 |
 | 4a | **T2a:** input map: every input question, and which fixture reaches it | test-hardening T2 | 2 | medium | done 2026-10-06 (`tests/input_map/`) |
-| 4b | **T2b:** new discrete-generation fixtures: `sxd1`–`sxd3`, `matrat1`, `nophen1`–`nophen3`, `nophen1n`–`nophen3n`, `noce1`, `goalonly`, `onetrait`, `onetrait2`, `fivetr`, `multigrp`, `prog2s`, `prog3s`, `sires19`/`sires20` | test-hardening T2 | 4a | large | **next**; `matrat1` (Q6) and `sires19`/`sires20` (Q7) marked *pending answer* |
-| 4c | **T2c:** new overlapping-generation fixtures: `ovlpfix`, `ovlp3ac`; coverage check (≥ 95% lines, branches reported) | test-hardening T2 | 4a | medium | `ovlp3ac` (Q2, Q4) marked *pending answer* |
+| 4b | **T2b:** new discrete-generation fixtures: `sxd1`–`sxd3`, `matrat1`, `nophen1`–`nophen3`, `nophen1n`–`nophen3n`, `noce1`, `goalonly`, `onetrait`, `onetrt2s`, `fivetr`, `multigrp`, `prog2s`, `prog3s`, `sires19`/`sires20` | test-hardening T2 | 4a | large | done 2026-10-09 (`5d65e12`–`5517a5e`); `matrat1` (Q6) and `sires19`/`sires20` (Q7) marked *pending answer* |
+| 4c | **T2c:** new overlapping-generation fixtures: `ovlpfix`, `ovlp3ac`; coverage check (≥ 95% lines, branches reported) | test-hardening T2 | 4a | medium | **next**; `ovlp3ac` (Q2, Q4) marked *pending answer* |
 | 5a | **I/O 1a:** `driver/spec.yaml`, translator and importer for **1-stage** discrete | I/O Phase 1 | 4b | large | |
 | 5b | **I/O 1b:** translator and importer for **2- and 3-stage** | I/O Phase 1 | 5a | medium | |
 | 5c | **I/O 1c:** translator and importer for **overlapping generations**; round trip passes for every fixture | I/O Phase 1 | 5a, 4c | medium | |

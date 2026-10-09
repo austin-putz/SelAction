@@ -1,5 +1,29 @@
 # SelAction (development version)
 
+## Tests (2026-10-09)
+
+* **20 new discrete-generation fixtures** (test-hardening T2b, step 4b),
+  27 in all. Every input question in discrete generations is now reached
+  (159 of 162 input statements; the other 3 are overlapping-generation
+  questions for step 4c). Line coverage 79.0% → 90.0%, branches 55.7% →
+  60.6%. No program changes; the 7 existing outputs are unchanged.
+  * `noce1`, `goalonly`, `onetrait`, `fivetr`, `multigrp`: common
+    environment off, a goal-only trait, one trait, five traits, two
+    groups of each type.
+  * `matrat1` `[pending Q6]` (sires = dams) and `sires19`/`sires20`
+    `[pending Q7]` (either side of the 20-sire switch; they reproduce the
+    4.590% and 4.682% in the letter to Piter and Jack).
+  * `sxd1`–`sxd3`: separate sire and dam indices in 1, 2 and 3 stages.
+  * `prog2s`, `prog3s`, `onetrt2s`: groups and progeny in multistage
+    selection, and one trait in 2-stage selection.
+  * `nophen1`–`nophen3`, `nophen1n`–`nophen3n`: the "no phenotypic
+    information" warning and every way of answering it.
+  * Byte-identical on Linux (gfortran 14); clean under valgrind and the
+    strict build.
+* Found while building them (no code changed): the stage-2/3 trait
+  questions don't re-ask on an invalid answer (recorded in
+  `tests/input_map/README.md` for the batch-mode input guards).
+
 ## Bug fixes (2026-10-09)
 
 * **Unset common-environmental correlations (`ccorr`).** When common

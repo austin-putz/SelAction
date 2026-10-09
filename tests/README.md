@@ -103,16 +103,22 @@ used, so any R installation works. `make test` itself needs no R.
   summary. A layer not written yet shows "not yet present". If R is
   missing, the R layers FAIL rather than being skipped.
 
-Coverage on 2026-10-05 (7 fixtures + 6 error cases):
+Coverage on 2026-10-09, after step 4b (27 fixtures + 8 error cases):
 
 | File | Lines executed | Branches taken |
 |---|---|---|
 | `selaction.f90` | 90.5% of 21 | 91.7% of 12 |
-| `seldiscrete.f90` | 73.3% of 3,200 | 49.9% of 7,722 |
-| `selovlp.f90` | 85.7% of 934 | 57.1% of 2,144 |
-| `selroutines.f90` | 80.8% of 1,928 | 80.5% of 1,618 |
-| `seltools.f90` | 88.1% of 915 | 66.5% of 158 |
-| **Total** | **79.0% of 6,998** | **55.7% of 11,654** |
+| `seldiscrete.f90` | 89.0% of 3,203 | 55.2% of 7,734 |
+| `selovlp.f90` | 85.7% of 935 | 57.2% of 2,148 |
+| `selroutines.f90` | 94.3% of 1,949 | 89.9% of 1,640 |
+| `seltools.f90` | 89.0% of 915 | 68.4% of 158 |
+| **Total** | **90.0% of 7,023** | **60.6% of 11,692** |
+
+Before step 4b (2026-10-05, 7 fixtures + 6 error cases): 79.0% of lines,
+55.7% of branches. Every live routine now runs except `srec_dutt`
+(`seltools.f90`), which the 3-variable normal integral calls only when a
+truncation point is below −5 SD (nearly everyone selected in a stage);
+that is for the unit tests (test-hardening T3), not an input path.
 
 ## Continuous integration
 
@@ -131,7 +137,9 @@ request, and by hand (Actions tab, "Run workflow").
   `33.378` → `33.379`, and `blup1` `-0.000` → `0.000` plus `57.377` →
   `57.376`. gfortran 16 (Homebrew) gives exactly the same two
   differences as gfortran 14, so they come from the chip, not the
-  compiler version. These are rounding of the last printed digit, the same kind
+  compiler version. Of the 20 fixtures added in step 4b (2026-10-09), three
+  (`noce1`, `nophen2n`, `nophen3n`) differ there in the same way; the
+  other 17 are byte-identical. These are rounding of the last printed digit, the same kind
   as the strict build's `blup1` difference, so on that platform the
   byte-exact step may fail without failing the job and the tolerant
   step must pass. The stored outputs are not changed to suit any
@@ -604,14 +612,35 @@ both remain good follow-up work.
 
 ## Adding a new fixture
 
-There are currently 7 fixtures: `test1` (3-trait discrete 1-stage),
-`test2s` (discrete 2-stage), `test3s` (discrete 3-stage), `blup1`
-(discrete 1-stage isolating the BLUP-only inbreeding path), `advgrp`
-(discrete 1-stage isolating the unconfigured/partially-configured
-group-type matrix-block guards, including progeny groups), `ovlp2`
-(overlapping generations, 2-trait, 2-age-class-per-sex), and `ovlpgrp`
-(overlapping generations with all three group types - see above). New
-fixtures must come from actually running a real binary with a valid,
+There are currently 27 fixtures; `manifest.txt` describes each one.
+
+- **Original seven:** `test1` (3-trait discrete 1-stage), `test2s`
+  (2-stage), `test3s` (3-stage), `blup1` (the BLUP-only inbreeding
+  path), `advgrp` (unconfigured group types, progeny groups), `ovlp2` and
+  `ovlpgrp` (overlapping generations, see above).
+- **Added in step 4b** (2026-10-09, test-hardening T2b; every discrete
+  input question is now reached, see `input_map/README.md`):
+  - 1-stage variants: `noce1` (no common environment), `goalonly`,
+    `onetrait`, `fivetr` (5 traits), `multigrp` (two groups of each
+    type), `matrat1` (sires = dams), `sires19`/`sires20`
+  - separate sire and dam indices: `sxd1`, `sxd2`, `sxd3`
+  - groups and progeny in multistage selection: `prog2s`, `prog3s`;
+    one trait in 2-stage selection: `onetrt2s`
+  - the no-phenotypic-information warning and every correction:
+    `nophen1`–`nophen3` (separate indices), `nophen1n`–`nophen3n` (one
+    index)
+
+**Fixtures marked `[pending Qn]`** record what the code does today in an
+area under an open question to Piter Bijma and Jack Dekkers
+(`correspondence/2026-10-bijma-dekkers/`). They are regenerated, with
+before/after results, if an answer changes the model:
+
+| Fixture | Question | Why |
+|---|---|---|
+| `matrat1` | Q6 | half-sib information with one dam per sire |
+| `sires19`, `sires20` | Q7 | either side of the 20-sire switch in the inbreeding correction; they reproduce the letter's 4.590% and 4.682% |
+
+New fixtures must come from actually running a real binary with a valid,
 non-singular parameter set - do not hand-write expected output.
 
 1. Build with `make` (see root `README.md`).
@@ -625,4 +654,7 @@ non-singular parameter set - do not hand-write expected output.
 4. Copy the program's own `name.in` (its echo of the answers) and
    `name.out` into `tests/fixtures/`.
 5. Add a line `name:description` to `manifest.txt`.
-6. Run `make test` and confirm it passes.
+6. Run `make test` and confirm it passes, then `make check` (strict
+   build) and, if you can, `make memcheck` on Linux (Docker on a Mac).
+7. Rerun `tests/tools/read_map.sh` and update the "Covered by" columns
+   in `input_map/README.md`.

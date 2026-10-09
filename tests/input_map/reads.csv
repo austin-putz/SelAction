@@ -1,110 +1,110 @@
 file,line,routine,statement,hit_by
-selaction.f90,22,selaction,"read *,stages",test1 test2s test3s blup1 advgrp ovlp2 ovlpgrp longfile longovlp longtrt ovlptrt spacetrt duptrt quotefile pathfile
-seldiscrete.f90,16,sel1s,"call read_name(""filename"", 8, fnam)",test1 blup1 advgrp longfile longtrt spacetrt duptrt quotefile pathfile
-seldiscrete.f90,32,sel1s,"read *,ntraits",test1 blup1 advgrp longtrt spacetrt duptrt
-seldiscrete.f90,90,sel1s,"read *,indexdiff",test1 blup1 advgrp longtrt spacetrt duptrt
-seldiscrete.f90,121,sel1s,"read *,initc",test1 blup1 advgrp
-seldiscrete.f90,139,sel1s,"read *,sigmap(p)",test1 blup1 advgrp
-seldiscrete.f90,144,sel1s,"read *,hh(p)",test1 blup1 advgrp
-seldiscrete.f90,161,sel1s,"read *,cc(p)",test1 blup1 advgrp
-seldiscrete.f90,184,sel1s,"read *,initfs",test1 blup1 advgrp
-seldiscrete.f90,189,sel1s,"read *,fsgroups",test1
-seldiscrete.f90,194,sel1s,"read *,fsgroupsoff(p)",test1
-seldiscrete.f90,200,sel1s,"read *,iniths",test1 blup1 advgrp
-seldiscrete.f90,205,sel1s,"read *,hsgroups",test1 blup1 advgrp
-seldiscrete.f90,210,sel1s,"read *,hsgroupsdams(p)",test1 blup1 advgrp
-seldiscrete.f90,214,sel1s,"read *,hsgroupsoff(p)",test1 blup1 advgrp
-seldiscrete.f90,220,sel1s,"read *,initprog",test1 blup1 advgrp
-seldiscrete.f90,225,sel1s,"read *,proggroups",advgrp
-seldiscrete.f90,231,sel1s,"read *,proggroupsdams(p)",advgrp
-seldiscrete.f90,237,sel1s,"read *,proggroupsoffs(p)",advgrp
-seldiscrete.f90,310,sel1s,"read *,phcorr(i,j)",test1 blup1 advgrp
-seldiscrete.f90,319,sel1s,"read *,gcorr(i,j)",test1 blup1 advgrp
-seldiscrete.f90,329,sel1s,"read *,ccorr(i,j)",test1 blup1 advgrp
-seldiscrete.f90,361,sel1s,"read *,nsires",test1 blup1 advgrp
-seldiscrete.f90,365,sel1s,"read *,ndams",test1 blup1 advgrp
-seldiscrete.f90,369,sel1s,"read *,noffs",test1 blup1 advgrp
-seldiscrete.f90,373,sel1s,"read *,noffd",test1 blup1 advgrp
-seldiscrete.f90,377,sel1s,"read *,pvals",test1 blup1 advgrp
-seldiscrete.f90,381,sel1s,"read *,pvald",test1 blup1 advgrp
-seldiscrete.f90,480,sel1s,"read *,sourcesd",
-seldiscrete.f90,507,sel1s,"read *,gcorr(i,p)",
-seldiscrete.f90,516,sel1s,"read *,gcorr(p,i)",
-seldiscrete.f90,565,sel1s,"read *,gcorr(i,p)",
-seldiscrete.f90,574,sel1s,"read *,gcorr(p,i)",
-seldiscrete.f90,617,sel1s,"read *,ccprog(q)",advgrp
-seldiscrete.f90,1163,sel2s,"call read_name(""filename"", 8, fnam)",test2s
-seldiscrete.f90,1179,sel2s,"read *,ntraits",test2s
-seldiscrete.f90,1245,sel2s,"read *,indexdiff",test2s
-seldiscrete.f90,1289,sel2s,"read *,initc",test2s
-seldiscrete.f90,1307,sel2s,"read *,sigmap(p)",test2s
-seldiscrete.f90,1312,sel2s,"read *,hh(p)",test2s
-seldiscrete.f90,1329,sel2s,"read *,cc(p)",test2s
-seldiscrete.f90,1352,sel2s,"read *,initfs",test2s
-seldiscrete.f90,1357,sel2s,"read *,fsgroups",
-seldiscrete.f90,1362,sel2s,"read *,fsgroupsoff(p)",
-seldiscrete.f90,1368,sel2s,"read *,iniths",test2s
-seldiscrete.f90,1373,sel2s,"read *,hsgroups",
-seldiscrete.f90,1378,sel2s,"read *,hsgroupsdams(p)",
-seldiscrete.f90,1382,sel2s,"read *,hsgroupsoff(p)",
-seldiscrete.f90,1388,sel2s,"read *,initprog",test2s
-seldiscrete.f90,1393,sel2s,"read *,proggroups",
-seldiscrete.f90,1399,sel2s,"read *,proggroupsdams(p)",
-seldiscrete.f90,1405,sel2s,"read *,proggroupsoffs(p)",
-seldiscrete.f90,1498,sel2s,"read *,phcorr(i,j)",test2s
-seldiscrete.f90,1507,sel2s,"read *,gcorr(i,j)",test2s
-seldiscrete.f90,1517,sel2s,"read *,ccorr(i,j)",test2s
-seldiscrete.f90,1549,sel2s,"read *,nsires",test2s
-seldiscrete.f90,1554,sel2s,"read *,ndams",test2s
-seldiscrete.f90,1559,sel2s,"read *,noffs",test2s
-seldiscrete.f90,1563,sel2s,"read *,noffd",test2s
-seldiscrete.f90,1568,sel2s,"read *,pvals",test2s
-seldiscrete.f90,1573,sel2s,"read *,pvals2",test2s
-seldiscrete.f90,1578,sel2s,"read *,pvald",test2s
-seldiscrete.f90,1583,sel2s,"read *,pvald2",test2s
-seldiscrete.f90,1680,sel2s,"read *,sourcesd",
-seldiscrete.f90,1715,sel2s,"read *,gcorr(i,p)",
-seldiscrete.f90,1724,sel2s,"read *,gcorr(p,i)",
-seldiscrete.f90,1776,sel2s,"read *,gcorr(i,p)",
-seldiscrete.f90,1785,sel2s,"read *,gcorr(p,i)",
-seldiscrete.f90,1838,sel2s,"read *,ccprog(q)",
-seldiscrete.f90,2800,sel3s,"call read_name(""filename"", 8, fnam)",test3s
-seldiscrete.f90,2816,sel3s,"read *,ntraits",test3s
-seldiscrete.f90,2891,sel3s,"read *,indexdiff",test3s
-seldiscrete.f90,2950,sel3s,"read *,initc",test3s
-seldiscrete.f90,2968,sel3s,"read *,sigmap(p)",test3s
-seldiscrete.f90,2973,sel3s,"read *,hh(p)",test3s
-seldiscrete.f90,2990,sel3s,"read *,cc(p)",test3s
-seldiscrete.f90,3013,sel3s,"read *,initfs",test3s
-seldiscrete.f90,3018,sel3s,"read *,fsgroups",test3s
-seldiscrete.f90,3023,sel3s,"read *,fsgroupsoff(p)",test3s
-seldiscrete.f90,3029,sel3s,"read *,iniths",test3s
-seldiscrete.f90,3034,sel3s,"read *,hsgroups",test3s
-seldiscrete.f90,3039,sel3s,"read *,hsgroupsdams(p)",test3s
-seldiscrete.f90,3043,sel3s,"read *,hsgroupsoff(p)",test3s
-seldiscrete.f90,3049,sel3s,"read *,initprog",test3s
-seldiscrete.f90,3054,sel3s,"read *,proggroups",
-seldiscrete.f90,3060,sel3s,"read *,proggroupsdams(p)",
-seldiscrete.f90,3066,sel3s,"read *,proggroupsoffs(p)",
-seldiscrete.f90,3181,sel3s,"read *,phcorr(i,j)",test3s
-seldiscrete.f90,3190,sel3s,"read *,gcorr(i,j)",test3s
-seldiscrete.f90,3200,sel3s,"read *,ccorr(i,j)",test3s
-seldiscrete.f90,3232,sel3s,"read *,nsires",test3s
-seldiscrete.f90,3236,sel3s,"read *,ndams",test3s
-seldiscrete.f90,3240,sel3s,"read *,noffs",test3s
-seldiscrete.f90,3244,sel3s,"read *,noffd",test3s
-seldiscrete.f90,3248,sel3s,"read *,pvals",test3s
-seldiscrete.f90,3252,sel3s,"read *,pvals2",test3s
-seldiscrete.f90,3256,sel3s,"read *,pvals3",test3s
-seldiscrete.f90,3260,sel3s,"read *,pvald",test3s
-seldiscrete.f90,3264,sel3s,"read *,pvald2",test3s
-seldiscrete.f90,3268,sel3s,"read *,pvald3",test3s
-seldiscrete.f90,3365,sel3s,"read *,sourcesd",
-seldiscrete.f90,3408,sel3s,"read *,gcorr(i,p)",
-seldiscrete.f90,3417,sel3s,"read *,gcorr(p,i)",
-seldiscrete.f90,3475,sel3s,"read *,gcorr(i,p)",
-seldiscrete.f90,3484,sel3s,"read *,gcorr(p,i)",
-seldiscrete.f90,3543,sel3s,"read *,ccprog(q)",
+selaction.f90,22,selaction,"read *,stages",test1 test2s test3s blup1 advgrp ovlp2 ovlpgrp noce1 goalonly onetrait fivetr multigrp matrat1 sires19 sires20 sxd1 sxd2 sxd3 prog2s prog3s onetrt2s nophen1 nophen1n nophen2 nophen2n nophen3 nophen3n longfile longovlp longtrt ovlptrt spacetrt duptrt quotefile pathfile
+seldiscrete.f90,16,sel1s,"call read_name(""filename"", 8, fnam)",test1 blup1 advgrp noce1 goalonly onetrait fivetr multigrp matrat1 sires19 sires20 sxd1 nophen1 nophen1n longfile longtrt spacetrt duptrt quotefile pathfile
+seldiscrete.f90,32,sel1s,"read *,ntraits",test1 blup1 advgrp noce1 goalonly onetrait fivetr multigrp matrat1 sires19 sires20 sxd1 nophen1 nophen1n longtrt spacetrt duptrt
+seldiscrete.f90,96,sel1s,"read *,indexdiff",test1 blup1 advgrp noce1 goalonly onetrait fivetr multigrp matrat1 sires19 sires20 sxd1 nophen1 nophen1n longtrt spacetrt duptrt
+seldiscrete.f90,127,sel1s,"read *,initc",test1 blup1 advgrp noce1 goalonly onetrait fivetr multigrp matrat1 sires19 sires20 sxd1 nophen1 nophen1n
+seldiscrete.f90,145,sel1s,"read *,sigmap(p)",test1 blup1 advgrp noce1 goalonly onetrait fivetr multigrp matrat1 sires19 sires20 sxd1 nophen1 nophen1n
+seldiscrete.f90,150,sel1s,"read *,hh(p)",test1 blup1 advgrp noce1 goalonly onetrait fivetr multigrp matrat1 sires19 sires20 sxd1 nophen1 nophen1n
+seldiscrete.f90,167,sel1s,"read *,cc(p)",test1 blup1 advgrp goalonly onetrait fivetr multigrp matrat1 sires19 sires20 sxd1 nophen1 nophen1n
+seldiscrete.f90,190,sel1s,"read *,initfs",test1 blup1 advgrp noce1 goalonly onetrait fivetr multigrp matrat1 sires19 sires20 sxd1 nophen1 nophen1n
+seldiscrete.f90,195,sel1s,"read *,fsgroups",test1 noce1 goalonly onetrait fivetr multigrp matrat1 sires19 sires20 sxd1 nophen1 nophen1n
+seldiscrete.f90,200,sel1s,"read *,fsgroupsoff(p)",test1 noce1 goalonly onetrait fivetr multigrp matrat1 sires19 sires20 sxd1 nophen1 nophen1n
+seldiscrete.f90,206,sel1s,"read *,iniths",test1 blup1 advgrp noce1 goalonly onetrait fivetr multigrp matrat1 sires19 sires20 sxd1 nophen1 nophen1n
+seldiscrete.f90,211,sel1s,"read *,hsgroups",test1 blup1 advgrp noce1 goalonly onetrait fivetr multigrp matrat1 sires19 sires20 sxd1
+seldiscrete.f90,216,sel1s,"read *,hsgroupsdams(p)",test1 blup1 advgrp noce1 goalonly onetrait fivetr multigrp matrat1 sires19 sires20 sxd1
+seldiscrete.f90,220,sel1s,"read *,hsgroupsoff(p)",test1 blup1 advgrp noce1 goalonly onetrait fivetr multigrp matrat1 sires19 sires20 sxd1
+seldiscrete.f90,226,sel1s,"read *,initprog",test1 blup1 advgrp noce1 goalonly onetrait fivetr multigrp matrat1 sires19 sires20 sxd1 nophen1 nophen1n
+seldiscrete.f90,231,sel1s,"read *,proggroups",advgrp multigrp
+seldiscrete.f90,237,sel1s,"read *,proggroupsdams(p)",advgrp multigrp
+seldiscrete.f90,243,sel1s,"read *,proggroupsoffs(p)",advgrp multigrp
+seldiscrete.f90,316,sel1s,"read *,phcorr(i,j)",test1 blup1 advgrp noce1 goalonly fivetr multigrp matrat1 sires19 sires20 sxd1 nophen1 nophen1n
+seldiscrete.f90,325,sel1s,"read *,gcorr(i,j)",test1 blup1 advgrp noce1 goalonly fivetr multigrp matrat1 sires19 sires20 sxd1 nophen1 nophen1n
+seldiscrete.f90,335,sel1s,"read *,ccorr(i,j)",test1 blup1 advgrp goalonly fivetr multigrp matrat1 sires19 sires20 sxd1 nophen1 nophen1n
+seldiscrete.f90,367,sel1s,"read *,nsires",test1 blup1 advgrp noce1 goalonly onetrait fivetr multigrp matrat1 sires19 sires20 sxd1 nophen1 nophen1n
+seldiscrete.f90,371,sel1s,"read *,ndams",test1 blup1 advgrp noce1 goalonly onetrait fivetr multigrp matrat1 sires19 sires20 sxd1 nophen1 nophen1n
+seldiscrete.f90,375,sel1s,"read *,noffs",test1 blup1 advgrp noce1 goalonly onetrait fivetr multigrp matrat1 sires19 sires20 sxd1 nophen1 nophen1n
+seldiscrete.f90,379,sel1s,"read *,noffd",test1 blup1 advgrp noce1 goalonly onetrait fivetr multigrp matrat1 sires19 sires20 sxd1 nophen1 nophen1n
+seldiscrete.f90,383,sel1s,"read *,pvals",test1 blup1 advgrp noce1 goalonly onetrait fivetr multigrp matrat1 sires19 sires20 sxd1 nophen1 nophen1n
+seldiscrete.f90,387,sel1s,"read *,pvald",test1 blup1 advgrp noce1 goalonly onetrait fivetr multigrp matrat1 sires19 sires20 sxd1 nophen1 nophen1n
+seldiscrete.f90,486,sel1s,"read *,sourcesd",nophen1
+seldiscrete.f90,513,sel1s,"read *,gcorr(i,p)",nophen1
+seldiscrete.f90,522,sel1s,"read *,gcorr(p,i)",nophen1
+seldiscrete.f90,571,sel1s,"read *,gcorr(i,p)",nophen1n
+seldiscrete.f90,580,sel1s,"read *,gcorr(p,i)",nophen1n
+seldiscrete.f90,623,sel1s,"read *,ccprog(q)",advgrp multigrp
+seldiscrete.f90,1169,sel2s,"call read_name(""filename"", 8, fnam)",test2s sxd2 prog2s onetrt2s nophen2 nophen2n
+seldiscrete.f90,1185,sel2s,"read *,ntraits",test2s sxd2 prog2s onetrt2s nophen2 nophen2n
+seldiscrete.f90,1257,sel2s,"read *,indexdiff",test2s sxd2 prog2s onetrt2s nophen2 nophen2n
+seldiscrete.f90,1301,sel2s,"read *,initc",test2s sxd2 prog2s onetrt2s nophen2 nophen2n
+seldiscrete.f90,1319,sel2s,"read *,sigmap(p)",test2s sxd2 prog2s onetrt2s nophen2 nophen2n
+seldiscrete.f90,1324,sel2s,"read *,hh(p)",test2s sxd2 prog2s onetrt2s nophen2 nophen2n
+seldiscrete.f90,1341,sel2s,"read *,cc(p)",test2s sxd2 prog2s onetrt2s nophen2 nophen2n
+seldiscrete.f90,1364,sel2s,"read *,initfs",test2s sxd2 prog2s onetrt2s nophen2 nophen2n
+seldiscrete.f90,1369,sel2s,"read *,fsgroups",sxd2 prog2s onetrt2s nophen2 nophen2n
+seldiscrete.f90,1374,sel2s,"read *,fsgroupsoff(p)",sxd2 prog2s onetrt2s nophen2 nophen2n
+seldiscrete.f90,1380,sel2s,"read *,iniths",test2s sxd2 prog2s onetrt2s nophen2 nophen2n
+seldiscrete.f90,1385,sel2s,"read *,hsgroups",sxd2 prog2s onetrt2s
+seldiscrete.f90,1390,sel2s,"read *,hsgroupsdams(p)",sxd2 prog2s onetrt2s
+seldiscrete.f90,1394,sel2s,"read *,hsgroupsoff(p)",sxd2 prog2s onetrt2s
+seldiscrete.f90,1400,sel2s,"read *,initprog",test2s sxd2 prog2s onetrt2s nophen2 nophen2n
+seldiscrete.f90,1405,sel2s,"read *,proggroups",prog2s
+seldiscrete.f90,1411,sel2s,"read *,proggroupsdams(p)",prog2s
+seldiscrete.f90,1417,sel2s,"read *,proggroupsoffs(p)",prog2s
+seldiscrete.f90,1510,sel2s,"read *,phcorr(i,j)",test2s sxd2 prog2s nophen2 nophen2n
+seldiscrete.f90,1519,sel2s,"read *,gcorr(i,j)",test2s sxd2 prog2s nophen2 nophen2n
+seldiscrete.f90,1529,sel2s,"read *,ccorr(i,j)",test2s sxd2 prog2s nophen2 nophen2n
+seldiscrete.f90,1561,sel2s,"read *,nsires",test2s sxd2 prog2s onetrt2s nophen2 nophen2n
+seldiscrete.f90,1566,sel2s,"read *,ndams",test2s sxd2 prog2s onetrt2s nophen2 nophen2n
+seldiscrete.f90,1571,sel2s,"read *,noffs",test2s sxd2 prog2s onetrt2s nophen2 nophen2n
+seldiscrete.f90,1575,sel2s,"read *,noffd",test2s sxd2 prog2s onetrt2s nophen2 nophen2n
+seldiscrete.f90,1580,sel2s,"read *,pvals",test2s sxd2 prog2s onetrt2s nophen2 nophen2n
+seldiscrete.f90,1585,sel2s,"read *,pvals2",test2s sxd2 prog2s onetrt2s nophen2 nophen2n
+seldiscrete.f90,1590,sel2s,"read *,pvald",test2s sxd2 prog2s onetrt2s nophen2 nophen2n
+seldiscrete.f90,1595,sel2s,"read *,pvald2",test2s sxd2 prog2s onetrt2s nophen2 nophen2n
+seldiscrete.f90,1692,sel2s,"read *,sourcesd",nophen2
+seldiscrete.f90,1727,sel2s,"read *,gcorr(i,p)",nophen2
+seldiscrete.f90,1736,sel2s,"read *,gcorr(p,i)",nophen2
+seldiscrete.f90,1788,sel2s,"read *,gcorr(i,p)",nophen2n
+seldiscrete.f90,1797,sel2s,"read *,gcorr(p,i)",nophen2n
+seldiscrete.f90,1850,sel2s,"read *,ccprog(q)",prog2s
+seldiscrete.f90,2812,sel3s,"call read_name(""filename"", 8, fnam)",test3s sxd3 prog3s nophen3 nophen3n
+seldiscrete.f90,2828,sel3s,"read *,ntraits",test3s sxd3 prog3s nophen3 nophen3n
+seldiscrete.f90,2909,sel3s,"read *,indexdiff",test3s sxd3 prog3s nophen3 nophen3n
+seldiscrete.f90,2968,sel3s,"read *,initc",test3s sxd3 prog3s nophen3 nophen3n
+seldiscrete.f90,2986,sel3s,"read *,sigmap(p)",test3s sxd3 prog3s nophen3 nophen3n
+seldiscrete.f90,2991,sel3s,"read *,hh(p)",test3s sxd3 prog3s nophen3 nophen3n
+seldiscrete.f90,3008,sel3s,"read *,cc(p)",test3s sxd3 prog3s nophen3 nophen3n
+seldiscrete.f90,3031,sel3s,"read *,initfs",test3s sxd3 prog3s nophen3 nophen3n
+seldiscrete.f90,3036,sel3s,"read *,fsgroups",test3s sxd3 prog3s nophen3 nophen3n
+seldiscrete.f90,3041,sel3s,"read *,fsgroupsoff(p)",test3s sxd3 prog3s nophen3 nophen3n
+seldiscrete.f90,3047,sel3s,"read *,iniths",test3s sxd3 prog3s nophen3 nophen3n
+seldiscrete.f90,3052,sel3s,"read *,hsgroups",test3s sxd3 prog3s
+seldiscrete.f90,3057,sel3s,"read *,hsgroupsdams(p)",test3s sxd3 prog3s
+seldiscrete.f90,3061,sel3s,"read *,hsgroupsoff(p)",test3s sxd3 prog3s
+seldiscrete.f90,3067,sel3s,"read *,initprog",test3s sxd3 prog3s nophen3 nophen3n
+seldiscrete.f90,3072,sel3s,"read *,proggroups",prog3s
+seldiscrete.f90,3078,sel3s,"read *,proggroupsdams(p)",prog3s
+seldiscrete.f90,3084,sel3s,"read *,proggroupsoffs(p)",prog3s
+seldiscrete.f90,3199,sel3s,"read *,phcorr(i,j)",test3s sxd3 prog3s nophen3 nophen3n
+seldiscrete.f90,3208,sel3s,"read *,gcorr(i,j)",test3s sxd3 prog3s nophen3 nophen3n
+seldiscrete.f90,3218,sel3s,"read *,ccorr(i,j)",test3s sxd3 prog3s nophen3 nophen3n
+seldiscrete.f90,3250,sel3s,"read *,nsires",test3s sxd3 prog3s nophen3 nophen3n
+seldiscrete.f90,3254,sel3s,"read *,ndams",test3s sxd3 prog3s nophen3 nophen3n
+seldiscrete.f90,3258,sel3s,"read *,noffs",test3s sxd3 prog3s nophen3 nophen3n
+seldiscrete.f90,3262,sel3s,"read *,noffd",test3s sxd3 prog3s nophen3 nophen3n
+seldiscrete.f90,3266,sel3s,"read *,pvals",test3s sxd3 prog3s nophen3 nophen3n
+seldiscrete.f90,3270,sel3s,"read *,pvals2",test3s sxd3 prog3s nophen3 nophen3n
+seldiscrete.f90,3274,sel3s,"read *,pvals3",test3s sxd3 prog3s nophen3 nophen3n
+seldiscrete.f90,3278,sel3s,"read *,pvald",test3s sxd3 prog3s nophen3 nophen3n
+seldiscrete.f90,3282,sel3s,"read *,pvald2",test3s sxd3 prog3s nophen3 nophen3n
+seldiscrete.f90,3286,sel3s,"read *,pvald3",test3s sxd3 prog3s nophen3 nophen3n
+seldiscrete.f90,3383,sel3s,"read *,sourcesd",nophen3
+seldiscrete.f90,3426,sel3s,"read *,gcorr(i,p)",nophen3
+seldiscrete.f90,3435,sel3s,"read *,gcorr(p,i)",nophen3
+seldiscrete.f90,3493,sel3s,"read *,gcorr(i,p)",nophen3n
+seldiscrete.f90,3502,sel3s,"read *,gcorr(p,i)",nophen3n
+seldiscrete.f90,3561,sel3s,"read *,ccprog(q)",prog3s
 selovlp.f90,23,ovlp,"call read_name(""filename"", 8, fnam)",ovlp2 ovlpgrp longovlp ovlptrt
 selovlp.f90,39,ovlp,"read *,ntraits",ovlp2 ovlpgrp ovlptrt
 selovlp.f90,47,ovlp,"read *,nsires",ovlp2 ovlpgrp ovlptrt
@@ -112,52 +112,52 @@ selovlp.f90,51,ovlp,"read *,ndams",ovlp2 ovlpgrp ovlptrt
 selovlp.f90,55,ovlp,"read *,noffs",ovlp2 ovlpgrp ovlptrt
 selovlp.f90,59,ovlp,"read *,noffd",ovlp2 ovlpgrp ovlptrt
 selovlp.f90,66,ovlp,"read *,nclass",ovlp2 ovlpgrp ovlptrt
-selovlp.f90,88,ovlp,"read *,initsk",ovlp2 ovlpgrp ovlptrt
-selovlp.f90,106,ovlp,"read *,nanim(p)",ovlp2 ovlpgrp ovlptrt
+selovlp.f90,94,ovlp,"read *,initsk",ovlp2 ovlpgrp ovlptrt
 selovlp.f90,112,ovlp,"read *,nanim(p)",ovlp2 ovlpgrp ovlptrt
-selovlp.f90,132,ovlp,"read *,nselec(p)",
-selovlp.f90,139,ovlp,"read *,nselec(p)",
-selovlp.f90,232,ovlp,"read *,initc",ovlp2 ovlpgrp
-selovlp.f90,250,ovlp,"read *,sigmap(p)",ovlp2 ovlpgrp
-selovlp.f90,255,ovlp,"read *,hh(p)",ovlp2 ovlpgrp
-selovlp.f90,272,ovlp,"read *,cc(p)",ovlpgrp
-selovlp.f90,295,ovlp,"read *,initfs",ovlp2 ovlpgrp
-selovlp.f90,300,ovlp,"read *,fsgroups",ovlpgrp
-selovlp.f90,305,ovlp,"read *,fsgroupsoff(p)",ovlpgrp
-selovlp.f90,312,ovlp,"read *,iniths",ovlp2 ovlpgrp
-selovlp.f90,317,ovlp,"read *,hsgroups",ovlpgrp
-selovlp.f90,322,ovlp,"read *,hsgroupsdams(p)",ovlpgrp
-selovlp.f90,326,ovlp,"read *,hsgroupsoff(p)",ovlpgrp
-selovlp.f90,336,ovlp,"read *,initprog",ovlp2 ovlpgrp
-selovlp.f90,341,ovlp,"read *,proggroups",ovlpgrp
-selovlp.f90,347,ovlp,"read *,proggroupsdams(p)",ovlpgrp
-selovlp.f90,352,ovlp,"read *,proggroupsoffs(p)",ovlpgrp
-selovlp.f90,398,ovlp,"read *,o",ovlp2 ovlpgrp
-selovlp.f90,464,ovlp,"read *,o",ovlp2 ovlpgrp
-selovlp.f90,524,ovlp,"read *,phcorr(i,j)",ovlp2 ovlpgrp
-selovlp.f90,533,ovlp,"read *,gcorr(i,j)",ovlp2 ovlpgrp
-selovlp.f90,543,ovlp,"read *,ccorr(i,j)",ovlpgrp
-selovlp.f90,615,ovlp,"read *,ccprog(q)",ovlpgrp
-selroutines.f90,32,read_name,"read(*,'(a)',iostat=ios) buf",test1 test2s test3s blup1 advgrp ovlp2 ovlpgrp longfile longovlp longtrt ovlptrt spacetrt duptrt quotefile pathfile
-selroutines.f90,394,note_pheninfo,"read *,localinit",
-selroutines.f90,513,info_sources,"read *,loctempsource(locp,locits)",test1 test2s test3s blup1 advgrp
-selroutines.f90,516,info_sources,"read *,loctempsource(locp,locits)",test1 test2s test3s blup1 advgrp
+selovlp.f90,118,ovlp,"read *,nanim(p)",ovlp2 ovlpgrp ovlptrt
+selovlp.f90,138,ovlp,"read *,nselec(p)",
+selovlp.f90,145,ovlp,"read *,nselec(p)",
+selovlp.f90,238,ovlp,"read *,initc",ovlp2 ovlpgrp
+selovlp.f90,256,ovlp,"read *,sigmap(p)",ovlp2 ovlpgrp
+selovlp.f90,261,ovlp,"read *,hh(p)",ovlp2 ovlpgrp
+selovlp.f90,278,ovlp,"read *,cc(p)",ovlpgrp
+selovlp.f90,301,ovlp,"read *,initfs",ovlp2 ovlpgrp
+selovlp.f90,306,ovlp,"read *,fsgroups",ovlpgrp
+selovlp.f90,311,ovlp,"read *,fsgroupsoff(p)",ovlpgrp
+selovlp.f90,318,ovlp,"read *,iniths",ovlp2 ovlpgrp
+selovlp.f90,323,ovlp,"read *,hsgroups",ovlpgrp
+selovlp.f90,328,ovlp,"read *,hsgroupsdams(p)",ovlpgrp
+selovlp.f90,332,ovlp,"read *,hsgroupsoff(p)",ovlpgrp
+selovlp.f90,342,ovlp,"read *,initprog",ovlp2 ovlpgrp
+selovlp.f90,347,ovlp,"read *,proggroups",ovlpgrp
+selovlp.f90,353,ovlp,"read *,proggroupsdams(p)",ovlpgrp
+selovlp.f90,358,ovlp,"read *,proggroupsoffs(p)",ovlpgrp
+selovlp.f90,404,ovlp,"read *,o",ovlp2 ovlpgrp
+selovlp.f90,470,ovlp,"read *,o",ovlp2 ovlpgrp
+selovlp.f90,530,ovlp,"read *,phcorr(i,j)",ovlp2 ovlpgrp
+selovlp.f90,539,ovlp,"read *,gcorr(i,j)",ovlp2 ovlpgrp
+selovlp.f90,549,ovlp,"read *,ccorr(i,j)",ovlpgrp
+selovlp.f90,621,ovlp,"read *,ccprog(q)",ovlpgrp
+selroutines.f90,32,read_name,"read(*,'(a)',iostat=ios) buf",test1 test2s test3s blup1 advgrp ovlp2 ovlpgrp noce1 goalonly onetrait fivetr multigrp matrat1 sires19 sires20 sxd1 sxd2 sxd3 prog2s prog3s onetrt2s nophen1 nophen1n nophen2 nophen2n nophen3 nophen3n longfile longovlp longtrt ovlptrt spacetrt duptrt quotefile pathfile
+selroutines.f90,394,note_pheninfo,"read *,localinit",nophen1 nophen1n nophen2 nophen2n nophen3 nophen3n
+selroutines.f90,513,info_sources,"read *,loctempsource(locp,locits)",test1 test2s test3s blup1 advgrp noce1 goalonly onetrait fivetr multigrp matrat1 sires19 sires20 sxd1 sxd2 sxd3 prog2s prog3s onetrt2s nophen1 nophen1n nophen2 nophen2n nophen3 nophen3n
+selroutines.f90,516,info_sources,"read *,loctempsource(locp,locits)",test1 test2s test3s blup1 advgrp noce1 goalonly onetrait fivetr multigrp matrat1 sires19 sires20 sxd1 sxd2 sxd3 prog2s prog3s onetrt2s nophen1 nophen1n nophen2 nophen2n nophen3 nophen3n
 selroutines.f90,677,info_sourcesovlp,"read *,loctempsource(locq,locp,locits)",ovlp2 ovlpgrp
 selroutines.f90,680,info_sourcesovlp,"read *,loctempsource(locq,locp,locits)",ovlp2 ovlpgrp
-selroutines.f90,895,info_sources2,"read *,loctempsourcems2(locp,locits2)",test2s test3s
-selroutines.f90,905,info_sources2,"read *,loctempsourcems2(locp,locits2)",test2s test3s
-selroutines.f90,1102,info_sources3,"read *,loctempsourcems2(locp,locits2)",test3s
-selroutines.f90,1112,info_sources3,"read *,loctempsourcems2(locp,locits2)",test3s
-selroutines.f90,1226,traitinfo,"call read_name(""trait name"", 8, xtraits(i))",test1 test2s test3s blup1 advgrp longtrt spacetrt duptrt
-selroutines.f90,1239,traitinfo,"read *,sdesttraits(i)",test1 test2s test3s blup1 advgrp duptrt
-selroutines.f90,1252,traitinfo,"read *,tempev(i,1)",
-selroutines.f90,1264,traitinfo,"read *,tempev(i,1)",test1 test2s test3s blup1 advgrp duptrt
+selroutines.f90,895,info_sources2,"read *,loctempsourcems2(locp,locits2)",test2s test3s sxd2 sxd3 prog2s prog3s onetrt2s nophen2 nophen2n nophen3 nophen3n
+selroutines.f90,905,info_sources2,"read *,loctempsourcems2(locp,locits2)",test2s test3s sxd2 sxd3 prog2s prog3s onetrt2s nophen2 nophen2n nophen3 nophen3n
+selroutines.f90,1102,info_sources3,"read *,loctempsourcems2(locp,locits2)",test3s sxd3 prog3s nophen3 nophen3n
+selroutines.f90,1112,info_sources3,"read *,loctempsourcems2(locp,locits2)",test3s sxd3 prog3s nophen3 nophen3n
+selroutines.f90,1226,traitinfo,"call read_name(""trait name"", 8, xtraits(i))",test1 test2s test3s blup1 advgrp noce1 goalonly onetrait fivetr multigrp matrat1 sires19 sires20 sxd1 sxd2 sxd3 prog2s prog3s onetrt2s nophen1 nophen1n nophen2 nophen2n nophen3 nophen3n longtrt spacetrt duptrt
+selroutines.f90,1239,traitinfo,"read *,sdesttraits(i)",test1 test2s test3s blup1 advgrp noce1 goalonly fivetr multigrp matrat1 sires19 sires20 sxd1 sxd2 sxd3 prog2s prog3s nophen1 nophen1n nophen2 nophen2n nophen3 nophen3n duptrt
+selroutines.f90,1252,traitinfo,"read *,tempev(i,1)",goalonly fivetr sxd2 sxd3 prog2s prog3s nophen1 nophen1n nophen2 nophen2n nophen3 nophen3n
+selroutines.f90,1264,traitinfo,"read *,tempev(i,1)",test1 test2s test3s blup1 advgrp noce1 goalonly onetrait fivetr multigrp matrat1 sires19 sires20 sxd1 sxd2 sxd3 prog2s prog3s onetrt2s nophen1 nophen1n nophen2 nophen2n nophen3 nophen3n duptrt
 selroutines.f90,1299,traitinfoovlp,"call read_name(""trait name"", 8, xtraits(i))",ovlp2 ovlpgrp ovlptrt
 selroutines.f90,1312,traitinfoovlp,"read *,desttraits(i)",ovlp2 ovlpgrp
 selroutines.f90,1325,traitinfoovlp,"read *,tempev(i,1)",
 selroutines.f90,1337,traitinfoovlp,"read *,tempev(i,1)",ovlp2 ovlpgrp
-selroutines.f90,1379,traitinfo2,"read *,ddesttraits(i)",
-selroutines.f90,1438,traitinfo3,"read *,sdesttraits2(i)",
-selroutines.f90,1483,traitinfo4,"read *,ddesttraits2(i)",
-selroutines.f90,1536,traitinfo5,"read *,sdesttraits3(i)",
-selroutines.f90,1581,traitinfo6,"read *,ddesttraits3(i)",
+selroutines.f90,1379,traitinfo2,"read *,ddesttraits(i)",sxd1 sxd2 sxd3 nophen1 nophen2 nophen3
+selroutines.f90,1438,traitinfo3,"read *,sdesttraits2(i)",sxd2 sxd3 prog2s prog3s nophen2 nophen2n nophen3 nophen3n
+selroutines.f90,1483,traitinfo4,"read *,ddesttraits2(i)",sxd2 sxd3 nophen2 nophen3
+selroutines.f90,1536,traitinfo5,"read *,sdesttraits3(i)",sxd3 prog3s nophen3 nophen3n
+selroutines.f90,1581,traitinfo6,"read *,ddesttraits3(i)",sxd3 nophen3

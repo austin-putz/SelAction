@@ -6,9 +6,10 @@ finished, newest first.** Read the top entry to see where things stand.
 
 ## Current position
 
-- **Last finished:** the Linux `ovlp2` bug is fixed (2026-10-09), see the
-  log.
-- **Next:** step 4b, T2b: new discrete-generation test inputs.
+- **Last finished:** step 4b, T2b: 20 new discrete-generation test
+  inputs (2026-10-09), see the log.
+- **Next:** step 4c, T2c: the overlapping-generation test inputs
+  (`ovlpfix`, `ovlp3ac`) and the coverage check.
 - **Waiting on others:** answers from Piter Bijma and Jack Dekkers to the
   open modelling questions (Q1–Q7, **sent 2026-10-05**), and any worked
   examples (`correspondence/2026-10-bijma-dekkers/`).
@@ -33,6 +34,55 @@ finished, newest first.** Read the top entry to see where things stand.
 ---
 
 ## Log
+
+### Step 4b: T2b, new discrete-generation test inputs (done 2026-10-09, commits `5d65e12`, `0966058`, `393377c`, `5517a5e` + docs)
+
+- **What changed:** 20 new test inputs with stored reports, 27 in all.
+  No program changes.
+  - 1-stage variants: no common environment (`noce1`), a goal-only trait
+    (`goalonly`), one trait (`onetrait`), five traits (`fivetr`), two
+    groups of each type (`multigrp`), sires = dams (`matrat1`), and 19
+    vs 20 sires (`sires19`, `sires20`)
+  - separate indices for sires and dams in 1, 2 and 3 stages (`sxd1`–`sxd3`)
+  - groups and progeny in 2- and 3-stage selection (`prog2s`, `prog3s`),
+    one trait in 2-stage selection (`onetrt2s`)
+  - the "no phenotypic information" warning, answered every possible way,
+    in each stage (`nophen1`–`nophen3`, `nophen1n`–`nophen3n`)
+- **Tests:** `make check` passes: 27/27 golden, 8/8 error cases, strict
+  build clean. Linux (Docker, gfortran 14): 27/27 byte-identical, valgrind
+  clean on all 35 runs. Every new input was run a second time from the
+  program's own echo of the answers and gave the identical report. CI
+  green on all four jobs; on Apple Silicon 3 new reports (`noce1`,
+  `nophen2n`, `nophen3n`) differ in a last digit, like `test1`/`blup1`,
+  and pass the tolerant check that is required there.
+- **Coverage:** lines 79.0% → 90.0%, branches 55.7% → 60.6%. The input map
+  now shows 159 of 162 questions reached; the 3 left are the
+  overlapping-generation questions for step 4c. Every routine runs except
+  `srec_dutt`, a corner of the normal-integral maths (a stage that selects
+  almost everyone); that belongs in the unit tests (step 9), not an input.
+- **Results changed?** No: the 7 existing reports are byte-identical.
+- **Findings:**
+  - **Question 7 example confirmed.** `sires19`/`sires20` reproduce the
+    letter's 4.590% and 4.682% exactly, but only with the half-sib
+    group left at 200 dams (as in `test1`) while the population has 50
+    dams. That is how the letter's figure was made; the fixtures pin it.
+    Worth knowing when Jack and Piter answer.
+  - **A check of the 2- and 3-stage code.** `prog2s` and `prog3s` select
+    the same overall proportions with the same final index, and give the
+    same final results; `prog3s` after stage 2 matches `prog2s` after
+    stage 1 to within 0.002. That's what the theory predicts, so it is a
+    good sign for the multistage code.
+  - **Input check (no code changed):** the stage-2/3 trait questions don't
+    ask again on an invalid answer; they skip the trait silently. Noted in
+    the input map for the batch-mode input checks (step 6).
+  - **Name too long:** the planned `onetrait2` is 9 characters, and the
+    program stopped with `-error-30-` as it should. It is `onetrt2s`.
+  - **Step 4c's 95% target:** the discrete code is at 89% of lines after
+    this step, and two overlapping-generation inputs won't lift it. At
+    step 4c I will list what is still not run and propose how to reach
+    95% (or a realistic target) before building anything.
+  - Nothing new for Jack or Piter.
+- **Next:** step 4c, T2c: `ovlpfix`, `ovlp3ac`, coverage check.
 
 ### Fix: the intermittent Linux `ovlp2` failure (done 2026-10-09)
 

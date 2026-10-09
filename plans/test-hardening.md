@@ -4,7 +4,7 @@
 
 **Approved, revision 3 (2026-10-05).** Austin's answers to the four
 questions are recorded under "Decisions" below. **Progress:** T0, T1,
-T6 and T2a are done (2026-10-05/06); T2b is next. The order and status
+T6, T2a and T2b are done (2026-10-05/06/09); T2c is next. The order and status
 of every step are in `plans/implementation-sequence.md`, with summaries
 in `plans/progress.md`. Directory names updated 2026-10-05: `fortran_mac/` is now
 `fortran/`, and `fortran_linux/` was removed, so there is one source tree
@@ -314,7 +314,7 @@ doesn't need extra R packages beyond what generating the references used.
 
 ### T2: Close the coverage gaps with new golden fixtures
 
-**T2a (input map) done 2026-10-06; T2b next.**
+**T2a (input map) done 2026-10-06; T2b (discrete fixtures) done 2026-10-09; T2c next.** `onetrait2` was built as `onetrt2s` (8-character limit).
 
 New inputs for every untested feature in 1.3. Each new fixture is a
 golden test, so it **also gets a sanity review**: read the output and
