@@ -1,5 +1,20 @@
 # SelAction (development version)
 
+## Bug fixes (2026-10-13)
+
+* **Age class with nothing selected (overlapping generations, fixed
+  numbers).** An age class given 0 selected animals left its selection
+  intensity `oi`/`ok` unset, and the starting covariances `os`/`od` then
+  divided by its index variance, which is 0 (0/0 = NaN; `selovlp.f90`,
+  `ovlp`). The NaN was never used: every later use skips classes with
+  nothing selected, and the arrays are overwritten after the first round.
+  But the strict build (FPE traps) stopped there. Fixed with the same
+  rule the selection rounds already use: no selection means i = k = 0,
+  and the division is skipped. Found by the new `ovlpfix` fixture (step
+  4c), the first test that leaves an age class out of selection.
+  * Results unchanged: every fixture byte-identical with and without the
+    fix.
+
 ## Tests (2026-10-09)
 
 * **20 new discrete-generation fixtures** (test-hardening T2b, step 4b),

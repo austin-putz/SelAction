@@ -660,6 +660,12 @@
           if (pvalcl(p).gt.0.0) then
             call trunc(pvalcl(p),dum1,dum2,oi(p),ok(p))
      !       osigmai(p)=osigmai(p)*(1-ok(p))
+          else
+            ! age class with nothing selected (fixed numbers, 0 selected):
+            ! no selection, so i = k = 0 (as in the rounds below); oi/ok
+            ! were left unset here before
+            oi(p)=0.0
+            ok(p)=0.0
           end if
         end do
 
@@ -692,8 +698,17 @@
        !          print *,"oscovapi(o,p)",oscovapi(o,p)
         !         print *,"ocovipi(o,q)",ocovipi(o,q)
          !        print *,"ok(o)",ok(o)
-                  os(o,p,q)=abs(ocovapiq(o,p,q)-((oscovapi(o,p)*ocovipi(o,q)*ok(o))/osigmai(o)))
-                  od(o,p,q)=abs(ocovapiq(o,p,q)-((odcovapi(o,p)*ocovipi(o,q)*ok(o))/osigmai(o)))
+                  ! osigmai is 0 for an age class with nothing selected; there
+                  ! k = 0, so the term is 0 (it was 0/0 = NaN; such classes are
+                  ! skipped below, so results don't change, but it trapped
+                  ! under strict FPE flags)
+                  if (pvalcl(o).gt.0.0) then
+                    os(o,p,q)=abs(ocovapiq(o,p,q)-((oscovapi(o,p)*ocovipi(o,q)*ok(o))/osigmai(o)))
+                    od(o,p,q)=abs(ocovapiq(o,p,q)-((odcovapi(o,p)*ocovipi(o,q)*ok(o))/osigmai(o)))
+                  else
+                    os(o,p,q)=abs(ocovapiq(o,p,q))
+                    od(o,p,q)=abs(ocovapiq(o,p,q))
+                  end if
                 end do
               end do
           end do
