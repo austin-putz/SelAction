@@ -670,12 +670,19 @@
         end do
 
 	! covariance starting values
+        ! covariances of index and breeding values per trait: set for every
+        ! age class and trait before the loop below, which reads
+        ! ocovipi(o,q) for q > p (it was read there before being set)
+        do o=1,2*nclass
+          do p=1,ntraits
+            oscovapi(o,p)=hh(p)*tempev(p,1)*sigmaa(p)
+            odcovapi(o,p)=hh(p)*tempev(p,1)*sigmaa(p)
+            ocovipi(o,p)=hh(p)*tempev(p,1)*sigmaa(p)
+          end do
+        end do
         do o=1,2*nclass
           do p=1,ntraits
             do q=1,ntraits
-              oscovapi(o,p)=hh(p)*tempev(p,1)*sigmaa(p)
-              odcovapi(o,p)=hh(p)*tempev(p,1)*sigmaa(p)
-              ocovipi(o,p)=hh(p)*tempev(p,1)*sigmaa(p)
 	          ocovp(o,p,q)=phcorr(p,q)*(sqrt(sigmap(p))*sqrt(sigmap(q)))
 	          ocovas(o,p,q)=gcorr(p,q)*(sqrt(sigmaas(p))*sqrt(sigmaas(q)))
 	          ocovad(o,p,q)=gcorr(p,q)*(sqrt(sigmaad(p))*sqrt(sigmaad(q)))

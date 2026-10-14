@@ -14,6 +14,23 @@
   4c), the first test that leaves an age class out of selection.
   * Results unchanged: every fixture byte-identical with and without the
     fix.
+* **BLUP as a source under overlapping generations read unset values
+  (2026-10-14).** In `ovlp` (`selovlp.f90`) the starting covariances of
+  the parents' breeding values (`os`/`od`) used `ocovipi(o,q)` for every
+  trait pair, but `ocovipi` was filled inside the same loop, so for
+  q > p it was read before being set. `os`/`od` matter only when BLUP
+  breeding values are an information source. Where the unset memory held
+  0 (macOS) the result was right; on Linux and Windows it was junk, and
+  the new `ovlpblup` fixture selected 0 sires and 0 dams. **This was
+  the earlier report that "BLUP + groups under overlapping generations
+  collapses to zero"** (`tests/README.md`), which could not be
+  reproduced on a Mac. Inherited from the original code
+  (`fortran_orig/selovlp.f90:635/658`). Fixed by filling the three
+  per-trait values for every age class before that loop (same
+  expressions, moved; no equation changes). Found by CI and valgrind.
+  * Results unchanged on macOS (every fixture byte-identical); on Linux
+    the BLUP fixtures now match macOS, and valgrind is clean (53,000+
+    reports before).
 
 ## Tests (2026-10-09)
 
