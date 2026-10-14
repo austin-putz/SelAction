@@ -6,10 +6,20 @@ finished, newest first.** Read the top entry to see where things stand.
 
 ## Current position
 
-- **Last finished:** step 4b, T2b: 20 new discrete-generation test
-  inputs (2026-10-09), see the log.
-- **Next:** step 4c, T2c: the overlapping-generation test inputs
-  (`ovlpfix`, `ovlp3ac`) and the coverage check.
+- **Last finished:** step 4c, T2c: 18 more test inputs, 45 in all;
+  every input question reached, 95.1% of lines (2026-10-14), see the log.
+  Test-hardening T2 is complete.
+- **Next:** step 5a, I/O Phase 1a: `driver/spec.yaml`, the translator and
+  importer for 1-stage discrete selection.
+- **Review later (Austin asked to be reminded):**
+  - **When Q6 is answered:** review `matrat1`, `matrat1y`, `matrat2`,
+    `matrat3` with Austin. They record today's rule: with sires = dams,
+    half-sib information is removed in the last stage only, and where it
+    stays alongside BLUP the sources are exactly collinear (step 4c
+    findings). Regenerate them, with before/after results, if the model
+    changes.
+  - When Q7 is answered: `sires19`, `sires20`. When Q2/Q4 are answered:
+    `ovlp3ac`.
 - **Waiting on others:** answers from Piter Bijma and Jack Dekkers to the
   open modelling questions (Q1–Q7, **sent 2026-10-05**), and any worked
   examples (`correspondence/2026-10-bijma-dekkers/`).
@@ -34,6 +44,75 @@ finished, newest first.** Read the top entry to see where things stand.
 ---
 
 ## Log
+
+### Step 4c: T2c, overlapping-generation inputs and 95% coverage (done 2026-10-14, commits `28f1fe0`, `fff9bf2`, `1640e0c`, `360e1d5` + docs)
+
+- **What changed:**
+  - 18 new test inputs with stored reports, 45 in all. Overlapping
+    generations: fixed numbers per age class with one class left out
+    (`ovlpfix`), 3 age classes (`ovlp3ac`), BLUP with a half-sib group
+    (`ovlpblup`), the no-phenotypic-information warning (`ovlpwarn`),
+    one trait (`ovlp1t`). Discrete: sires = dams with separate indices
+    and in 2-/3-stage selection (`matrat1y`, `matrat2`, `matrat3`), every
+    source type in the printed indices (`sxdsrc1`–`sxdsrc3`, `sxdsrc2b`,
+    `sxdsrc3b`), `noce2s`, `onetrt3s`, and the remaining answers to the
+    warning (`nophen1d`, `nophen2s`, `nophen3d`).
+  - **Two program fixes** (approved by Austin, each in its own commit):
+    `28f1fe0`, an age class with 0 selected divided 0 by 0 when the
+    covariances were set up (never used, so no result changed, but the
+    strict build stopped there); and `fff9bf2`, BLUP under overlapping
+    generations read a value before it was set (see Findings). Both in
+    `selovlp.f90`, both inherited from the original code.
+- **Tests:** `make check` passes: 45/45 golden, 8/8 error cases, strict
+  build clean. Every new input was rerun from the program's own echo and
+  gave the identical report, and was checked on the strict build. Linux
+  (Docker, gfortran 14): 45/45 byte-identical, valgrind clean on all 53
+  runs (after the second fix below). CI green on all four jobs; on Apple
+  Silicon 14 of 45 reports differ in a last digit (9 of them new) and
+  pass the tolerant check required there.
+- **Coverage:** lines 90.0% → **95.1%** (target met), branches 60.6% →
+  63.2%. The input map shows all 162 input questions reached. The
+  test-hardening plan's coverage gate (step 14, T7) is set to 95%. What
+  still never runs: "wrong input, ask again" paths (step 6 tests them as
+  errors), error stops, and corners of the normal-integral maths (step 9).
+- **Results changed?** No: the 27 existing reports are byte-identical,
+  with and without the fix.
+- **Findings:**
+  - **For the Q6 review (on the "Review later" list above).** With
+    sires = dams, half-sib sources are removed only in the last stage, so
+    `matrat2` (stage 1) and `matrat3` (stage 2) keep them. In a stage that
+    keeps them together with BLUP, each "mean EBV of the half-sib dams"
+    weight was exactly −½ times the half-sib weight: the two sources are
+    collinear, the matrix being inverted is singular or nearly so, and
+    the weights differed between builds (−15.505 vs −15.508). The stored
+    `matrat3` keeps BLUP out of that stage so the test is stable; the
+    collinear version is described here for Jack and Piter. It supports
+    the letter's proposal to apply the rule at every stage.
+  - **Fail loudly (for step 6).** Asking for more animals than there are
+    candidates under overlapping generations stops with `-error-20-` and
+    **exit code 0**; the "requested number cannot be met" warning written
+    for that case is never reached. A stage that adds no information to
+    an index stops with `-error-10-` (singular matrix), also exit 0. Step
+    6 should reject the first up front and give both a non-zero exit code.
+  - **Echo bug (for step 5).** With one trait and separate indices, the
+    echo `.in` contains a "use for dams" answer the program never asked;
+    replaying it works only because the next question asks again. The
+    translator must not produce that line.
+  - **A second bug, found by CI (fixed with Austin's approval, commit
+    `fff9bf2`).** On Linux and Windows `ovlpblup` selected 0 sires and 0
+    dams; valgrind flagged it and `ovlpwarn`. With BLUP as a source under
+    overlapping generations, a value (`ocovipi`) was read before it was
+    set, because it was filled inside the loop that reads it. On a Mac
+    the memory happened to be 0, which gives the right answer, so it never
+    showed there. **This was the old "BLUP + groups collapses to zero"
+    report.** Inherited from the original code. Fixed by filling the
+    value first (no equation change): every report is byte-identical on
+    the Mac, Linux now matches, and valgrind is clean. I ran CI on a side
+    branch first, so `main` never went red.
+  - My coverage estimate was a little high: the planned 12 inputs reached
+    94.93%; with your approval, 6 more small inputs brought it to 95.06%.
+  - Nothing new for Jack or Piter beyond the Q6 point above.
+- **Next:** step 5a, I/O Phase 1a.
 
 ### Step 4b: T2b, new discrete-generation test inputs (done 2026-10-09, commits `5d65e12`, `0966058`, `393377c`, `5517a5e` + docs)
 

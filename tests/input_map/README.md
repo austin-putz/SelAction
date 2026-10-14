@@ -17,11 +17,9 @@ from the code. **After adding fixtures, rerun the script and update the
 "Covered by" columns.** Line numbers refer to `fortran/` at the commit
 that last updated this file.
 
-**Status on 2026-10-09, after step 4b (27 fixtures, 8 error cases): 159
-of 162 input statements are reached.** The 3 not reached are in
-overlapping generations (fixed numbers per age class, and a goal-only
-trait); the step-4c inputs cover them (last section). Before step 4b, 124
-were reached.
+**Status on 2026-10-14, after step 4c (45 fixtures, 8 error cases): all
+162 input statements are reached.** Before step 4b, 124 were; after 4b,
+159.
 
 Notation: *sel1s / sel2s / sel3s* are the 1-, 2- and 3-stage routines in
 `seldiscrete.f90`; they ask the same questions, so they share a table
@@ -103,31 +101,31 @@ there are as many sires as dams**.
 
 | Question | Asked when | Answer (checks) | Line | Covered by |
 |---|---|---|---|---|
-| file name | always | ≤ 8 characters, no blanks (`read_name`) | 23 | `ovlp2`, `ovlpgrp`, `longovlp`, `ovlptrt` |
-| number of traits | always | integer | 39 | `ovlp2`, `ovlpgrp`, `ovlptrt` |
+| file name | always | ≤ 8 characters, no blanks (`read_name`) | 23 | all overlapping + `longovlp`, `ovlptrt` |
+| number of traits | always | integer | 39 | all overlapping + `ovlptrt` |
 | total selected sires | always | integer | 47 | same |
 | total selected dams | always | integer | 51 | same |
 | male candidates per dam | always | real | 55 | same |
 | female candidates per dam | always | real | 59 | same |
 | number of age classes per sex | always | integer | 66 | same |
-| truncation selection, or fixed number per age class? | always | `t`/`n` | 94 | same (all answer `t`) |
+| truncation selection, or fixed number per age class? | always | `t`/`n` | 94 | same (`n`: `ovlpfix`; `t`: the rest) |
 | male candidates in age class, per class except the first (set from candidates per dam) | always | real | 112 | same |
 | female candidates in age class, per class except the first | always | real | 118 | same |
-| selected sires in age class, per class | fixed numbers (`n`) | real | **138** | **none** |
-| selected dams in age class, per class | fixed numbers (`n`) | real | **145** | **none** |
+| selected sires in age class, per class | fixed numbers (`n`) | real | 138 | `ovlpfix` (class 2 answered 0) |
+| selected dams in age class, per class | fixed numbers (`n`) | real | 145 | `ovlpfix` |
 | use common environmental effects? | always | `y`/`n` | 238 | `ovlp2` (`n`), `ovlpgrp` (`y`) |
-| phenotypic variance, per trait | always | real | 256 | `ovlp2`, `ovlpgrp` |
-| heritability h², per trait | always | 0 < h² < 1 (re-asks) | 261 | `ovlp2`, `ovlpgrp` |
+| phenotypic variance, per trait | always | real | 256 | all overlapping (`ovlp2`, `ovlpgrp`, `ovlpfix`, `ovlp3ac`, `ovlpblup`, `ovlpwarn`, `ovlp1t`) |
+| heritability h², per trait | always | 0 < h² < 1 (re-asks) | 261 | all overlapping |
 | c², per trait | common environment `y` | as discrete | 278 | `ovlpgrp` |
-| use full-sib groups? | always | `y`/`n` | 301 | `ovlp2`, `ovlpgrp` |
+| use full-sib groups? | always | `y`/`n` | 301 | all overlapping |
 | number of full-sib groups / animals per group | FS `y` | integer / real | 306, 311 | `ovlpgrp` |
-| use half-sib groups? | **only if sires < dams** | `y`/`n` | 318 | `ovlp2`, `ovlpgrp` |
+| use half-sib groups? | **only if sires < dams** | `y`/`n` | 318 | all overlapping |
 | number of half-sib groups / dams / animals per group | HS `y` | integer / real / real | 323, 328, 332 | `ovlpgrp` |
-| use progeny groups? | always | `y`/`n` | 342 | `ovlp2`, `ovlpgrp` |
+| use progeny groups? | always | `y`/`n` | 342 | all overlapping |
 | number of progeny groups / dams / animals per group | progeny `y` | integer / real / real | 347, 353, 358 | `ovlpgrp` |
-| next sire age class with more information (or −1) | truncation (`t`); after the sources for the first sire class | integer or −1 | 404 | `ovlp2`, `ovlpgrp` |
-| next dam age class with more information (or −1) | truncation (`t`); after the sources for the first dam class | integer or −1 | 470 | `ovlp2`, `ovlpgrp` |
-| phenotypic / genetic / common env. correlation, per pair | always (common env. only if `y`) | −1 < r < 1 (re-asks the pair) | 530, 539, 549 | `ovlp2`, `ovlpgrp` (549: `ovlpgrp`) |
+| next sire age class with more information (or −1) | truncation (`t`); after the sources for the first sire class | integer or −1 | 404 | all with truncation (all but `ovlpfix`); `ovlp3ac` jumps a class |
+| next dam age class with more information (or −1) | truncation (`t`); after the sources for the first dam class | integer or −1 | 470 | as above; `ovlpwarn` jumps a class |
+| phenotypic / genetic / common env. correlation, per pair | always (common env. only if `y`) | −1 < r < 1 (re-asks the pair) | 530, 539, 549 | overlapping with more than one trait (549: those with common environment `y`) |
 | c² in the progeny test, per trait | progeny `y` and common environment `y` | 0 < c² < 1 (re-asks) | 621 | `ovlpgrp` |
 
 With fixed numbers (`n`), the sources are asked for **every** age class
@@ -142,38 +140,34 @@ that has animals selected, instead of "next age class" questions.
 | `traitinfo` | use: index `i` / goal `h` / both `b` / not now `n` | discrete, **more than one trait** (one trait is set to `b`) | `i`/`h`/`b`/`n` (re-asks) | 1239 | all discrete + `duptrt` |
 | `traitinfo` | economic value, goal-only trait | use `h` | ≠ 0 (re-asks) | 1252 | `goalonly`, `fivetr`, `nophen*`, `sxd2`, `sxd3`, `prog2s`, `prog3s` |
 | `traitinfo` | economic value, index-and-goal trait | use `b` | ≠ 0 (re-asks) | 1264 | all discrete + `duptrt` |
-| `traitinfoovlp` | trait name, per trait | overlapping | as above | 1299 | `ovlp2`, `ovlpgrp`, `ovlptrt` |
-| `traitinfoovlp` | use `i`/`h`/`b`/`n` | overlapping, more than one trait | as above | 1312 | `ovlp2`, `ovlpgrp` |
-| `traitinfoovlp` | economic value, goal-only trait | use `h` | ≠ 0 | **1325** | **none** |
-| `traitinfoovlp` | economic value, index-and-goal trait | use `b` | ≠ 0 | 1337 | `ovlp2`, `ovlpgrp` |
+| `traitinfoovlp` | trait name, per trait | overlapping | as above | 1299 | all overlapping + `ovlptrt` |
+| `traitinfoovlp` | use `i`/`h`/`b`/`n` | overlapping, more than one trait | as above | 1312 | overlapping with more than one trait |
+| `traitinfoovlp` | economic value, goal-only trait | use `h` | ≠ 0 | 1325 | `ovlpfix` |
+| `traitinfoovlp` | economic value, index-and-goal trait | use `b` | ≠ 0 | 1337 | all overlapping |
 | `traitinfo2` | dams: use `i`/`h`/`b`/`n` | separate indices `y` | as above | 1379 | `sxd1`–`sxd3`, `nophen1`–`nophen3` |
 | `traitinfo3` | sires, stage 2: add to index? `i`/`n` | 2- or 3-stage, more than one trait, for each trait **not** in the stage-1 index (use `n` or `h`) | `i`/`n` | 1438 | `sxd2`, `sxd3`, `prog2s`, `prog3s`, `nophen2`, `nophen2n`, `nophen3`, `nophen3n` |
 | `traitinfo4` | dams, stage 2: as above | separate indices `y`, 2- or 3-stage, each dam trait not in the stage-1 dam index | `i`/`n` | 1483 | `sxd2`, `sxd3`, `nophen2`, `nophen3` |
 | `traitinfo5` | sires, stage 3: as above | 3-stage, trait not in the stage-2 index | `i`/`n` | 1536 | `sxd3`, `prog3s`, `nophen3`, `nophen3n` |
 | `traitinfo6` | dams, stage 3: as above | separate indices `y`, 3-stage, each dam trait not in the stage-2 dam index | `i`/`n` | 1581 | `sxd3`, `nophen3` |
 | `info_sources` | information sources for a trait, first and following codes | each index trait (sires; dams too if separate indices) | codes: 1 own performance, 2 BLUP, 3+n full-sib group n, 23+n half-sib group n, 63+n progeny group n; −1 ends | 513, 516 | all discrete |
-| `info_sourcesovlp` | as above, per age class | overlapping | as above | 677, 680 | `ovlp2`, `ovlpgrp` |
+| `info_sourcesovlp` | as above, per age class | overlapping | as above | 677, 680 | all overlapping |
 | `info_sources2` | sources added in stage 2 | 2- and 3-stage, if any remain | codes, −1 ends | 895, 905 | all 2- and 3-stage |
 | `info_sources3` | sources added in stage 3 | 3-stage, if any remain | codes, −1 ends | 1102, 1112 | all 3-stage |
 | `note_pheninfo` | warning: trait without phenotypic sources and without genetic correlation to one that has them: edit sources `i` or correlations `c`? | the checks in section 2 find such a trait (discrete only) | `i`/`c` (re-asks) | 394 | `nophen1`–`nophen3`, `nophen1n`–`nophen3n` |
 
-## Not reached yet → step 4c
+## How the last questions were reached
 
-Step 4b (2026-10-09) added 20 discrete-generation inputs and reached
-every discrete question. Three input lines are left, all in overlapping
-generations:
-
-| Not reached | Lines | Planned test input |
-|---|---|---|
-| selected sires / dams per age class (fixed numbers) | selovlp 138, 145 | `ovlpfix` |
-| goal-only trait (`h`): economic value | selroutines 1325 | `ovlpfix` (includes a goal-only trait) |
-
-How step 4b reached the correction questions: each `nophen` input has two
-goal-only traits with zero genetic correlations (answered `c`; the trait
-with sources is listed after the first and before the second), and a
-BLUP-only trait (BLUP alone is not phenotypic information) answered `i`.
-`nophen1`–`nophen3` use separate indices (`nophen2` answers `d`, the
-others `s`); `nophen1n`–`nophen3n` use one index.
+- **Step 4b** (2026-10-09) added 20 discrete-generation inputs and reached
+  every discrete question. The correction questions are reached by the
+  `nophen` inputs: two goal-only traits with zero genetic correlations
+  (answered `c`; the trait with sources is listed after the first and
+  before the second), and a BLUP-only trait (BLUP alone is not phenotypic
+  information) answered `i`. `nophen1`–`nophen3` and `nophen1d`,
+  `nophen2s`, `nophen3d` use separate indices (every `s`/`d` answer in
+  every stage); `nophen1n`–`nophen3n` use one index.
+- **Step 4c** (2026-10-14) reached the last three, in overlapping
+  generations: `ovlpfix` uses fixed numbers per age class (sire class 2
+  answered 0, so its sources are never asked) and has a goal-only trait.
 
 ## Findings from the walk (no code changed)
 
@@ -206,3 +200,17 @@ others `s`); `nophen1n`–`nophen3n` use one index.
    written to the echo `.in` and the trait's stage-2/3 use is left as it
    was. The other use questions re-ask. Found in step 4b; recorded for the
    I/O plan's batch-mode input guards (Phase 2), no code changed.
+7. **The echo writes a question that was never asked.** With one trait
+   and separate indices, `traitinfo2` sets the dams' use to `i` without
+   asking but still writes `i ! use of <trait> for dams` to the echo
+   `.in`. Replaying the echo works only because the next question
+   (common environment, `y`/`n`) rejects `i` and asks again. `onetrt3s`
+   is stored without that line. The YAML translator (I/O Phase 1) must
+   not emit it. Found in step 4c, no code changed.
+8. **More animals requested than candidates (overlapping generations)
+   stops with `-error-20-` and exit code 0.** The starting proportion
+   selected is above 1, so `trunc` stops before the "requested number
+   cannot be met" warning written for this case can be reached (that
+   warning is therefore unreachable in practice). The I/O plan's input
+   checks (Phase 2) should reject the input up front; the exit code is
+   part of Phase 2 too. Found in step 4c, no code changed.

@@ -4,7 +4,7 @@
 
 **Approved, revision 3 (2026-10-05).** Austin's answers to the four
 questions are recorded under "Decisions" below. **Progress:** T0, T1,
-T6, T2a and T2b are done (2026-10-05/06/09); T2c is next. The order and status
+T6 and T2 (T2a–T2c) are done (2026-10-05 to 10-14): 45 fixtures, every input question reached, 95.1% of lines. Next in the sequence is the I/O plan (step 5a); T3–T5 and T7 follow. The order and status
 of every step are in `plans/implementation-sequence.md`, with summaries
 in `plans/progress.md`. Directory names updated 2026-10-05: `fortran_mac/` is now
 `fortran/`, and `fortran_linux/` was removed, so there is one source tree
@@ -314,7 +314,7 @@ doesn't need extra R packages beyond what generating the references used.
 
 ### T2: Close the coverage gaps with new golden fixtures
 
-**T2a (input map) done 2026-10-06; T2b (discrete fixtures) done 2026-10-09; T2c next.** `onetrait2` was built as `onetrt2s` (8-character limit).
+**T2a (input map) done 2026-10-06; T2b (discrete fixtures) done 2026-10-09; T2c (overlapping fixtures, coverage) done 2026-10-14: 95.1% of lines, 63.2% of branches.** `onetrait2` was built as `onetrt2s` (8-character limit).
 
 New inputs for every untested feature in 1.3. Each new fixture is a
 golden test, so it **also gets a sanity review**: read the output and
@@ -521,7 +521,10 @@ there. Coverage prints in the Linux log (T7 adds the gate).
 
 - `coverage.sh` runs in CI and prints the table in the job log.
 - CI fails if live-line coverage drops below the level reached in T2
-  (target ≥ 95%), so new code can't land untested.
+  (target ≥ 95%), so new code can't land untested. **Level reached in
+  T2: 95.1% of lines (2026-10-14), so the gate is 95%.** Branches stay
+  reported, not gated (63.2%; most untaken branches are "wrong input"
+  and error paths).
 
 ### Order and hand-off to the I/O plan (revision 3)
 

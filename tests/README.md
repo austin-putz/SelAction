@@ -103,22 +103,24 @@ used, so any R installation works. `make test` itself needs no R.
   summary. A layer not written yet shows "not yet present". If R is
   missing, the R layers FAIL rather than being skipped.
 
-Coverage on 2026-10-09, after step 4b (27 fixtures + 8 error cases):
+Coverage on 2026-10-14, after step 4c (45 fixtures + 8 error cases):
 
 | File | Lines executed | Branches taken |
 |---|---|---|
 | `selaction.f90` | 90.5% of 21 | 91.7% of 12 |
-| `seldiscrete.f90` | 89.0% of 3,203 | 55.2% of 7,734 |
-| `selovlp.f90` | 85.7% of 935 | 57.2% of 2,148 |
-| `selroutines.f90` | 94.3% of 1,949 | 89.9% of 1,640 |
-| `seltools.f90` | 89.0% of 915 | 68.4% of 158 |
-| **Total** | **90.0% of 7,023** | **60.6% of 11,692** |
+| `seldiscrete.f90` | 95.9% of 3,203 | 57.5% of 7,734 |
+| `selovlp.f90` | 95.0% of 940 | 61.5% of 2,150 |
+| `selroutines.f90` | 96.4% of 1,949 | 91.3% of 1,640 |
+| `seltools.f90` | 89.7% of 915 | 69.6% of 158 |
+| **Total** | **95.1% of 7,028** | **63.2% of 11,694** |
 
-Before step 4b (2026-10-05, 7 fixtures + 6 error cases): 79.0% of lines,
-55.7% of branches. Every live routine now runs except `srec_dutt`
-(`seltools.f90`), which the 3-variable normal integral calls only when a
-truncation point is below −5 SD (nearly everyone selected in a stage);
-that is for the unit tests (test-hardening T3), not an input path.
+History: 79.0% of lines and 55.7% of branches before step 4b (7 fixtures);
+90.0% / 60.6% after it (27 fixtures). What still never runs: the "wrong
+input, ask again" paths (tested as errors once batch mode exists, I/O
+Phase 2), error stops and the incoherent-parameters message, and corners
+of the normal-integral maths in `seltools.f90` (e.g. `srec_dutt`, only
+when a stage selects almost everyone), which are for the unit tests
+(test-hardening T3).
 
 ## Continuous integration
 
@@ -139,7 +141,10 @@ request, and by hand (Actions tab, "Run workflow").
   differences as gfortran 14, so they come from the chip, not the
   compiler version. Of the 20 fixtures added in step 4b (2026-10-09), three
   (`noce1`, `nophen2n`, `nophen3n`) differ there in the same way; the
-  other 17 are byte-identical. These are rounding of the last printed digit, the same kind
+  other 17 are byte-identical. Of the 18 added in step 4c (2026-10-14),
+  nine differ the same way (`matrat2`, `matrat3`, `sxdsrc1`, `sxdsrc2`,
+  `sxdsrc3`, `sxdsrc2b`, `noce2s`, `onetrt3s`, `nophen3d`): 14 of 45 in
+  all, every one passing the tolerant check. These are rounding of the last printed digit, the same kind
   as the strict build's `blup1` difference, so on that platform the
   byte-exact step may fail without failing the job and the tolerant
   step must pass. The stored outputs are not changed to suit any
@@ -568,17 +573,25 @@ when making the code compile); `fortran_orig/selovlp.f90` accumulates
 correctly. The `fortran_linux/` copy that still had it was removed on
 2026-10-05.
 
-## Previously reported: BLUP breeding values + groups under overlapping generations
+## Resolved: BLUP breeding values under overlapping generations (unset `ocovipi`, Linux/Windows only)
 
 Earlier notes recorded that combining BLUP (code 2) with a group under `ovlp`
 drove `pvalcl` to 0 in every age class (all-zero response / `NaN`, or
-`-error-10-: matrix is singular`). This could **not** be reproduced, before
-or after the fix above, in the 72-input sweep; the triggering input was not
-saved. It may have been the silent root-finder failure above, but that is
-not confirmed. BLUP as the *only* source gives a zero response, which is
-correct (no phenotypic information); its "% of total response" lines now
-print `n/a` instead of dividing by a near-zero total. If the collapse is seen again, save the `.in` file as a
-fixture candidate.
+`-error-10-: matrix is singular`), and that this could not be reproduced.
+**Found on 2026-10-14** (step 4c): the new `ovlpblup` fixture selected 0
+sires and 0 dams on Linux and Windows CI, while macOS was correct, and
+valgrind reported unset values. Cause: in `ovlp`, the starting covariances
+of the parents' breeding values (`os`/`od`) read `ocovipi(o,q)` for every
+trait pair, but `ocovipi` was filled inside the same loop, so for q > p it
+was read before it was set. `os`/`od` enter the index only when BLUP is an
+information source, so only BLUP inputs were affected. On macOS the unset
+memory held 0, which happens to give the right result; elsewhere it held
+junk. Inherited from the original code. Fixed by filling `ocovipi` (and
+`oscovapi`/`odcovapi`) for every age class before that loop. Every fixture
+is byte-identical on macOS with and without the fix; Linux now matches and
+valgrind is clean. `ovlpblup` and `ovlpwarn` (a BLUP-only trait) guard it.
+BLUP as the *only* source gives a zero response, which is correct (no
+phenotypic information); its "% of total response" lines print `n/a`.
 
 ## Overlapping generations with groups (`ovlpgrp`) fixture
 
@@ -612,7 +625,7 @@ both remain good follow-up work.
 
 ## Adding a new fixture
 
-There are currently 27 fixtures; `manifest.txt` describes each one.
+There are currently 45 fixtures; `manifest.txt` describes each one.
 
 - **Original seven:** `test1` (3-trait discrete 1-stage), `test2s`
   (2-stage), `test3s` (3-stage), `blup1` (the BLUP-only inbreeding
@@ -629,6 +642,18 @@ There are currently 27 fixtures; `manifest.txt` describes each one.
   - the no-phenotypic-information warning and every correction:
     `nophen1`–`nophen3` (separate indices), `nophen1n`–`nophen3n` (one
     index)
+- **Added in step 4c** (2026-10-14, test-hardening T2c; every input
+  question is now reached, line coverage 95.1%):
+  - overlapping generations: `ovlpfix` (fixed numbers, an age class with
+    0 selected, goal-only and index-only traits), `ovlp3ac` (3 age
+    classes), `ovlpblup` (BLUP + half-sib group), `ovlpwarn` (the
+    no-phenotypic-information warning), `ovlp1t` (one trait)
+  - sires = dams with separate indices and in multistage selection:
+    `matrat1y`, `matrat2`, `matrat3`
+  - every source type printed in sire and dam indices at every stage:
+    `sxdsrc1`, `sxdsrc2`, `sxdsrc3`, `sxdsrc2b`, `sxdsrc3b`
+  - small variants: `noce2s`, `onetrt3s`, and the remaining answers to
+    the warning, `nophen1d`, `nophen2s`, `nophen3d`
 
 **Fixtures marked `[pending Qn]`** record what the code does today in an
 area under an open question to Piter Bijma and Jack Dekkers
@@ -637,8 +662,9 @@ before/after results, if an answer changes the model:
 
 | Fixture | Question | Why |
 |---|---|---|
-| `matrat1` | Q6 | half-sib information with one dam per sire |
+| `matrat1`, `matrat1y`, `matrat2`, `matrat3` | Q6 | half-sib information with one dam per sire; in 2- and 3-stage selection it is removed in the last stage only (stage 1 of `matrat2`, stage 2 of `matrat3` keep it) |
 | `sires19`, `sires20` | Q7 | either side of the 20-sire switch in the inbreeding correction; they reproduce the letter's 4.590% and 4.682% |
+| `ovlp3ac` | Q2, Q4 | three age classes: genetic lag between age classes and the family-structure correction |
 
 New fixtures must come from actually running a real binary with a valid,
 non-singular parameter set - do not hand-write expected output.

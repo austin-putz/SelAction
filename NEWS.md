@@ -1,5 +1,33 @@
 # SelAction (development version)
 
+## Tests (2026-10-14)
+
+* **18 new fixtures** (test-hardening T2c, step 4c), 45 in all. Every
+  input question is now reached (162 of 162), and line coverage is 95.1%
+  (branches 63.2%).
+  * Overlapping generations: `ovlpfix` (fixed numbers per age class, one
+    class with 0 selected, goal-only and index-only traits), `ovlp3ac`
+    `[pending Q2, Q4]` (3 age classes), `ovlpblup` (BLUP + half-sib
+    group; on Linux it exposed the unset `ocovipi` read fixed above),
+    `ovlpwarn`, `ovlp1t`.
+  * Sires = dams: `matrat1y`, `matrat2`, `matrat3` `[pending Q6]`.
+  * Every source type in sire and dam indices at every stage:
+    `sxdsrc1`–`sxdsrc3`, `sxdsrc2b`, `sxdsrc3b`.
+  * `noce2s`, `onetrt3s`, `nophen1d`, `nophen2s`, `nophen3d`.
+* Found while building them (no code changed; details in
+  `tests/input_map/README.md` and `plans/progress.md`):
+  * Requesting more animals than candidates under overlapping
+    generations stops with `-error-20-` and exit code 0; the warning
+    written for that case is never reached. A stage that adds no
+    information stops with `-error-10-` (singular), also exit 0. Both go
+    to the I/O plan's Phase 2 (input checks, exit codes).
+  * With sires = dams, half-sib information is removed in the last stage
+    only (Question 6). In a stage that keeps it alongside BLUP, the
+    half-sib sources are exactly collinear and the index weights become
+    unstable.
+  * With one trait and separate indices, the echo `.in` contains a line
+    that was never asked.
+
 ## Bug fixes (2026-10-13)
 
 * **Age class with nothing selected (overlapping generations, fixed
@@ -566,7 +594,9 @@ fixtures byte-identical.
   response / `NaN`" could not be reproduced, before or after the changes
   above, in a 72-input sweep of BLUP combined with full-sib, half-sib and
   progeny groups. The triggering input was not recorded. It may have been the
-  silent root-finder failure fixed above; not confirmed.
+  silent root-finder failure fixed above; not confirmed. **Resolved
+  2026-10-14:** it was an unset `ocovipi` read that is wrong only off
+  macOS (see "Bug fixes", 2026-10-13/14, at the top).
 * With `nsires == ndams` (mating ratio 1, no paternal half sibs), the
   earlier-stage source lists of `sel2s`/`sel3s` are not filtered for
   half-sib sources; only the final-stage list is. Unchanged from the
