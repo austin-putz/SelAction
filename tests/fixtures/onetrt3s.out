@@ -1,0 +1,139 @@
+  
+             *************************************************
+             *                   SelAction                   *
+             *      Multi-Trait Index Selection Software     *
+             *                                               *
+             *                 developed by:                 *
+             *        Marc J.M. Rutten and Piter Bijma       *
+             *       Animal Breeding and Genetics Group      *
+             *          Wageningen University, 2000          *
+             *                                               *
+             *                  updated by:                  *
+             *          Austin Putz and Jack Dekkers         *
+             *          Iowa State University, 2026          *
+             *                                               *
+             *                  version 1.2                  *
+             *************************************************
+  
+  
+  TRAITS
+  
+    ADG     
+  
+  
+   TRAIT PARAMETERS
+   
+        phenotypic variance  heritability
+ADG            95.000           0.300
+  
+  BREEDING GOAL INFORMATION
+  
+          5.000 * ADG     
+  
+   POPULATION SIZE
+   
+                      number of selected sires :   10.000
+                       number of selected dams :  200.000
+ number of male selection candidates per dam   :    5.000
+ number of female selection candidates per dam :    5.000
+  
+          selected proportion sires in stage 1 : 0.500
+          selected proportion sires in stage 2 : 0.200
+          selected proportion sires in stage 3 : 0.100
+               total selected proportion sires : 0.010
+  
+           selected proportion dams in stage 1 : 0.800
+           selected proportion dams in stage 2 : 0.500
+           selected proportion dams in stage 3 : 0.500
+                total selected proportion dams : 0.200
+  
+  CHARACTERISTICS OF THE USED GROUPS
+  
+  full-sib group            1  with    9.00000000      animals
+  half-sib group            1  with    200.000000      dams, producing    9.00000000     animals
+  
+  STAGE 1 INDEX INFORMATION FOR SIRES :
+  
+     own performance                      for ADG       (   1.242)
+  
+  STAGE 1 INDEX INFORMATION FOR DAMS:
+     own performance                      for ADG       (   1.242)
+  
+  STAGE 2 INDEX INFORMATION FOR SIRES :
+     own performance                      for ADG       (   1.084)
+     information of fs-group            1 for ADG       (   1.813)
+  
+  STAGE 2 INDEX INFORMATION FOR DAMS :
+     own performance                      for ADG       (   1.084)
+     information of fs-group            1 for ADG       (   1.813)
+  
+  STAGE 3 INDEX INFORMATION FOR SIRES :
+     own performance                      for ADG       (   1.068)
+     information of fs-group            1 for ADG       (   1.670)
+     information of hs-group            1 for ADG       (   0.667)
+  
+  STAGE 3 INDEX INFORMATION FOR DAMS :
+     own performance                      for ADG       (   1.068)
+     information of fs-group            1 for ADG       (   1.670)
+     information of hs-group            1 for ADG       (   0.667)
+  
+  
+              ******************   RESULTS   *******************
+  
+  EQUILIBRIUM PARAMETERS
+  
+        phenotypic variance  heritability
+ADG            88.482           0.248
+  
+  RESPONSE AFTER STAGE 1
+                            sires           dams          total
+ ADG     
+         trait units :      0.929          0.407          1.337
+      economic units :      4.647          2.037          6.685
+ % of total response :     69.521         30.479        100.000
+  
+  TOTAL RESPONSE AFTER STAGE 1
+                            sires           dams          total
+      economic units :      4.647          2.037          6.685
+  
+  
+        index variance :       136.529
+breeding goal variance :       549.553
+     accuracy of index :         0.498
+  
+  
+  RESPONSE AFTER STAGE 2
+                            sires           dams          total
+ ADG     
+         trait units :      2.384          1.314          3.698
+      economic units :     11.920          6.568         18.488
+ % of total response :     64.475         35.525        100.000
+  
+  TOTAL RESPONSE AFTER STAGE 2
+                            sires           dams          total
+      economic units :     11.920          6.568         18.488
+  
+  
+        index variance :       189.200
+breeding goal variance :       549.553
+     accuracy of index :         0.587
+  
+  
+  RESPONSE AFTER STAGE 3
+                            sires           dams          total
+ ADG     
+         trait units :      3.539          1.899          5.438
+      economic units :     17.693          9.496         27.189
+ % of total response :     65.075         34.925        100.000
+  
+  TOTAL RESPONSE AFTER STAGE 3
+                            sires           dams          total
+      economic units :     17.693          9.496         27.189
+  
+  
+        index variance :       194.468
+breeding goal variance :       549.553
+     accuracy of index :         0.595
+  
+  
+                       ******  end of output  ******

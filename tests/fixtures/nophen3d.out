@@ -1,0 +1,262 @@
+  
+             *************************************************
+             *                   SelAction                   *
+             *      Multi-Trait Index Selection Software     *
+             *                                               *
+             *                 developed by:                 *
+             *        Marc J.M. Rutten and Piter Bijma       *
+             *       Animal Breeding and Genetics Group      *
+             *          Wageningen University, 2000          *
+             *                                               *
+             *                  updated by:                  *
+             *          Austin Putz and Jack Dekkers         *
+             *          Iowa State University, 2026          *
+             *                                               *
+             *                  version 1.2                  *
+             *************************************************
+  
+  
+  TRAITS
+  
+    GoalA   
+    ADG     
+    GoalB   
+    BlupT   
+    Unused  
+  
+  
+   TRAIT PARAMETERS
+   
+        phenotypic variance  heritability  com.env.effect
+GoalA          25.000           0.200           0.050
+ADG            95.000           0.300           0.050
+GoalB           0.040           0.200           0.050
+BlupT          10.000           0.250           0.050
+Unused         10.000           0.250           0.050
+  
+   PHENOTYPIC CORRELATIONS
+   
+             GoalA    ADG      GoalB    BlupT    Unused  
+GoalA          1.000
+ADG            0.100    1.000
+GoalB          0.100    0.100    1.000
+BlupT          0.100    0.100    0.100    1.000
+Unused         0.100    0.100    0.100    0.100    1.000
+  
+   GENETIC CORRELATIONS
+   
+             GoalA    ADG      GoalB    BlupT    Unused  
+GoalA          1.000
+ADG            0.300    1.000
+GoalB          0.000    0.200    1.000
+BlupT          0.000    0.000    0.000    1.000
+Unused         0.000    0.200    0.000    0.000    1.000
+  
+   COMMON ENVIRONMENTAL CORRELATIONS
+   
+             GoalA    ADG      GoalB    BlupT    Unused  
+GoalA          1.000
+ADG            0.000    1.000
+GoalB          0.000    0.000    1.000
+BlupT          0.000    0.000    0.000    1.000
+Unused         0.000    0.000    0.000    0.000    1.000
+  
+  BREEDING GOAL INFORMATION
+  
+          1.000 * GoalA   
+          5.000 * ADG     
+          1.000 * GoalB   
+  
+   POPULATION SIZE
+   
+                      number of selected sires :   10.000
+                       number of selected dams :  200.000
+ number of male selection candidates per dam   :    5.000
+ number of female selection candidates per dam :    5.000
+  
+          selected proportion sires in stage 1 : 0.500
+          selected proportion sires in stage 2 : 0.200
+          selected proportion sires in stage 3 : 0.100
+               total selected proportion sires : 0.010
+  
+           selected proportion dams in stage 1 : 0.800
+           selected proportion dams in stage 2 : 0.500
+           selected proportion dams in stage 3 : 0.500
+                total selected proportion dams : 0.200
+  
+  CHARACTERISTICS OF THE USED GROUPS
+  
+  full-sib group            1  with    9.00000000      animals
+  
+  STAGE 1 INDEX INFORMATION FOR SIRES :
+  
+     own performance                      for ADG       (   1.297)
+  
+  STAGE 1 INDEX INFORMATION FOR DAMS:
+     own performance                      for ADG       (   1.311)
+  
+     own performance                      for BlupT     (  -0.388)
+  
+  STAGE 2 INDEX INFORMATION FOR SIRES :
+     own performance                      for ADG       (   1.107)
+     information of fs-group            1 for ADG       (   1.304)
+  
+  STAGE 2 INDEX INFORMATION FOR DAMS :
+     own performance                      for ADG       (   1.120)
+     information of fs-group            1 for ADG       (   1.294)
+  
+     own performance                      for BlupT     (  -0.353)
+     information of fs-group            1 for BlupT     (   0.108)
+  
+  STAGE 3 INDEX INFORMATION FOR SIRES :
+     own performance                      for ADG       (   1.099)
+     ebv of the dam                       for ADG       (   1.399)
+     ebv of the sire                      for ADG       (   1.399)
+     information of fs-group            1 for ADG       (   1.233)
+  
+  STAGE 3 INDEX INFORMATION FOR DAMS :
+     own performance                      for ADG       (   1.112)
+     ebv of the dam                       for ADG       (   1.395)
+     ebv of the sire                      for ADG       (   1.397)
+     information of fs-group            1 for ADG       (   1.224)
+  
+     own performance                      for BlupT     (  -0.351)
+     information of fs-group            1 for BlupT     (   0.124)
+  
+  
+              ******************   RESULTS   *******************
+  
+  EQUILIBRIUM PARAMETERS
+  
+        phenotypic variance  heritability  com.env.effect
+GoalA          24.905           0.197           0.050
+ADG            89.013           0.253           0.053
+GoalB           0.040           0.199           0.050
+BlupT           9.999           0.250           0.050
+Unused          9.979           0.248           0.050
+  
+   PHENOTYPIC CORRELATIONS
+  
+   
+             GoalA    ADG      GoalB    BlupT    Unused  
+GoalA          1.000
+ADG            0.088    1.000
+GoalB          0.098    0.093    1.000
+BlupT          0.101    0.105    0.100    1.000
+Unused         0.097    0.092    0.098    0.100    1.000
+  
+   GENETIC CORRELATIONS
+  
+             GoalA    ADG      GoalB    BlupT    Unused  
+GoalA          1.000
+ADG            0.269    1.000
+GoalB         -0.013    0.179    1.000
+BlupT          0.002    0.006    0.001    1.000
+Unused        -0.013    0.179   -0.008    0.001    1.000
+  
+   COMMON ENVIRONMENTAL CORRELATIONS
+  
+             GoalA    ADG      GoalB    BlupT    Unused  
+GoalA          1.000
+ADG            0.000    1.000
+GoalB          0.000    0.000    1.000
+BlupT          0.000    0.000    0.000    1.000
+Unused         0.000    0.000    0.000    0.000    1.000
+  
+  RESPONSE AFTER STAGE 1
+                            sires           dams          total
+ GoalA   
+         trait units :      0.119          0.053          0.172
+      economic units :      0.119          0.053          0.172
+ % of total response :      1.701          0.749          2.450
+  
+ ADG     
+         trait units :      0.949          0.418          1.367
+      economic units :      4.744          2.090          6.834
+ % of total response :     67.672         29.813         97.485
+  
+ GoalB   
+         trait units :      0.003          0.001          0.005
+      economic units :      0.003          0.001          0.005
+ % of total response :      0.045          0.020          0.065
+  
+  CORRELATED RESPONSE AFTER STAGE 1
+                            sires           dams          total
+ BlupT   
+         trait units :      0.002         -0.013         -0.011
+  
+  TOTAL RESPONSE AFTER STAGE 1
+                            sires           dams          total
+      economic units :      4.867          2.144          7.011
+  
+  
+  index variance sires :       149.789    index variance dams :       151.278
+breeding goal variance :       596.776
+accuracy of sire index :         0.501  accuracy of dam index :         0.503
+  
+  
+  RESPONSE AFTER STAGE 2
+                            sires           dams          total
+ GoalA   
+         trait units :      0.288          0.159          0.447
+      economic units :      0.288          0.159          0.447
+ % of total response :      1.578          0.872          2.450
+  
+ ADG     
+         trait units :      2.292          1.267          3.559
+      economic units :     11.462          6.335         17.797
+ % of total response :     62.782         34.702         97.485
+  
+ GoalB   
+         trait units :      0.008          0.004          0.012
+      economic units :      0.008          0.004          0.012
+ % of total response :      0.042          0.023          0.065
+  
+  CORRELATED RESPONSE AFTER STAGE 2
+                            sires           dams          total
+ BlupT   
+         trait units :      0.006         -0.023         -0.016
+  
+  TOTAL RESPONSE AFTER STAGE 2
+                            sires           dams          total
+      economic units :     11.757          6.499         18.256
+  
+  
+  index variance sires :       183.042    index variance dams :       184.169
+breeding goal variance :       596.776
+accuracy of sire index :         0.554  accuracy of dam index :         0.556
+  
+  
+  RESPONSE AFTER STAGE 3
+                            sires           dams          total
+ GoalA   
+         trait units :      0.438          0.233          0.671
+      economic units :      0.438          0.233          0.671
+ % of total response :      1.600          0.850          2.450
+  
+ ADG     
+         trait units :      3.486          1.852          5.338
+      economic units :     17.430          9.260         26.691
+ % of total response :     63.662         33.823         97.485
+  
+ GoalB   
+         trait units :      0.012          0.006          0.018
+      economic units :      0.012          0.006          0.018
+ % of total response :      0.043          0.023          0.065
+  
+  CORRELATED RESPONSE AFTER STAGE 3
+                            sires           dams          total
+ BlupT   
+         trait units :      0.001         -0.036         -0.035
+  
+  TOTAL RESPONSE AFTER STAGE 3
+                            sires           dams          total
+      economic units :     17.880          9.499         27.379
+  
+  
+  index variance sires :       187.450    index variance dams :       188.556
+breeding goal variance :       596.776
+accuracy of sire index :         0.560  accuracy of dam index :         0.562
+  
+  
+                       ******  end of output  ******

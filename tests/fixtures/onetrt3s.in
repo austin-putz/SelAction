@@ -1,0 +1,39 @@
+         3 ! stage selection
+  onetrt3s ! filenames
+         1 ! number of traits
+         y ! different indices for sires and dams
+  ADG      ! name of trait  1
+     5.000 ! economic value ADG     
+         n ! use of common environment
+    95.000 ! phenotypic variance ADG     
+     0.300 ! heritability ADG     
+         y ! full-sib groups ?
+         1 ! number of fsgroups
+     9.000 ! number of animals in fsgroup  1
+         y ! half-sib groups ?
+         1 ! number of hsgroups
+   200.000 ! number of dams in hsgroup   1
+     9.000 ! number of animals in hsgroup  1
+         n ! progeny groups ?
+         1 ! info source ADG      for males
+        -1 ! info source ADG      for males
+         4 ! info source ADG      in stage 2 for males
+        -1 ! info source ADG      in stage 2 for males
+        24 ! info source ADG      in stage 3 for males
+        -1 ! info source ADG      in stage 3 for males
+         1 ! info source ADG      for females
+        -1 ! info source ADG      for females
+         4 ! info source ADG      in stage 2 for females
+        -1 ! info source ADG      in stage 2 for females
+        24 ! info source ADG      in stage 3 for females
+        -1 ! info source ADG      in stage 3 for females
+    10.000 ! number of sires
+   200.000 ! number of dams
+     5.000 ! number of male offspring per dam
+     5.000 ! number of female offspring per dam
+     0.500 ! proportion sires in stage 1
+     0.200 ! proportion sires in stage 2
+     0.100 ! proportion sires in stage 3
+     0.800 ! proportion dams in stage 1
+     0.500 ! proportion dams in stage 2
+     0.500 ! proportion dams in stage 3
