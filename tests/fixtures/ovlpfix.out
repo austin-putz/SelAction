@@ -1,0 +1,161 @@
+  
+             *************************************************
+             *                   SelAction                   *
+             *      Multi-Trait Index Selection Software     *
+             *                                               *
+             *                 developed by:                 *
+             *        Marc J.M. Rutten and Piter Bijma       *
+             *       Animal Breeding and Genetics Group      *
+             *          Wageningen University, 2000          *
+             *                                               *
+             *                  updated by:                  *
+             *          Austin Putz and Jack Dekkers         *
+             *          Iowa State University, 2026          *
+             *                                               *
+             *                  version 1.2                  *
+             *************************************************
+  
+  
+  TRAITS
+  
+    wt      
+    gr      
+    bf      
+  
+  
+   TRAIT PARAMETERS
+   
+        phenotypic variance  heritability  com.env.effect
+wt            100.000           0.300           0.050
+gr             50.000           0.250           0.050
+bf              4.000           0.400           0.050
+  
+   PHENOTYPIC CORRELATIONS
+   
+             wt       gr       bf      
+wt             1.000
+gr             0.200    1.000
+bf             0.100    0.100    1.000
+  
+   GENETIC CORRELATIONS
+   
+             wt       gr       bf      
+wt             1.000
+gr             0.300    1.000
+bf             0.200    0.150    1.000
+  
+   COMMON ENVIRONMENTAL CORRELATIONS
+   
+             wt       gr       bf      
+wt             1.000
+gr             0.050    1.000
+bf             0.050    0.050    1.000
+  
+  BREEDING GOAL INFORMATION
+  
+          5.000 * wt      
+         -2.000 * gr      
+  
+   POPULATION SIZE
+   
+                      number of selected sires :   10.000
+                       number of selected dams :  200.000
+ number of male selection candidates per dam   :    5.000
+ number of female selection candidates per dam :    5.000
+  
+    selected proportion sires in age class   1 :   0.010 x   1000.0 =   10.000
+     selected proportion dams in age class   3 :   0.120 x   1000.0 =  120.000
+     selected proportion dams in age class   4 :   0.160 x    500.0 =   80.000
+  
+ generation interval :  1.20  cohort intervals
+  
+  CHARACTERISTICS OF THE USED GROUPS
+  
+  full-sib group            1  with    9.00000000      animals
+  half-sib group            1  with    200.000000      dams, producing    9.00000000     animals
+  
+  INDEX INFORMATION:
+  
+  age class            1
+     own performance                      for wt        (   0.986)
+     information of fs-group            1 for wt        (   1.161)
+     information of hs-group            1 for wt        (   0.797)
+  
+     own performance                      for bf        (   0.473)
+  
+  age class            3
+     own performance                      for wt        (   0.986)
+     information of fs-group            1 for wt        (   1.161)
+     information of hs-group            1 for wt        (   0.797)
+  
+     own performance                      for bf        (   0.473)
+  
+  age class            4
+     own performance                      for wt        (   1.001)
+     information of fs-group            1 for wt        (   1.295)
+  
+     own performance                      for bf        (   0.483)
+  
+  
+              ******************   RESULTS   *******************
+  
+  EQUILIBRIUM PARAMETERS
+  
+        phenotypic variance  heritability  com.env.effect
+wt             94.997           0.263           0.053
+gr             49.805           0.247           0.050
+bf              3.982           0.397           0.050
+  
+   PHENOTYPIC CORRELATIONS
+  
+   
+             wt       gr       bf      
+wt             1.000
+gr             0.191    1.000
+bf             0.087    0.096    1.000
+  
+   GENETIC CORRELATIONS
+  
+             wt       gr       bf      
+wt             1.000
+gr             0.275    1.000
+bf             0.172    0.139    1.000
+  
+   COMMON ENVIRONMENTAL CORRELATIONS
+  
+             wt       gr       bf      
+wt             1.000
+gr             0.050    1.000
+bf             0.050    0.050    1.000
+  
+  RESPONSE
+                            sires           dams          total
+ wt      
+         trait units :      3.277          1.964          5.241
+      economic units :     16.387          9.819         26.206
+ % of total response :     67.886         40.678        108.564
+  
+ gr      
+         trait units :      0.646          0.387          1.034
+      economic units :     -1.292         -0.775         -2.067
+ % of total response :     -5.353         -3.210         -8.564
+  
+  CORRELATED RESPONSE
+                            sires           dams          total
+ bf      
+         trait units :      0.195          0.118          0.313
+  
+  TOTAL RESPONSE
+                            sires           dams          total
+      economic units :     15.095          9.044         24.139
+  
+  
+ age class  1  index variance :      185.142  accuracy of index :  0.566
+ age class  3  index variance :      185.142  accuracy of index :  0.566
+ age class  4  index variance :      177.248  accuracy of index :  0.554
+  
+       breeding goal variance :      577.707
+  
+  
+  
+                       ******  end of output  ******

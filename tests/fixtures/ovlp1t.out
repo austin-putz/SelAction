@@ -1,0 +1,98 @@
+  
+             *************************************************
+             *                   SelAction                   *
+             *      Multi-Trait Index Selection Software     *
+             *                                               *
+             *                 developed by:                 *
+             *        Marc J.M. Rutten and Piter Bijma       *
+             *       Animal Breeding and Genetics Group      *
+             *          Wageningen University, 2000          *
+             *                                               *
+             *                  updated by:                  *
+             *          Austin Putz and Jack Dekkers         *
+             *          Iowa State University, 2026          *
+             *                                               *
+             *                  version 1.2                  *
+             *************************************************
+  
+  
+  TRAITS
+  
+    wt      
+  
+  
+   TRAIT PARAMETERS
+   
+        phenotypic variance  heritability  com.env.effect
+wt            100.000           0.300           0.050
+  
+  BREEDING GOAL INFORMATION
+  
+          5.000 * wt      
+  
+   POPULATION SIZE
+   
+                      number of selected sires :   10.000
+                       number of selected dams :  200.000
+ number of male selection candidates per dam   :    5.000
+ number of female selection candidates per dam :    5.000
+  
+    selected proportion sires in age class   1 :   0.010 x   1000.0 =   10.000
+    selected proportion sires in age class   2 :   0.000 x    500.0 =    0.000
+     selected proportion dams in age class   3 :   0.195 x   1000.0 =  194.504
+     selected proportion dams in age class   4 :   0.011 x    500.0 =    5.496
+  
+ generation interval :  1.01  cohort intervals
+  
+  CHARACTERISTICS OF THE USED GROUPS
+  
+  full-sib group            1  with    9.00000000      animals
+  half-sib group            1  with    200.000000      dams, producing    9.00000000     animals
+  
+  INDEX INFORMATION:
+  
+  age class            1
+     own performance                      for wt        (   1.084)
+     information of fs-group            1 for wt        (   1.320)
+  
+  age class            2
+     own performance                      for wt        (   1.066)
+     information of fs-group            1 for wt        (   1.160)
+     information of hs-group            1 for wt        (   0.905)
+  
+  age class            3
+     own performance                      for wt        (   1.282)
+  
+  age class            4
+     own performance                      for wt        (   1.282)
+  
+  
+              ******************   RESULTS   *******************
+  
+  EQUILIBRIUM PARAMETERS
+  
+        phenotypic variance  heritability  com.env.effect
+wt             94.147           0.256           0.053
+  
+  RESPONSE
+                            sires           dams          total
+ wt      
+         trait units :      3.632          1.778          5.410
+      economic units :     18.160          8.892         27.052
+ % of total response :     67.131         32.869        100.000
+  
+  TOTAL RESPONSE
+                            sires           dams          total
+      economic units :     18.160          8.892         27.052
+  
+  
+ age class  1  index variance :      191.237  accuracy of index :  0.563
+ age class  2  index variance :      201.400  accuracy of index :  0.578
+ age class  3  index variance :      154.828  accuracy of index :  0.506
+ age class  4  index variance :      154.828  accuracy of index :  0.506
+  
+       breeding goal variance :      603.667
+  
+  
+  
+                       ******  end of output  ******
